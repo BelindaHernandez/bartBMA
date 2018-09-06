@@ -1,0 +1,15 @@
+Package: bartBMA
+Type: Package
+Title: Bayesian Additive Regression Trees using Bayesian Model Averaging
+Version: 1.0
+Date: 2018-08-31
+Author: Belinda Hernandez
+Maintainer: Belinda Hernandez <hernandb@tcd.ie>
+Description: BART-BMA Baryesian Additive Regression Trees using Bayesian Model Averaging is an extension to the original BART \dQuote{sum-of-trees} model of Chipman et al. BART-BMA differs to the original BART model in two main aspects in order to implement a greedy model which 
+  will be computationally feasible for high dimensional data. Firstly BART-BMA uses a greedy search for the best split points and variables when growing decision trees within each \dQuote{sum-of-trees} 
+  model. This means trees are only grown based on the most predictive set of split rules. Also rather than using MCMC, BART-BMA uses a greedy implementation of Bayesian Model Averaging called Occam's Window 
+  which take a weighted average over multiple \dQuote{sum-of-trees} models to form its overall prediction. This means that only the set of \dQuote{sum-of-trees} for which there is high support from the data
+  are saved to memory and used in the final model.
+License: GPL (>= 2)
+Imports: Rcpp (>= 0.12.17)
+LinkingTo: Rcpp, RcppArmadillo
