@@ -62,7 +62,7 @@ bartBMA.default<-function(x.train,y.train,a=3,nu=3,sigquant=0.9,c=1000,
     bartBMA_call[[5]]<-bartBMA_call[[5]][[length(bartBMA_call[[5]])]]
   }
   
-  bartBMA_call$numvars<-ncol(training)
+  bartBMA_call$numvars<-ncol(x.train)
   bartBMA_call$call<-match.call()
   bartBMA_call[[2]]<-bartBMA_call[[2]][[length(bartBMA_call[[2]])]]
   bartBMA_call[[3]]<-bartBMA_call[[3]][[length(bartBMA_call[[3]])]]
