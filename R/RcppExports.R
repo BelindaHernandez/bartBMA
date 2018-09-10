@@ -313,19 +313,3 @@ gibbs_sampler2 <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, n
     .Call(`_bartBMA_gibbs_sampler2`, overall_sum_trees, overall_sum_mat, y, BIC_weights, num_iter, burnin, num_obs, a, sigma, mu_mu, nu, lambda, resids)
 }
 
-rcpparma_hello_world <- function() {
-    .Call(`_bartBMA_rcpparma_hello_world`)
-}
-
-rcpparma_outerproduct <- function(x) {
-    .Call(`_bartBMA_rcpparma_outerproduct`, x)
-}
-
-rcpparma_innerproduct <- function(x) {
-    .Call(`_bartBMA_rcpparma_innerproduct`, x)
-}
-
-rcpparma_bothproducts <- function(x) {
-    .Call(`_bartBMA_rcpparma_bothproducts`, x)
-}
-
