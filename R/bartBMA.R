@@ -3,9 +3,7 @@
 bartBMA<-function(x,...)UseMethod("bartBMA")
 
 bartBMA.default<-function(x.train,y.train,a=3,nu=3,sigquant=0.9,c=1000,
-                          pen=12,num_cp=20,x.test=matrix(0.0,0,0),
-                          num_rounds=5,alpha=0.95,beta=1,split_rule_node=0,
-                          gridpoint=0,maxOWsize=100){
+                          pen=12,num_cp=20,x.test=matrix(0.0,0,0),num_rounds=5,alpha=0.95,beta=1,split_rule_node=0,gridpoint=0,maxOWsize=100){
   binary=FALSE
   start_mean=0
   start_sd=1
@@ -64,7 +62,7 @@ bartBMA.default<-function(x.train,y.train,a=3,nu=3,sigquant=0.9,c=1000,
     bartBMA_call[[5]]<-bartBMA_call[[5]][[length(bartBMA_call[[5]])]]
   }
   
-  bartBMA_call$numvars<-ncol(x.train) #ncol(training)
+  bartBMA_call$numvars<-ncol(x.train)
   bartBMA_call$call<-match.call()
   bartBMA_call[[2]]<-bartBMA_call[[2]][[length(bartBMA_call[[2]])]]
   bartBMA_call[[3]]<-bartBMA_call[[3]][[length(bartBMA_call[[3]])]]
