@@ -107,20 +107,28 @@ NumericMatrix set_daughter_to_end_tree(int grow_node,NumericMatrix prior_tree_ta
 NumericMatrix set_daughter_to_end_mat(double d,NumericMatrix prior_tree_matrix_temp,double left_daughter,NumericVector ld_obs,NumericVector rd_obs){
 	int ncol_mat=prior_tree_matrix_temp.ncol();
 	arma::mat N=Rcpp::as<arma::mat>(prior_tree_matrix_temp);
+	std::cout<<"prior tree mat has "<<N.n_cols<<" number of columns"<<"\n";
+	//Dec18 changed this to instead of copying last column adding a col of zeros:
+	//!!!!!change this line to have a vector of zeros re run and see if that solves problem1
+  //N.insert_cols(d,0);
 	arma::vec colmat=N.col(d);
+
+	std::cout<<"colmat size "<<colmat.size()<<" first few obs "<<colmat(0)<<" "<<colmat(1)<<" "<<colmat(2)<<"\n";
 	NumericVector colmat2=wrap(colmat);
 
 	if(d+1==ncol_mat){
+	  //Dec 2018 changed all of this part of the if statement swap out!
 		//update prior_tree_matrix
 		//insert extra column for the new split node
-
 		N.insert_cols(ncol_mat,1); 
+		colmat=N.col(ncol_mat);
+		colmat2=wrap(colmat);
 		colmat2[ld_obs]=left_daughter;
 		colmat2[rd_obs]=left_daughter+1;
 		colmat=Rcpp::as<arma::vec>(colmat2);
 		N.col(d+1)=colmat;
-
 	}else{
+	  //else just update existing column
 		colmat2[ld_obs]=left_daughter;
 		colmat2[rd_obs]=left_daughter+1;
 		colmat=Rcpp::as<arma::vec>(colmat2);
