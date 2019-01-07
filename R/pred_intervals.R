@@ -37,7 +37,7 @@ pred_intervals<-function(object,num_iter,burnin,l_quant,u_quant,newdata=NULL){
     post_yorig_i<-y_orig_post_sum_trees[[i]]
     final_y_chain<-rbind(final_y_chain,post_y_i[sample_its,])
     final_yorig_chain<-rbind(final_yorig_chain,post_yorig_i[sample_its,])
-    PI<-apply(final_y_chain,2,function(x)quantile(x,probs=c(l_quant,0.5,u_quant)))
+    PI<-apply(final_yorig_chain,2,function(x)quantile(x,probs=c(l_quant,0.5,u_quant)))
   }
   
   
