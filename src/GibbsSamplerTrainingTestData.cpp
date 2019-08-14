@@ -10,34 +10,34 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 
 NumericVector find_term_nodes_gs(NumericMatrix tree_table){
-  NumericVector terminal_nodes;
+  //NumericVector terminal_nodes;
   arma::mat arma_tree(tree_table.begin(),tree_table.nrow(), tree_table.ncol(), false); 
   
   arma::vec colmat=arma_tree.col(4);
   arma::uvec term_nodes=arma::find(colmat==-1);
   term_nodes=term_nodes+1;
   return(wrap(term_nodes));
-  }
+}
 
 //################################################################################################################################//
-   //[[Rcpp::depends(RcppArmadillo)]]
- //[[Rcpp::export]]
+  //[[Rcpp::depends(RcppArmadillo)]]
+//[[Rcpp::export]]
 
 NumericVector find_term_obs_gs(NumericMatrix tree_matrix_temp,double terminal_node){
   //NumericVector term_obs;
   arma::mat arma_tree_mat(tree_matrix_temp.begin(),tree_matrix_temp.nrow(), tree_matrix_temp.ncol(), false); 
   arma::uvec term_obs;
   
-    for(int j=0;j<tree_matrix_temp.ncol();j++){
-  arma::vec colmat=arma_tree_mat.col(j);
-   term_obs=arma::find(colmat==terminal_node);
-  if(term_obs.size()>0){
-    break;
-  }
+  for(int j=0;j<tree_matrix_temp.ncol();j++){
+    arma::vec colmat=arma_tree_mat.col(j);
+    term_obs=arma::find(colmat==terminal_node);
+    if(term_obs.size()>0){
+      break;
     }
+  }
   
   return(wrap(term_obs));
-  }
+}
 //################################################################################################################################//
   // [[Rcpp::export]]
 NumericVector calc_rowsums(NumericMatrix predictions){
@@ -57,7 +57,8 @@ NumericVector calculate_resids(NumericMatrix predictions,NumericVector response)
 //################################################################################################################################//
   // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-List update_Gibbs_mean_var(NumericMatrix tree_table,NumericVector resids,double a,double sigma,double mu_mu,IntegerVector terminal_nodes,  List term_obs_tree){
+List update_Gibbs_mean_var(//NumericMatrix tree_table,
+                           NumericVector resids,double a,double sigma,double mu_mu,IntegerVector terminal_nodes,  List term_obs_tree){
   List update_params(2);
   
   NumericVector mu_ij(terminal_nodes.size());
@@ -80,8 +81,8 @@ List update_Gibbs_mean_var(NumericMatrix tree_table,NumericVector resids,double 
     
     new_var[k]=(1/((1/(pow(sigma,2)))*(Tj[k]+a)));
     
-    NumericVector temp;
-    term_obs=temp;
+    //NumericVector temp;
+    //term_obs=temp;
     
   }  
   
@@ -99,6 +100,8 @@ double update_sigma(double a1,double b,NumericVector resids,int n){
   double shape=(a1+n/2);
   double rate =((ssr/2)+(1/b));
   RNGScope scope;
+  //double tau =shape/rate;
+  
   double tau =R::rgamma(shape,1/rate);
   double sigma = sqrt((1/tau));
   return sigma;
@@ -213,6 +216,8 @@ NumericVector get_new_mean(IntegerVector terminal_nodes,List new_mean_var){
   for(int k=0;k<terminal_nodes.size();k++){
     NumericVector sd=new_mean_var[1];
     NumericVector temp_mean=new_mean_var[0];
+    //double new_mean=temp_mean[k];
+    
     double new_mean= R::rnorm(temp_mean[k],sqrt(sd[k]));
     node_means.push_back(new_mean);
     
@@ -222,30 +227,34 @@ NumericVector get_new_mean(IntegerVector terminal_nodes,List new_mean_var){
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // [[Rcpp::export]]
-List update_predictions_gs(NumericMatrix tree_table,NumericVector new_mean,NumericVector new_var,int n,
-                        IntegerVector terminal_nodes,List term_obs_tree){
+List update_predictions_gs(//NumericMatrix tree_table,
+                           NumericVector new_mean,NumericVector new_var,int n,
+                           IntegerVector terminal_nodes,List term_obs_tree){
   
-  List updated_preds(2);
+  //List updated_preds(2);
+  List updated_preds(1);
   NumericVector new_preds(n);
   
   for(int k=0;k<terminal_nodes.size();k++){
     
     NumericVector term_obs=term_obs_tree[k];        
     //update the mean of the selected tree nodes:
-      tree_table(terminal_nodes[k]-1,5)= new_mean[k];
-      tree_table(terminal_nodes[k]-1,6)=sqrt(new_var[k]);
+      //tree_table(terminal_nodes[k]-1,5)= new_mean[k];
+      //tree_table(terminal_nodes[k]-1,6)=sqrt(new_var[k]);
       double newmean=new_mean[k];
       //update residuals for next iteration
       new_preds[term_obs]=newmean;
   }
   
-  updated_preds[0]=tree_table;
-  updated_preds[1]=new_preds;
+  //updated_preds[0]=tree_table;
+  //updated_preds[1]=new_preds;
+  
+  updated_preds[0]=new_preds;
   
   return(updated_preds);
 }
 //################################################################################################################################//
- // [[Rcpp::export]]
+  // [[Rcpp::export]]
 NumericVector scale_response_gs(double a,double b,double c,double d,NumericVector y){
   NumericVector y_scaled = -((-b*c+a*d)/(-a+b))+((-c+d)*y/(-a+b));
   return(y_scaled);
@@ -291,17 +300,24 @@ List get_tree_info_test_data(NumericMatrix test_data,NumericMatrix tree_data) {
   
   arma::mat arma_tree(tree_data.begin(), tree_data.nrow(), tree_data.ncol(), false);
   arma::mat testd(test_data.begin(), test_data.nrow(), test_data.ncol(), false);
-  NumericVector internal_nodes=find_internal_nodes_gs(tree_data);
+  //NumericVector internal_nodes=find_internal_nodes_gs(tree_data);
   NumericVector terminal_nodes=find_term_nodes_gs(tree_data);
-  arma::vec arma_terminal_nodes=Rcpp::as<arma::vec>(terminal_nodes);
+  //arma::vec arma_terminal_nodes=Rcpp::as<arma::vec>(terminal_nodes);
   NumericVector tree_predictions;
   
   //now for each internal node find the observations that belong to the terminal nodes
   
   NumericVector predictions(test_data.nrow());
   List term_obs(terminal_nodes.size());
+  if(terminal_nodes.size()==1){
+    double nodemean=tree_data(terminal_nodes[0]-1,5);				// let nodemean equal tree_data row terminal_nodes[i]^th row , 6th column. The minus 1 is because terminal nodes consists of indices starting at 1, but need indices to start at 0.
+    predictions=rep(nodemean,test_data.nrow());
+    IntegerVector temp_obsvec = seq_len(test_data.nrow())-1;
+    term_obs[0]= temp_obsvec;
+  }
+  else{
   for(int i=0;i<terminal_nodes.size();i++){
-  arma::mat subdata=testd;
+  //arma::mat subdata=testd;
   int curr_term=terminal_nodes[i];
   int row_index;
   int term_node=terminal_nodes[i];
@@ -390,6 +406,7 @@ List get_tree_info_test_data(NumericMatrix test_data,NumericMatrix tree_data) {
   predictions[predind]= nodemean;
   term_obs[i]=predind;
   } 
+  }
   List ret(3);
   ret[0] = terminal_nodes;
   ret[1] = term_obs;
@@ -420,7 +437,7 @@ List term_nodes_trees(sum_tree.size());
 List term_obs_trees(sum_tree.size());
 NumericMatrix predictions(num_obs,sum_tree.size());
 
-for(int k =0;k<sum_tree.size();k++){          
+for(int k=0;k<sum_tree.size();k++){          
 NumericMatrix tree_table=sum_tree[k];
 List tree_info=get_tree_info_test_data(test_data, tree_table) ;
 NumericVector term_nodes=tree_info[0];
@@ -452,9 +469,18 @@ return(ret);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
 // [[Rcpp::export]]
 
-List gibbs_sampler(List overall_sum_trees,List overall_sum_mat,NumericVector y,NumericVector BIC_weights,int num_iter,int burnin,int num_obs,int num_test_obs,double a,double sigma,double mu_mu,double nu,double lambda,List resids,NumericMatrix test_data){
+List gibbs_sampler(List overall_sum_trees,
+                   List overall_sum_mat,
+                   NumericVector y,
+                   NumericVector BIC_weights,
+                   int num_iter,int burnin,int num_obs,int num_test_obs,
+                   double a,double sigma,double mu_mu,double nu,double lambda,
+                   List resids,
+                   NumericMatrix test_data){
 if(burnin>=num_iter){
 throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
 }
@@ -466,25 +492,29 @@ List overall_term_test_obs_trees=test_tree_info[1];
 
 double a1=nu/2;
 double b=2/(nu*lambda);
-double sigma_init=sigma;
+double sigma2=sigma;
+
+double sigma_init=sigma2;
 List overall_term_nodes_trees=tree_info[0];
 List overall_term_obs_trees=tree_info[1];
 List overall_predictions=tree_info[2];
 NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
-List prediction_list(overall_sum_trees.size());
-List prediction_list_orig(overall_sum_trees.size());
-List prediction_test_list(overall_sum_trees.size());
-List predictive_dist_train_list(overall_sum_trees.size());
-List predictive_dist_train_list_orig(overall_sum_trees.size());
-List prediction_test_list_orig(overall_sum_trees.size());
-List overall_sum_trees1=clone(overall_sum_trees);
-List overall_sum_mat1=clone(overall_sum_mat); 
+//List prediction_list(overall_sum_trees.size());
+//List prediction_list_orig(overall_sum_trees.size());
+//List prediction_test_list(overall_sum_trees.size());
+//List prediction_test_list_orig(overall_sum_trees.size());
+//List predictive_dist_train_list(overall_sum_trees.size());
+//List predictive_dist_train_list_orig(overall_sum_trees.size());
+//List predictive_dist_test_list(overall_sum_trees.size());
+List predictive_dist_test_list_orig(overall_sum_trees.size());
+//List overall_sum_trees1=clone(overall_sum_trees);
+//List overall_sum_mat1=clone(overall_sum_mat); 
 List sigma_chains(overall_sum_trees.size());
-int one_tree=0;
+//int one_tree=0;
 for(int i=0;i<overall_sum_trees.size();i++){
   //for each set of trees loop over individual trees    
   NumericVector sigma_its(num_iter);
-  sigma=sigma_init;
+  sigma2=sigma_init;
   SEXP s = overall_sum_trees[i];
   NumericVector test_preds_sum_tree;
   NumericMatrix sum_predictions;
@@ -492,181 +522,261 @@ for(int i=0;i<overall_sum_trees.size();i++){
   
   if(is<List>(s)){
     //if current set of trees contains more than one tree
-    List sum_tree=overall_sum_trees1[i];
-    List sum_tree_mat=overall_sum_mat1[i];
+    //List sum_tree=overall_sum_trees1[i];
+    //List sum_tree_mat=overall_sum_mat1[i];
     List sum_term_nodes=overall_term_nodes_trees[i];
     List sum_term_obs=overall_term_obs_trees[i];
     List sum_term_test_obs=overall_term_test_obs_trees[i];
-    List sum_resids=resids[i];
+    List sum_resids0=resids[i];
+    List sum_resids=clone(sum_resids0);
+    
     NumericMatrix tree_predictions=overall_predictions[i];
     sum_predictions=clone(tree_predictions);
-    NumericMatrix post_predictions(num_iter,num_obs);
-    NumericMatrix post_predictions_PI(num_iter,num_obs);
-    NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
-    NumericMatrix post_predictions_orig(num_iter,num_obs);
-    NumericMatrix post_test_predictions(num_iter,num_test_obs);
-    NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+    //NumericMatrix post_predictions(num_iter,num_obs);
+    //NumericMatrix post_predictions_PI(num_iter,num_obs);
+    //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+    //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+    NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+    //NumericMatrix post_predictions_orig(num_iter,num_obs);
+    //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+    //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
     NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
-    NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+    NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
     
     for(int j=0;j<num_iter;j++){
-      for(int k =0;k<sum_tree.size();k++){
-        NumericMatrix tree_table=sum_tree[k];
-        IntegerMatrix tree_mat=sum_tree_mat[k];
+      for(int k =0;k<sum_term_nodes.size();k++){
+        //NumericMatrix tree_table=sum_tree[k];
+        //IntegerMatrix tree_mat=sum_tree_mat[k];
         //find terminal node means and observations associated with them
         IntegerVector term_nodes=sum_term_nodes[k];
         List term_obs=sum_term_obs[k];
         List term_test_obs=sum_term_test_obs[k];
         NumericVector predictions=sum_resids[k];
         //current predictions are the residuals for sum of trees!
-          
-          //update the means and predictions for tree
-        List new_node_mean_var=update_Gibbs_mean_var(tree_table,predictions,a,sigma,mu_mu,term_nodes,term_obs);
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                     predictions,a,sigma2,mu_mu,term_nodes,term_obs);
         NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
         NumericVector new_node_var=new_node_mean_var[1];
         //update predictions by setting predicted value for term_obs[termnode]=new mean value!
-          
-          List updated_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
-        NumericVector temp_preds=updated_preds[1];
+        
+        List updated_preds=update_predictions_gs(//tree_table,
+                                                 new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        
+        //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+        //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+        //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+        //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+        for(int q=0;q<sum_term_nodes.size();q++){
+          if(q!=k){
+            if(j==0){
+              NumericVector temp_resids1= sum_resids[q];
+              sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+            }else{
+            NumericVector temp_resids1= sum_resids[q];
+              sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+            }
+          }
+        }
         sum_new_predictions(_,k)=temp_preds;
         
         
-        List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
-        NumericVector temp_test_preds=updated_test_preds[1];
+        List updated_test_preds=update_predictions_gs(//tree_table,
+                                                      new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        NumericVector temp_test_preds=updated_test_preds[0];
         sum_new_test_predictions(_,k)=temp_test_preds;
         
-        //get overall predictions for current iteration and current sum of trees
-        sigma= update_sigma(a1,b,predictions,num_obs);
-        sigma_its[j]=sigma;
       }
+      
+      
       NumericVector pred_obs=calc_rowsums(sum_new_predictions);
-      post_predictions(j,_)=pred_obs;
-      NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
-      post_predictions_orig(j,_)=original_y;
+      NumericVector full_resids = y_scaled-pred_obs;
+      //get overall predictions for current iteration and current sum of trees
+      sigma2= update_sigma(a1,b,full_resids,num_obs);
+      sigma_its[j]=sigma2;
+      
+      //post_predictions(j,_)=pred_obs;
+      //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+      //post_predictions_orig(j,_)=original_y;
       
       NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
-      post_test_predictions(j,_)=pred_test_obs;
-      NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
-      post_test_predictions_orig(j,_)=original_test_y;
+      //post_test_predictions(j,_)=pred_test_obs;
+      //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+      //post_test_predictions_orig(j,_)=original_test_y;
       //prediction interval for training 
       
-      for(int g=0;g<pred_obs.size();g++){
-        post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma);
+      // for(int g=0;g<pred_obs.size();g++){
+      //   //post_predictions_PI(j,g)=pred_obs[g];
+      //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+      // }
+      
+      NumericVector temp_test_predictions_PI(num_test_obs);
+      //prediction interval for test data 
+      for(int g=0;g<pred_test_obs.size();g++){
+        //post_test_predictions_PI(j,g)=pred_test_obs[g];
+        //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+        temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
       }
       
-      NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
-      post_predictions_orig_PI(j,_)=original_y_PI;
+      //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+      NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
       
-      prediction_list[i]=post_predictions;
-      prediction_list_orig[i]=post_predictions_orig;
-      prediction_test_list[i]=post_test_predictions;
-      prediction_test_list_orig[i]=post_test_predictions_orig;
+      post_test_predictions_orig_PI(j,_)=original_y_PI_test;
       
-      //predictive intervals
+      // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+      // post_predictions_orig_PI(j,_)=original_y_PI;
       
-      predictive_dist_train_list[i]=post_predictions_PI;
-      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
     }
-    sigma_chains[i]=sigma_its;
+    //prediction_list[i]=post_predictions;
+    //prediction_list_orig[i]=post_predictions_orig;
+    //prediction_test_list[i]=post_test_predictions;
+    //prediction_test_list_orig[i]=post_test_predictions_orig;
     
-  }else{        
-    one_tree=1;
-  }      
+    //predictive intervals
+    
+    //predictive_dist_train_list[i]=post_predictions_PI;
+    //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+    
+    //predictive_dist_test_list[i]=post_test_predictions_PI;
+    predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+  }else{
+    
+    NumericVector sigma_its(num_iter);
+    ///NumericMatrix post_predictions(num_iter,num_obs);
+    //NumericMatrix post_predictions_PI(num_iter,num_obs);
+    //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+    //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+    NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+    //NumericMatrix post_predictions_orig(num_iter,num_obs);
+    //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+    //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+    NumericMatrix sum_predictions(num_obs,1);
+    NumericMatrix sum_test_predictions(num_test_obs,1);
+    
+    NumericVector predictions=resids[i];
+    
+    for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                     predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+                                                 new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        List updated_test_preds=update_predictions_gs(//tree_table,
+                                                      new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        NumericVector temp_test_preds=updated_test_preds[0];
+        //sum_predictions(_,0)=temp_preds;
+        sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+
+      
+      //NumericVector pred_obs=calc_rowsums(sum_predictions);
+      NumericVector pred_obs=temp_preds;
+      
+      //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+      NumericVector pred_test_obs=temp_test_preds;
+      
+      //post_predictions(j,_)=pred_obs;
+      //post_test_predictions(j,_)=pred_test_obs;
+      NumericVector full_resids = y_scaled-pred_obs;
+      sigma2= update_sigma(a1,b,full_resids,num_obs);
+      sigma_its[j]=sigma2;
+      //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+      //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+      //post_predictions_orig(j,_)=original_y;
+      //post_test_predictions_orig(j,_)=original_test_y;
+      
+      //prediction interval for training 
+      // for(int g=0;g<pred_obs.size();g++){
+      //   //post_predictions_PI(j,g)=pred_obs[g];
+      //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+      // }
+      // 
+      // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+      // post_predictions_orig_PI(j,_)=original_y_PI;
+      
+      NumericVector temp_test_predictions_PI(num_test_obs);
+      
+      //prediction interval for test data 
+      for(int g=0;g<pred_test_obs.size();g++){
+        //post_test_predictions_PI(j,g)=pred_test_obs[g];
+        //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+        temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        
+      }
+      
+      //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+      NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+      post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+      
+    }
+    
+    //prediction_list[i]=post_predictions;
+    //prediction_list_orig[i]=post_predictions_orig;
+    //prediction_test_list[i]=post_test_predictions;
+    //prediction_test_list_orig[i]=post_test_predictions_orig;
+    
+    //predictive intervals
+    
+    //predictive_dist_train_list[i]=post_predictions_PI;
+    //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+    
+    //predictive_dist_test_list[i]=post_test_predictions_PI;
+    predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+  }
+  sigma_chains[i]=sigma_its;
+  
 }
 
-if(one_tree==1){
-  NumericVector sigma_its(num_iter);
-  NumericMatrix post_predictions(num_iter,num_obs);
-  NumericMatrix post_predictions_PI(num_iter,num_obs);
-  NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
-  NumericMatrix post_predictions_orig(num_iter,num_obs);
-  NumericMatrix post_test_predictions(num_iter,num_obs);
-  NumericMatrix post_test_predictions_orig(num_iter,num_obs);
-  NumericMatrix sum_predictions(num_obs,overall_predictions.size());
-  NumericMatrix sum_test_predictions(num_test_obs,overall_predictions.size());
-  for(int t=0;t<overall_predictions.size();t++){
-    NumericVector preds=overall_predictions[t];
-    sum_predictions(_,t)=preds;
-  }
-  
-  for(int j=0;j<num_iter;j++){
-    for(int i=0;i<overall_sum_trees.size();i++){     
-      NumericMatrix tree_table=overall_sum_trees1[i];
-      IntegerMatrix tree_mat=overall_sum_mat1[i];
-      IntegerVector term_nodes=overall_term_nodes_trees[i];
-      List term_obs=overall_term_obs_trees[i];
-      List term_test_obs=overall_term_test_obs_trees[i];
-      NumericVector predictions=resids[i];
-      //find terminal node means and observations associated with them
-      
-      //current predictions are the residuals for sum of trees
-      
-      //update the means and predictions for tree
-      List new_node_mean_var=update_Gibbs_mean_var(tree_table,predictions,a,sigma,mu_mu,term_nodes,term_obs);
-      NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
-      NumericVector new_node_var=new_node_mean_var[1];
-      List updated_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
-      NumericVector temp_preds=updated_preds[1];
-      sum_predictions(_,i)=temp_preds;
-      
-      //get updated predictions for the test data
-      List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
-      NumericVector temp_test_preds=updated_test_preds[1];
-      sum_predictions(_,i)=temp_preds;
-      sum_test_predictions(_,i)=temp_test_preds;
-      NumericVector S=calculate_resids(sum_predictions,y_scaled);  
-      //get overall predictions for current iteration and current sum of trees
-      sigma= update_sigma(a1,b,S,num_obs);
-      sigma_its[j]=sigma;
-    }
-    NumericVector pred_obs=calc_rowsums(sum_predictions);
-    NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
-    post_predictions(j,_)=pred_obs;
-    post_test_predictions(j,_)=pred_test_obs;
-    NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
-    NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
-    post_predictions_orig(j,_)=original_y;
-    post_test_predictions_orig(j,_)=original_test_y;
-    
-    //prediction interval for training 
-    for(int g=0;g<pred_obs.size();g++){
-      post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma);
-    }
-    
-    NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
-    post_predictions_orig_PI(j,_)=original_y_PI;
-    
-  }
-  
-  List g(1);
-  sigma_chains=clone(g);
-  prediction_list=clone(g);
-  prediction_list_orig=clone(g);
-  prediction_test_list=clone(g);
-  prediction_test_list_orig=clone(g);
-  sigma_chains[0]=sigma_its;
-  NumericVector test2=sigma_chains[0];
-  prediction_list[0]=post_predictions;
-  prediction_list_orig[0]=post_predictions_orig;
-  prediction_test_list[0]=post_test_predictions;
-  prediction_test_list_orig[0]=post_test_predictions_orig;
-  //predictive intervals
-  predictive_dist_train_list[0]=post_predictions_PI;
-  predictive_dist_train_list_orig[0]= post_predictions_orig_PI;
-}
-List ret(7);
-NumericVector test2=sigma_chains[0];
-ret[0]= prediction_list;
-ret[1]= prediction_list_orig;
-ret[2]=sigma_chains;
-ret[3]=prediction_test_list;
-ret[4]=prediction_test_list_orig;
-ret[5]=predictive_dist_train_list;
-ret[6]=predictive_dist_train_list_orig;
+
+List ret(2);
+//NumericVector test2=sigma_chains[0];
+
+//ret[0]= prediction_list;
+//ret[1]= prediction_list_orig;
+//ret[2]=sigma_chains;
+//ret[3]=prediction_test_list;
+//ret[4]=prediction_test_list_orig;
+//ret[5]=predictive_dist_train_list;
+//ret[6]=predictive_dist_train_list_orig;
+//ret[7]=predictive_dist_test_list;
+//ret[8]=predictive_dist_test_list_orig;
+
+
+//ret[0]= prediction_list;
+//ret[1]= prediction_list_orig;
+ret[0]=sigma_chains;
+//ret[3]=prediction_test_list;
+//ret[4]=prediction_test_list_orig;
+//ret[5]=predictive_dist_train_list;
+//ret[6]=predictive_dist_train_list_orig;
+//ret[7]=predictive_dist_test_list;
+ret[1]=predictive_dist_test_list_orig;
 return(ret); 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 
 List gibbs_sampler2(List overall_sum_trees,List overall_sum_mat,NumericVector y,NumericVector BIC_weights,int num_iter,int burnin,int num_obs,double a,double sigma,double mu_mu,double nu,double lambda,List resids){
@@ -680,25 +790,26 @@ List gibbs_sampler2(List overall_sum_trees,List overall_sum_mat,NumericVector y,
   //  List overall_term_test_obs_trees=test_tree_info[1];
   double a1=nu/2;
   double b=2/(nu*lambda);
-  double sigma_init=sigma;
+  double sigma2=sigma;
+  double sigma_init=sigma2;
   List overall_term_nodes_trees=tree_info[0];
   List overall_term_obs_trees=tree_info[1];
   List overall_predictions=tree_info[2];
   NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
-  List prediction_list(overall_sum_trees.size());
-  List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
   //List prediction_test_list(overall_sum_trees.size());
-  List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
   List predictive_dist_train_list_orig(overall_sum_trees.size());
   //List prediction_test_list_orig(overall_sum_trees.size());
-  List overall_sum_trees1=clone(overall_sum_trees);
-  List overall_sum_mat1=clone(overall_sum_mat); 
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
   List sigma_chains(overall_sum_trees.size());
-  int one_tree=0;
+  //int one_tree=0;
   for(int i=0;i<overall_sum_trees.size();i++){
   //for each set of trees loop over individual trees    
   NumericVector sigma_its(num_iter);
-  sigma=sigma_init;
+  sigma2=sigma_init;
   SEXP s = overall_sum_trees[i];
   //NumericVector test_preds_sum_tree;
   NumericMatrix sum_predictions;
@@ -706,27 +817,28 @@ List gibbs_sampler2(List overall_sum_trees,List overall_sum_mat,NumericVector y,
   
   if(is<List>(s)){
   //if current set of trees contains more than one tree
-  List sum_tree=overall_sum_trees1[i];
-  List sum_tree_mat=overall_sum_mat1[i];
+  //List sum_tree=overall_sum_trees1[i];
+  //List sum_tree_mat=overall_sum_mat1[i];
   List sum_term_nodes=overall_term_nodes_trees[i];
   List sum_term_obs=overall_term_obs_trees[i];
   //List sum_term_test_obs=overall_term_test_obs_trees[i];
-  List sum_resids=resids[i];
+  List sum_resids0=resids[i];
+  List sum_resids=clone(sum_resids0);
   NumericMatrix tree_predictions=overall_predictions[i];
   sum_predictions=clone(tree_predictions);
-  NumericMatrix post_predictions(num_iter,num_obs);
-  NumericMatrix post_predictions_PI(num_iter,num_obs);
+  //NumericMatrix post_predictions(num_iter,num_obs);
+  //NumericMatrix post_predictions_orig(num_iter,num_obs);
+  //NumericMatrix post_predictions_PI(num_iter,num_obs);
   NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
-  NumericMatrix post_predictions_orig(num_iter,num_obs);
   //NumericMatrix post_test_predictions(num_iter,num_test_obs);
   //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
   NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
-  NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+  //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
   
   for(int j=0;j<num_iter;j++){
-  for(int k =0;k<sum_tree.size();k++){
-  NumericMatrix tree_table=sum_tree[k];
-  IntegerMatrix tree_mat=sum_tree_mat[k];
+  for(int k =0;k<sum_term_nodes.size();k++){
+  //NumericMatrix tree_table=sum_tree[k];
+  //IntegerMatrix tree_mat=sum_tree_mat[k];
   //find terminal node means and observations associated with them
   IntegerVector term_nodes=sum_term_nodes[k];
   List term_obs=sum_term_obs[k];
@@ -736,13 +848,31 @@ List gibbs_sampler2(List overall_sum_trees,List overall_sum_mat,NumericVector y,
   
   //update the means and predictions for tree
   
-  List new_node_mean_var=update_Gibbs_mean_var(tree_table,predictions,a,sigma,mu_mu,term_nodes,term_obs);
+  List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                               predictions,a,sigma2,mu_mu,term_nodes,term_obs);
   NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
   NumericVector new_node_var=new_node_mean_var[1];
   //update predictions by setting predicted value for term_obs[termnode]=new mean value!
   
-  List updated_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
-  NumericVector temp_preds=updated_preds[1];
+  List updated_preds=update_predictions_gs(//tree_table,
+                                           new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+  //NumericVector temp_preds=updated_preds[1];
+  NumericVector temp_preds=updated_preds[0];
+  //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+  //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+  //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+  //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+  for(int l=0;l<sum_term_nodes.size();l++){
+    if(l!=k){
+      if(j==0){
+        NumericVector temp_resids1= sum_resids[l];
+        sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+      }else{
+        NumericVector temp_resids1= sum_resids[l];
+        sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+      }
+    }
+  }
   sum_new_predictions(_,k)=temp_preds;
   
   
@@ -750,15 +880,17 @@ List gibbs_sampler2(List overall_sum_trees,List overall_sum_mat,NumericVector y,
   //NumericVector temp_test_preds=updated_test_preds[1];
   //sum_new_test_predictions(_,k)=temp_test_preds;
   
-  //get overall predictions for current iteration and current sum of trees
-  sigma= update_sigma(a1,b,predictions,num_obs);
-  sigma_its[j]=sigma;
   }
   
   NumericVector pred_obs=calc_rowsums(sum_new_predictions);
-  post_predictions(j,_)=pred_obs;
-  NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
-  post_predictions_orig(j,_)=original_y;
+  NumericVector full_resids = y_scaled-pred_obs;
+  //get overall predictions for current iteration and current sum of trees
+  sigma2= update_sigma(a1,b,full_resids,num_obs);
+  sigma_its[j]=sigma2;  
+    
+  //post_predictions(j,_)=pred_obs;
+  //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+  //post_predictions_orig(j,_)=original_y;
   
   //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
   //post_test_predictions(j,_)=pred_test_obs;
@@ -766,107 +898,2479 @@ List gibbs_sampler2(List overall_sum_trees,List overall_sum_mat,NumericVector y,
   //post_test_predictions_orig(j,_)=original_test_y;
   //prediction interval for training 
   
+  NumericVector temp_predictions_PI(num_obs);
+  
+  
   for(int g=0;g<pred_obs.size();g++){
-  post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma);
+  //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+  temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
   }
-  NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+  //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+  NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
   post_predictions_orig_PI(j,_)=original_y_PI;
-  prediction_list[i]=post_predictions;
-  prediction_list_orig[i]=post_predictions_orig;
+  
+  }
+  
+  //prediction_list[i]=post_predictions;
+  //prediction_list_orig[i]=post_predictions_orig;
   //prediction_test_list[i]=post_test_predictions;
   //prediction_test_list_orig[i]=post_test_predictions_orig;
   
   //predictive intervals
-  predictive_dist_train_list[i]=post_predictions_PI;
+  //predictive_dist_train_list[i]=post_predictions_PI;
   predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+  
+
+  }else{
+    NumericVector sigma_its(num_iter);
+    //NumericMatrix post_predictions(num_iter,num_obs);
+    //NumericMatrix post_predictions_orig(num_iter,num_obs);
+    //NumericMatrix post_predictions_PI(num_iter,num_obs);
+    NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+    //NumericMatrix post_test_predictions(num_iter,num_obs);
+    //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+    NumericMatrix sum_predictions(num_obs,1);
+    //NumericMatrix sum_test_predictions(num_test_obs,1);
+    NumericVector predictions=resids[i];
+    
+    for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                     predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+                                                 new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+
+        //get overall predictions for current iteration and current sum of trees
+
+      //NumericVector pred_obs=calc_rowsums(sum_predictions);
+      NumericVector pred_obs=temp_preds;
+      
+      //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+      //NumericVector pred_test_obs=temp_test_preds;
+      
+      //post_predictions(j,_)=pred_obs;
+      //post_test_predictions(j,_)=pred_test_obs;
+      
+      NumericVector full_resids=y_scaled-pred_obs;
+      sigma2= update_sigma(a1,b,full_resids,num_obs);
+      sigma_its[j]=sigma2;
+      //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+      //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+      //post_predictions_orig(j,_)=original_y;
+      //post_test_predictions_orig(j,_)=original_test_y;
+      
+      
+      NumericVector temp_predictions_PI(num_obs);
+      
+      //prediction interval for training 
+      for(int g=0;g<pred_obs.size();g++){
+        //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+      }
+      
+      //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+      NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+      post_predictions_orig_PI(j,_)=original_y_PI;
+      
+    }
+    
+    
+    //prediction_list[i]=post_predictions;
+    //prediction_list_orig[i]=post_predictions_orig;
+    //prediction_test_list[i]=post_test_predictions;
+    //prediction_test_list_orig[i]=post_test_predictions_orig;
+    
+    //predictive intervals
+    //predictive_dist_train_list[i]=post_predictions_PI;
+    predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
   }
   sigma_chains[i]=sigma_its;
   
-  }else{        
-  one_tree=1;
-  }      
+}
+
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  ret[1]=predictive_dist_train_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_no_update(List overall_sum_trees,
+                   List overall_sum_mat,
+                   NumericVector y,
+                   NumericVector BIC_weights,
+                   int num_iter,int burnin,int num_obs,int num_test_obs,
+                   double a,double sigma,double mu_mu,double nu,double lambda,
+                   List resids,
+                   NumericMatrix test_data){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
   }
-  if(one_tree==1){
-  NumericVector sigma_its(num_iter);
-  NumericMatrix post_predictions(num_iter,num_obs);
-  NumericMatrix post_predictions_PI(num_iter,num_obs);
-  NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
-  NumericMatrix post_predictions_orig(num_iter,num_obs);
-  //NumericMatrix post_test_predictions(num_iter,num_obs);
-  //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
-  NumericMatrix sum_predictions(num_obs,overall_predictions.size());
-  //NumericMatrix sum_test_predictions(num_test_obs,overall_predictions.size());
-  for(int t=0;t<overall_predictions.size();t++){
-  NumericVector preds=overall_predictions[t];
-  sum_predictions(_,t)=preds;
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  List overall_term_test_obs_trees=test_tree_info[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=tree_info[2];
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  List predictive_dist_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                       predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+                                                   new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int q=0;q<sum_tree.size();q++){
+          //   if(q!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          List updated_test_preds=update_predictions_gs(//tree_table,
+                                                        new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          NumericVector temp_test_preds=updated_test_preds[0];
+          sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        //post_predictions(j,_)=pred_obs;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        //post_predictions_orig(j,_)=original_y;
+        
+        NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        
+        //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        //post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        NumericVector temp_test_predictions_PI(num_test_obs);
+        //prediction interval for test data 
+        for(int g=0;g<pred_test_obs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+          temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        }
+        
+        //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        
+        post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+
+        
+      }
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_test_predictions(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                     predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+                                                 new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        List updated_test_preds=update_predictions_gs(//tree_table,
+                                                      new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        NumericVector temp_test_preds=updated_test_preds[0];
+        //sum_predictions(_,0)=temp_preds;
+        sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        //post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        NumericVector temp_test_predictions_PI(num_test_obs);
+        
+        //prediction interval for test data 
+        for(int g=0;g<pred_test_obs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+          temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+          
+        }
+        
+        //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
   }
   
-  for(int j=0;j<num_iter;j++){
-  for(int i=0;i<overall_sum_trees.size();i++){     
-  NumericMatrix tree_table=overall_sum_trees1[i];
-  IntegerMatrix tree_mat=overall_sum_mat1[i];
-  IntegerVector term_nodes=overall_term_nodes_trees[i];
-  List term_obs=overall_term_obs_trees[i];
-  //  List term_test_obs=overall_term_test_obs_trees[i];
-  NumericVector predictions=resids[i];
-  //find terminal node means and observations associated with them
   
-  //current predictions are the residuals for sum of trees
-  
-  //update the means and predictions for tree
-  List new_node_mean_var=update_Gibbs_mean_var(tree_table,predictions,a,sigma,mu_mu,term_nodes,term_obs);
-  NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
-  NumericVector new_node_var=new_node_mean_var[1];
-  List updated_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
-  NumericVector temp_preds=updated_preds[1];
-  sum_predictions(_,i)=temp_preds;
-  
-  //get updated predictions for the test data
-  //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
-  //NumericVector temp_test_preds=updated_test_preds[1];
-  sum_predictions(_,i)=temp_preds;
-  //sum_test_predictions(_,i)=temp_test_preds;
-  NumericVector S=calculate_resids(sum_predictions,y_scaled);  
-  //get overall predictions for current iteration and current sum of trees
-  sigma= update_sigma(a1,b,S,num_obs);
-  sigma_its[j]=sigma;
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  //ret[7]=predictive_dist_test_list;
+  ret[1]=predictive_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler_no_update2(List overall_sum_trees,List overall_sum_mat,NumericVector y,NumericVector BIC_weights,int num_iter,int burnin,int num_obs,double a,double sigma,double mu_mu,double nu,double lambda,List resids){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
   }
-  NumericVector pred_obs=calc_rowsums(sum_predictions);
-  //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
-  post_predictions(j,_)=pred_obs;
-  //post_test_predictions(j,_)=pred_test_obs;
-  NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
-  //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
-  post_predictions_orig(j,_)=original_y;
-  //post_test_predictions_orig(j,_)=original_test_y;
-  
-  //prediction interval for training 
-  for(int g=0;g<pred_obs.size();g++){
-  post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma);
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=tree_info[2];
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                       predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+                                                   new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int l=0;l<sum_tree.size();l++){
+          //   if(l!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        //post_predictions(j,_)=pred_obs;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        //post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        
+        //prediction interval for training 
+        
+        NumericVector temp_predictions_PI(num_obs);
+        
+        
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+          temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        }
+        //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                     predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+                                                 new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        //post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        NumericVector temp_predictions_PI(num_obs);
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+          temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
   }
   
-  NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
-  post_predictions_orig_PI(j,_)=original_y_PI;
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[1]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  ret[1]=predictive_dist_train_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_exp(List overall_sum_trees,
+                   List overall_sum_mat,
+                   NumericVector y,
+                   NumericVector BIC_weights,
+                   int num_iter,int burnin,int num_obs,int num_test_obs,
+                   double a,double sigma,double mu_mu,double nu,double lambda,
+                   List resids,
+                   NumericMatrix test_data){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  List overall_term_test_obs_trees=test_tree_info[1];
   
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=tree_info[2];
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List prediction_test_list_orig(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  List predictive_dist_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          for(int q=0;q<sum_term_nodes.size();q++){
+            if(q!=k){
+              if(j==0){
+                NumericVector temp_resids1= sum_resids[q];
+                sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+              }else{
+                NumericVector temp_resids1= sum_resids[q];
+                sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+              }
+            }
+          }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          List updated_test_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          NumericVector temp_test_preds=updated_test_preds[0];
+          sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        //post_predictions(j,_)=pred_obs;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        //post_predictions_orig(j,_)=original_y;
+        
+        NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        
+        // NumericVector temp_test_predictions_PI(num_test_obs);
+        // //prediction interval for test data 
+        // for(int g=0;g<pred_test_obs.size();g++){
+        //   //post_test_predictions_PI(j,g)=pred_test_obs[g];
+        //   //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+        //   temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        // }
+        // 
+        // //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        // NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        // 
+        // post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      ///NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_test_predictions(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        List updated_test_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        NumericVector temp_test_preds=updated_test_preds[0];
+        //sum_predictions(_,0)=temp_preds;
+        sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        //post_predictions_orig(j,_)=original_y;
+        post_test_predictions_orig(j,_)=original_test_y;
+        
+        //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        // NumericVector temp_test_predictions_PI(num_test_obs);
+        // 
+        // //prediction interval for test data 
+        // for(int g=0;g<pred_test_obs.size();g++){
+        //   //post_test_predictions_PI(j,g)=pred_test_obs[g];
+        //   //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+        //   temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        //   
+        // }
+        // 
+        // //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        // NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        // post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
   }
   
-  List g(1);
-  sigma_chains=clone(g);
-  prediction_list=clone(g);
-  prediction_list_orig=clone(g);
-  //prediction_test_list=clone(g);
-  //prediction_test_list_orig=clone(g);
-  sigma_chains[0]=sigma_its;
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  //ret[2]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  //ret[7]=predictive_dist_test_list;
+  //ret[8]=predictive_dist_test_list_orig;
+  
+  
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  ret[1]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  //ret[7]=predictive_dist_test_list;
+  //ret[8]=predictive_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler2_exp(List overall_sum_trees,List overall_sum_mat,NumericVector y,NumericVector BIC_weights,int num_iter,int burnin,int num_obs,double a,double sigma,double mu_mu,double nu,double lambda,List resids){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=tree_info[2];
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          for(int l=0;l<sum_term_nodes.size();l++){
+            if(l!=k){
+              if(j==0){
+                NumericVector temp_resids1= sum_resids[l];
+                sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+              }else{
+                NumericVector temp_resids1= sum_resids[l];
+                sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+              }
+            }
+          }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        //post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        // NumericVector temp_predictions_PI(num_obs);
+        // 
+        // 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        //   temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        
+        // NumericVector temp_predictions_PI(num_obs);
+        // 
+        // //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        //   temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      
+      //prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  
+  //ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_no_update_exp(List overall_sum_trees,
+                             List overall_sum_mat,
+                             NumericVector y,
+                             NumericVector BIC_weights,
+                             int num_iter,int burnin,int num_obs,int num_test_obs,
+                             double a,double sigma,double mu_mu,double nu,double lambda,
+                             List resids,
+                             NumericMatrix test_data){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  List overall_term_test_obs_trees=test_tree_info[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=tree_info[2];
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List prediction_test_list_orig(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  //List predictive_dist_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int q=0;q<sum_tree.size();q++){
+          //   if(q!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          List updated_test_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          NumericVector temp_test_preds=updated_test_preds[0];
+          sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        //post_predictions(j,_)=pred_obs;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        //post_predictions_orig(j,_)=original_y;
+        
+        NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        
+        //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        //post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        // NumericVector temp_test_predictions_PI(num_test_obs);
+        // //prediction interval for test data 
+        // for(int g=0;g<pred_test_obs.size();g++){
+        //   //post_test_predictions_PI(j,g)=pred_test_obs[g];
+        //   //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+        //   temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        // }
+        // 
+        // //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        // NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        // 
+        // post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        // 
+        
+        
+      }
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_test_predictions(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        List updated_test_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        NumericVector temp_test_preds=updated_test_preds[0];
+        //sum_predictions(_,0)=temp_preds;
+        sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        //post_predictions_orig(j,_)=original_y;
+        post_test_predictions_orig(j,_)=original_test_y;
+        
+        //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        // NumericVector temp_test_predictions_PI(num_test_obs);
+        // 
+        // //prediction interval for test data 
+        // for(int g=0;g<pred_test_obs.size();g++){
+        //   //post_test_predictions_PI(j,g)=pred_test_obs[g];
+        //   //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+        //   temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        //   
+        // }
+        // 
+        // //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        // NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        // post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  ret[1]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  //ret[7]=predictive_dist_test_list;
+  //ret[8]=predictive_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler_no_update2_exp(List overall_sum_trees,List overall_sum_mat,NumericVector y,NumericVector BIC_weights,int num_iter,int burnin,int num_obs,double a,double sigma,double mu_mu,double nu,double lambda,List resids){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=tree_info[2];
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int l=0;l<sum_tree.size();l++){
+          //   if(l!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        //post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        
+        //prediction interval for training 
+        
+        // NumericVector temp_predictions_PI(num_obs);
+        // 
+        // 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        //   temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        // NumericVector temp_predictions_PI(num_obs);
+        // 
+        // //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        //   temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      
+      //prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  //ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[1]=predictive_dist_train_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_ITE(List overall_sum_trees,
+                   List overall_sum_mat,
+                   NumericVector y,
+                   NumericVector BIC_weights,
+                   int num_iter,int burnin,int num_obs,int num_test_obs,
+                   double a,double sigma,double mu_mu,double nu,double lambda,
+                   List resids,
+                   NumericMatrix all_treated_data, NumericMatrix all_control_data){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //List overall_term_test_obs_trees=test_tree_info[1];
+  
+  
+  
+  //get terminal observations (i.e. node indices) for all observation in treated group
+  List test_tree_info_all_T=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,all_treated_data);
+  List overall_term_test_obs_trees_all_T=test_tree_info_all_T[1];
+  
+  //get terminal observations (i.e. node indices) for all observation in control group
+  List test_tree_info_all_C=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,all_control_data);
+  List overall_term_test_obs_trees_all_C=test_tree_info_all_C[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=tree_info[2];
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List ITE_test_list(overall_sum_trees.size());
+  List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  List ITE_dist_test_list(overall_sum_trees.size());
+  //List predictive_dist_test_list_orig(overall_sum_trees.size());
+  List ITE_dist_test_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  List ITE_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_term_test_obs_all_T=overall_term_test_obs_trees_all_T[i];
+      List sum_term_test_obs_all_C=overall_term_test_obs_trees_all_C[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions_all_T(num_test_obs,sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions_all_C(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //List term_test_obs=sum_term_test_obs[k];
+          List term_test_obs_all_T=sum_term_test_obs_all_T[k];
+          List term_test_obs_all_C=sum_term_test_obs_all_C[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                       predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+                                                   new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          for(int q=0;q<sum_term_nodes.size();q++){
+            if(q!=k){
+              if(j==0){
+                NumericVector temp_resids1= sum_resids[q];
+                sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+              }else{
+                NumericVector temp_resids1= sum_resids[q];
+                sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+              }
+            }
+          }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+          List updated_test_preds_all_T=update_predictions_gs(//tree_table,
+                                                              new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_T);         
+          //NumericVector temp_test_preds_all_T=updated_test_preds_all_T[1];
+          NumericVector temp_test_preds_all_T=updated_test_preds_all_T[0];
+          sum_new_test_predictions_all_T(_,k)=temp_test_preds_all_T;
+          
+          List updated_test_preds_all_C=update_predictions_gs(//tree_table,
+                                                              new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_C);         
+          //NumericVector temp_test_preds_all_C=updated_test_preds_all_C[1];
+          NumericVector temp_test_preds_all_C=updated_test_preds_all_C[0];
+          sum_new_test_predictions_all_C(_,k)=temp_test_preds_all_C;
+          
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        NumericVector pred_test_ITEs=calc_rowsums(sum_new_test_predictions_all_T)-calc_rowsums(sum_new_test_predictions_all_C);
+        post_test_ITEs(j,_)=pred_test_ITEs;
+        NumericVector original_test_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_ITEs);    
+        post_test_ITEs_orig(j,_)=original_test_ITE;
+        
+        NumericVector pred_test_all_T=calc_rowsums(sum_new_test_predictions_all_T);
+        NumericVector pred_test_all_C=calc_rowsums(sum_new_test_predictions_all_C);
+        
+        
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=pred_obs[g];
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        //prediction interval for training 
+        for(int g=0;g<pred_test_ITEs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_all_T[g],sigma2) - R::rnorm(pred_test_all_C[g],sigma2);
+          post_test_ITEs_PI(j,g)=R::rnorm(pred_test_all_T[g],sigma2) - R::rnorm(pred_test_all_C[g],sigma2);
+        }
+        
+        //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        //post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        NumericVector original_ITE_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_ITEs_PI(j,_));    
+        post_test_ITEs_orig_PI(j,_)=original_ITE_PI_test;
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      ITE_test_list[i]=post_test_ITEs;
+      ITE_test_list_orig[i]=post_test_ITEs_orig;
+      
+      //predictive intervals
+      
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+      ITE_dist_test_list[i]=post_test_ITEs_PI;
+      ITE_dist_test_list_orig[i]= post_test_ITEs_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericMatrix sum_test_predictions_all_T(num_test_obs,1);
+      NumericMatrix sum_test_predictions_all_C(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //List term_test_obs=overall_term_test_obs_trees[i];
+        List term_test_obs_all_T=overall_term_test_obs_trees_all_T[i];
+        List term_test_obs_all_C=overall_term_test_obs_trees_all_C[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                     predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+                                                 new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        List updated_test_preds_all_T=update_predictions_gs(//tree_table,
+                                                            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_T);         
+        //NumericVector temp_test_preds_all_T=updated_test_preds_all_T[1];
+        NumericVector temp_test_preds_all_T=updated_test_preds_all_T[0];
+        sum_test_predictions_all_T(_,0)=temp_test_preds_all_T;
+        
+        List updated_test_preds_all_C=update_predictions_gs(//tree_table,
+                                                            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_C);         
+        //NumericVector temp_test_preds_all_C=updated_test_preds_all_C[1];
+        NumericVector temp_test_preds_all_C=updated_test_preds_all_C[0];
+        sum_test_predictions_all_C(_,0)=temp_test_preds_all_C;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        NumericVector pred_test_obs_all_T=temp_test_preds_all_T;
+        NumericVector pred_test_obs_all_C=temp_test_preds_all_C;
+        NumericVector pred_test_ITEs=temp_test_preds_all_T-temp_test_preds_all_C;
+        
+        post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        post_test_ITEs(j,_)=pred_test_ITEs;
+        
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        NumericVector original_test_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_ITEs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        post_test_ITEs_orig(j,_)=original_test_ITE;
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=pred_obs[g];
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_test_ITEs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+          post_test_ITEs_PI(j,g)=R::rnorm(pred_test_obs_all_T[g],sigma2)-R::rnorm(pred_test_obs_all_C[g],sigma2);
+        }
+        
+        NumericVector original_ITE_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_ITEs_PI(j,_));    
+        //post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        post_test_ITEs_orig_PI(j,_)=original_ITE_PI_test;
+        
+      }
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      ITE_test_list[i]=post_test_ITEs;
+      ITE_test_list_orig[i]=post_test_ITEs_orig;
+      //predictive intervals
+      
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+      ITE_dist_test_list[i]=post_test_ITEs_PI;
+      ITE_dist_test_list_orig[i]= post_test_ITEs_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  
+  List ret(9);
   NumericVector test2=sigma_chains[0];
-  prediction_list[0]=post_predictions;
-  prediction_list_orig[0]=post_predictions_orig;
-  //prediction_test_list[0]=post_test_predictions;
-  //prediction_test_list_orig[0]=post_test_predictions_orig;
-  //predictive intervals
-  predictive_dist_train_list[0]=post_predictions_PI;
-  predictive_dist_train_list_orig[0]= post_predictions_orig_PI;
+  ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[2]=sigma_chains;
+  ret[3]=ITE_test_list;
+  ret[4]=ITE_test_list_orig;
+  ret[5]=predictive_dist_train_list;
+  ret[6]=predictive_dist_train_list_orig;
+  ret[7]=ITE_dist_test_list;
+  ret[8]=ITE_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler_ITE2(List overall_sum_trees,
+                        List overall_sum_mat,NumericVector y,NumericVector BIC_weights,
+                        int num_iter,int burnin,int num_obs,double a,double sigma,
+                        double mu_mu,double nu,double lambda,List resids,
+                        NumericMatrix all_treated_data, NumericMatrix all_control_data){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
   }
-  List ret(5);
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=tree_info[2];
+  
+  
+  List tree_info_all_T=get_tree_info_testdata_overall(overall_sum_trees,num_obs,all_treated_data);
+  List overall_term_obs_trees_all_T=tree_info_all_T[1];
+  
+  //get terminal observations (i.e. node indices) for all observation in control group
+  List tree_info_all_C=get_tree_info_testdata_overall(overall_sum_trees,num_obs,all_control_data);
+  List overall_term_obs_trees_all_C=tree_info_all_C[1];
+  
+  
+  
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  List ITE_list(overall_sum_trees.size());
+  List ITE_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  List ITE_dist_train_list(overall_sum_trees.size());
+  List ITE_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_obs_all_T=overall_term_obs_trees_all_T[i];
+      List sum_term_obs_all_C=overall_term_obs_trees_all_C[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_ITEs(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_predictions_all_T(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_predictions_all_C(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_obs_all_T=sum_term_obs_all_T[k];
+          List term_obs_all_C=sum_term_obs_all_C[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                       predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+                                                   new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          for(int l=0;l<sum_term_nodes.size();l++){
+            if(l!=k){
+              if(j==0){
+                NumericVector temp_resids1= sum_resids[l];
+                sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+              }else{
+                NumericVector temp_resids1= sum_resids[l];
+                sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+              }
+            }
+          }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          List updated_preds_all_T=update_predictions_gs(//tree_table,
+                                                         new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_T);         
+          //NumericVector temp_preds_all_T=updated_preds_all_T[1];
+          NumericVector temp_preds_all_T=updated_preds_all_T[0];
+          
+          List updated_preds_all_C=update_predictions_gs(//tree_table,
+                                                         new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_C);         
+          //NumericVector temp_preds_all_C=updated_preds_all_C[1];
+          NumericVector temp_preds_all_C=updated_preds_all_C[0];
+          
+          sum_new_predictions_all_T(_,k)=temp_preds_all_T;
+          sum_new_predictions_all_C(_,k)=temp_preds_all_C;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector pred_obs_all_T=calc_rowsums(sum_new_predictions_all_T);
+        NumericVector pred_obs_all_C=calc_rowsums(sum_new_predictions_all_C);
+        NumericVector pred_ITEs=pred_obs_all_T-pred_obs_all_C;
+        
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        post_ITEs(j,_)=pred_ITEs;
+        NumericVector original_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_ITEs);    
+        post_ITEs_orig(j,_)=original_ITE;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        for(int g=0;g<pred_obs.size();g++){
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        for(int g=0;g<pred_ITEs.size();g++){
+          post_ITEs_PI(j,g)=R::rnorm(pred_obs_all_T[g],sigma2)-R::rnorm(pred_obs_all_C[g],sigma2);
+        }
+        NumericVector original_ITE_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_ITEs_PI(j,_));    
+        post_ITEs_orig_PI(j,_)=original_ITE_PI;
+        
+        
+      }
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+      ITE_list[i]=post_ITEs;
+      ITE_list_orig[i]=post_ITEs_orig;
+      
+      ITE_dist_train_list[i]=post_ITEs_PI;
+      ITE_dist_train_list_orig[i]= post_ITEs_orig_PI;
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_ITEs(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_predictions_all_T(num_obs,1);
+      NumericMatrix sum_predictions_all_C(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_obs_all_T=overall_term_obs_trees_all_T[i];
+        List term_obs_all_C=overall_term_obs_trees_all_C[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                     predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+                                                 new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        List updated_preds_all_T=update_predictions_gs(//tree_table,
+                                                       new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_T);         
+        //NumericVector temp_preds_all_T=updated_preds_all_T[1];
+        NumericVector temp_preds_all_T=updated_preds_all_T[0];
+        sum_predictions_all_T(_,0)=temp_preds_all_T;
+        
+        List updated_preds_all_C=update_predictions_gs(//tree_table,
+                                                       new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_C);         
+        //NumericVector temp_preds_all_C=updated_preds_all_C[1];
+        NumericVector temp_preds_all_C=updated_preds_all_C[0];
+        sum_predictions_all_C(_,0)=temp_preds_all_C;
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        NumericVector pred_obs_all_T=temp_preds_all_T;
+        NumericVector pred_obs_all_C=temp_preds_all_C;
+        NumericVector pred_ITEs=temp_preds_all_T-temp_preds_all_C;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        post_ITEs(j,_)=pred_ITEs;
+        
+        
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        NumericVector original_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_ITEs);   
+        post_ITEs_orig(j,_)=original_ITE;
+        
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_ITEs.size();g++){
+          post_ITEs_PI(j,g)=R::rnorm(pred_obs_all_T[g],sigma2)-R::rnorm(pred_obs_all_C[g],sigma2);
+        }
+        
+        NumericVector original_ITE_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_ITEs_PI(j,_));    
+        post_ITEs_orig_PI(j,_)=original_ITE_PI;
+        
+      }
+      
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+      ITE_list[i]=post_ITEs;
+      ITE_list_orig[i]=post_ITEs_orig;
+      
+      ITE_dist_train_list[i]=post_ITEs_PI;
+      ITE_dist_train_list_orig[i]= post_ITEs_orig_PI;
+      
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  List ret(9);
   NumericVector test2=sigma_chains[0];
   ret[0]= prediction_list;
   ret[1]= prediction_list_orig;
@@ -875,5 +3379,4389 @@ List gibbs_sampler2(List overall_sum_trees,List overall_sum_mat,NumericVector y,
   //ret[4]=prediction_test_list_orig;
   ret[3]=predictive_dist_train_list;
   ret[4]=predictive_dist_train_list_orig;
+  ret[5]=ITE_list;
+  ret[6]=ITE_list_orig;
+  ret[7]=ITE_dist_train_list;
+  ret[8]=ITE_dist_train_list_orig;
   return(ret); 
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_ITE_no_update(List overall_sum_trees,
+                       List overall_sum_mat,
+                       NumericVector y,
+                       NumericVector BIC_weights,
+                       int num_iter,int burnin,int num_obs,int num_test_obs,
+                       double a,double sigma,double mu_mu,double nu,double lambda,
+                       List resids,
+                       NumericMatrix all_treated_data, NumericMatrix all_control_data){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //List overall_term_test_obs_trees=test_tree_info[1];
+  
+  
+  
+  //get terminal observations (i.e. node indices) for all observation in treated group
+  List test_tree_info_all_T=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,all_treated_data);
+  List overall_term_test_obs_trees_all_T=test_tree_info_all_T[1];
+  
+  //get terminal observations (i.e. node indices) for all observation in control group
+  List test_tree_info_all_C=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,all_control_data);
+  List overall_term_test_obs_trees_all_C=test_tree_info_all_C[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=tree_info[2];
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List ITE_test_list(overall_sum_trees.size());
+  List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  List ITE_dist_test_list(overall_sum_trees.size());
+  //List predictive_dist_test_list_orig(overall_sum_trees.size());
+  List ITE_dist_test_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  List ITE_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_term_test_obs_all_T=overall_term_test_obs_trees_all_T[i];
+      List sum_term_test_obs_all_C=overall_term_test_obs_trees_all_C[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions_all_T(num_test_obs,sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions_all_C(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //List term_test_obs=sum_term_test_obs[k];
+          List term_test_obs_all_T=sum_term_test_obs_all_T[k];
+          List term_test_obs_all_C=sum_term_test_obs_all_C[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                       predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+                                                   new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int q=0;q<sum_tree.size();q++){
+          //   if(q!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+          List updated_test_preds_all_T=update_predictions_gs(//tree_table,
+                                                              new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_T);         
+          //NumericVector temp_test_preds_all_T=updated_test_preds_all_T[1];
+          NumericVector temp_test_preds_all_T=updated_test_preds_all_T[0];
+          sum_new_test_predictions_all_T(_,k)=temp_test_preds_all_T;
+          
+          List updated_test_preds_all_C=update_predictions_gs(//tree_table,
+                                                              new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_C);         
+          //NumericVector temp_test_preds_all_C=updated_test_preds_all_C[1];
+          NumericVector temp_test_preds_all_C=updated_test_preds_all_C[0];
+          sum_new_test_predictions_all_C(_,k)=temp_test_preds_all_C;
+          
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        NumericVector pred_test_ITEs=calc_rowsums(sum_new_test_predictions_all_T)-calc_rowsums(sum_new_test_predictions_all_C);
+        post_test_ITEs(j,_)=pred_test_ITEs;
+        NumericVector original_test_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_ITEs);    
+        post_test_ITEs_orig(j,_)=original_test_ITE;
+        
+        NumericVector pred_test_all_T=calc_rowsums(sum_new_test_predictions_all_T);
+        NumericVector pred_test_all_C=calc_rowsums(sum_new_test_predictions_all_C);
+        
+        
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=pred_obs[g];
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        //prediction interval for training 
+        for(int g=0;g<pred_test_ITEs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_all_T[g],sigma2) - R::rnorm(pred_test_all_C[g],sigma2);
+          post_test_ITEs_PI(j,g)=R::rnorm(pred_test_all_T[g],sigma2) - R::rnorm(pred_test_all_C[g],sigma2);
+        }
+        
+        //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        //post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        NumericVector original_ITE_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_ITEs_PI(j,_));    
+        post_test_ITEs_orig_PI(j,_)=original_ITE_PI_test;
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      ITE_test_list[i]=post_test_ITEs;
+      ITE_test_list_orig[i]=post_test_ITEs_orig;
+      
+      //predictive intervals
+      
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+      ITE_dist_test_list[i]=post_test_ITEs_PI;
+      ITE_dist_test_list_orig[i]= post_test_ITEs_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericMatrix sum_test_predictions_all_T(num_test_obs,1);
+      NumericMatrix sum_test_predictions_all_C(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //List term_test_obs=overall_term_test_obs_trees[i];
+        List term_test_obs_all_T=overall_term_test_obs_trees_all_T[i];
+        List term_test_obs_all_C=overall_term_test_obs_trees_all_C[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                     predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+                                                 new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        List updated_test_preds_all_T=update_predictions_gs(//tree_table,
+                                                            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_T);         
+        //NumericVector temp_test_preds_all_T=updated_test_preds_all_T[1];
+        NumericVector temp_test_preds_all_T=updated_test_preds_all_T[0];
+        sum_test_predictions_all_T(_,0)=temp_test_preds_all_T;
+        
+        List updated_test_preds_all_C=update_predictions_gs(//tree_table,
+                                                            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_C);         
+        //NumericVector temp_test_preds_all_C=updated_test_preds_all_C[1];
+        NumericVector temp_test_preds_all_C=updated_test_preds_all_C[0];
+        sum_test_predictions_all_C(_,0)=temp_test_preds_all_C;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        NumericVector pred_test_obs_all_T=temp_test_preds_all_T;
+        NumericVector pred_test_obs_all_C=temp_test_preds_all_C;
+        NumericVector pred_test_ITEs=temp_test_preds_all_T-temp_test_preds_all_C;
+        
+        post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        post_test_ITEs(j,_)=pred_test_ITEs;
+        
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        NumericVector original_test_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_ITEs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        post_test_ITEs_orig(j,_)=original_test_ITE;
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=pred_obs[g];
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_test_ITEs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+          post_test_ITEs_PI(j,g)=R::rnorm(pred_test_obs_all_T[g],sigma2)-R::rnorm(pred_test_obs_all_C[g],sigma2);
+        }
+        
+        NumericVector original_ITE_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_ITEs_PI(j,_));    
+        //post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        post_test_ITEs_orig_PI(j,_)=original_ITE_PI_test;
+        
+      }
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      ITE_test_list[i]=post_test_ITEs;
+      ITE_test_list_orig[i]=post_test_ITEs_orig;
+      //predictive intervals
+      
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+      ITE_dist_test_list[i]=post_test_ITEs_PI;
+      ITE_dist_test_list_orig[i]= post_test_ITEs_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  
+  List ret(9);
+  NumericVector test2=sigma_chains[0];
+  ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[2]=sigma_chains;
+  ret[3]=ITE_test_list;
+  ret[4]=ITE_test_list_orig;
+  ret[5]=predictive_dist_train_list;
+  ret[6]=predictive_dist_train_list_orig;
+  ret[7]=ITE_dist_test_list;
+  ret[8]=ITE_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler_ITE_no_update2(List overall_sum_trees,
+                        List overall_sum_mat,NumericVector y,NumericVector BIC_weights,
+                        int num_iter,int burnin,int num_obs,double a,double sigma,
+                        double mu_mu,double nu,double lambda,List resids,
+                        NumericMatrix all_treated_data, NumericMatrix all_control_data){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=tree_info[2];
+  
+  
+  List tree_info_all_T=get_tree_info_testdata_overall(overall_sum_trees,num_obs,all_treated_data);
+  List overall_term_obs_trees_all_T=tree_info_all_T[1];
+  
+  //get terminal observations (i.e. node indices) for all observation in control group
+  List tree_info_all_C=get_tree_info_testdata_overall(overall_sum_trees,num_obs,all_control_data);
+  List overall_term_obs_trees_all_C=tree_info_all_C[1];
+  
+  
+  
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  List ITE_list(overall_sum_trees.size());
+  List ITE_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  List ITE_dist_train_list(overall_sum_trees.size());
+  List ITE_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_obs_all_T=overall_term_obs_trees_all_T[i];
+      List sum_term_obs_all_C=overall_term_obs_trees_all_C[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_ITEs(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_predictions_all_T(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_predictions_all_C(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_obs_all_T=sum_term_obs_all_T[k];
+          List term_obs_all_C=sum_term_obs_all_C[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                       predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+                                                   new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int l=0;l<sum_tree.size();l++){
+          //   if(l!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          List updated_preds_all_T=update_predictions_gs(//tree_table,
+                                                         new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_T);         
+          //NumericVector temp_preds_all_T=updated_preds_all_T[1];
+          NumericVector temp_preds_all_T=updated_preds_all_T[0];
+          
+          List updated_preds_all_C=update_predictions_gs(//tree_table,
+                                                         new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_C);         
+          //NumericVector temp_preds_all_C=updated_preds_all_C[1];
+          NumericVector temp_preds_all_C=updated_preds_all_C[0];
+          
+          sum_new_predictions_all_T(_,k)=temp_preds_all_T;
+          sum_new_predictions_all_C(_,k)=temp_preds_all_C;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector pred_obs_all_T=calc_rowsums(sum_new_predictions_all_T);
+        NumericVector pred_obs_all_C=calc_rowsums(sum_new_predictions_all_C);
+        NumericVector pred_ITEs=pred_obs_all_T-pred_obs_all_C;
+        
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        post_ITEs(j,_)=pred_ITEs;
+        NumericVector original_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_ITEs);    
+        post_ITEs_orig(j,_)=original_ITE;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        for(int g=0;g<pred_obs.size();g++){
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        for(int g=0;g<pred_ITEs.size();g++){
+          post_ITEs_PI(j,g)=R::rnorm(pred_obs_all_T[g],sigma2)-R::rnorm(pred_obs_all_C[g],sigma2);
+        }
+        NumericVector original_ITE_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_ITEs_PI(j,_));    
+        post_ITEs_orig_PI(j,_)=original_ITE_PI;
+        
+        
+      }
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+      ITE_list[i]=post_ITEs;
+      ITE_list_orig[i]=post_ITEs_orig;
+      
+      ITE_dist_train_list[i]=post_ITEs_PI;
+      ITE_dist_train_list_orig[i]= post_ITEs_orig_PI;
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_ITEs(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_predictions_all_T(num_obs,1);
+      NumericMatrix sum_predictions_all_C(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_obs_all_T=overall_term_obs_trees_all_T[i];
+        List term_obs_all_C=overall_term_obs_trees_all_C[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+                                                     predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+                                                 new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        List updated_preds_all_T=update_predictions_gs(//tree_table,
+                                                       new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_T);         
+        //NumericVector temp_preds_all_T=updated_preds_all_T[1];
+        NumericVector temp_preds_all_T=updated_preds_all_T[0];
+        sum_predictions_all_T(_,0)=temp_preds_all_T;
+        
+        List updated_preds_all_C=update_predictions_gs(//tree_table,
+                                                       new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_C);         
+        //NumericVector temp_preds_all_C=updated_preds_all_C[1];
+        NumericVector temp_preds_all_C=updated_preds_all_C[0];
+        sum_predictions_all_C(_,0)=temp_preds_all_C;
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        NumericVector pred_obs_all_T=temp_preds_all_T;
+        NumericVector pred_obs_all_C=temp_preds_all_C;
+        NumericVector pred_ITEs=temp_preds_all_T-temp_preds_all_C;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        post_ITEs(j,_)=pred_ITEs;
+        
+        
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        NumericVector original_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_ITEs);   
+        post_ITEs_orig(j,_)=original_ITE;
+        
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_ITEs.size();g++){
+          post_ITEs_PI(j,g)=R::rnorm(pred_obs_all_T[g],sigma2)-R::rnorm(pred_obs_all_C[g],sigma2);
+        }
+        
+        NumericVector original_ITE_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_ITEs_PI(j,_));    
+        post_ITEs_orig_PI(j,_)=original_ITE_PI;
+        
+      }
+      
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+      ITE_list[i]=post_ITEs;
+      ITE_list_orig[i]=post_ITEs_orig;
+      
+      ITE_dist_train_list[i]=post_ITEs_PI;
+      ITE_dist_train_list_orig[i]= post_ITEs_orig_PI;
+      
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  List ret(9);
+  NumericVector test2=sigma_chains[0];
+  ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[2]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  ret[3]=predictive_dist_train_list;
+  ret[4]=predictive_dist_train_list_orig;
+  ret[5]=ITE_list;
+  ret[6]=ITE_list_orig;
+  ret[7]=ITE_dist_train_list;
+  ret[8]=ITE_dist_train_list_orig;
+  return(ret); 
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_new_inits(List overall_sum_trees,
+                   List overall_sum_mat,
+                   NumericVector y,
+                   NumericVector BIC_weights,
+                   int num_iter,int burnin,int num_obs,int num_test_obs,
+                   double a,double sigma,double mu_mu,double nu,double lambda,
+                   List resids,
+                   NumericMatrix test_data,
+                   List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  List overall_term_test_obs_trees=test_tree_info[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  List predictive_dist_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          for(int q=0;q<sum_term_nodes.size();q++){
+            if(q!=k){
+              if(j==0){
+                NumericVector temp_resids1= sum_resids[q];
+                sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+              }else{
+                NumericVector temp_resids1= sum_resids[q];
+                sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+              }
+            }
+          }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          List updated_test_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          NumericVector temp_test_preds=updated_test_preds[0];
+          sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        //post_predictions(j,_)=pred_obs;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        //post_predictions_orig(j,_)=original_y;
+        
+        NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        
+        NumericVector temp_test_predictions_PI(num_test_obs);
+        //prediction interval for test data 
+        for(int g=0;g<pred_test_obs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+          temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        }
+        
+        //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        
+        post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      ///NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_test_predictions(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        List updated_test_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        NumericVector temp_test_preds=updated_test_preds[0];
+        //sum_predictions(_,0)=temp_preds;
+        sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        //post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        NumericVector temp_test_predictions_PI(num_test_obs);
+        
+        //prediction interval for test data 
+        for(int g=0;g<pred_test_obs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+          temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+          
+        }
+        
+        //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  //ret[2]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  //ret[7]=predictive_dist_test_list;
+  //ret[8]=predictive_dist_test_list_orig;
+  
+  
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  //ret[7]=predictive_dist_test_list;
+  ret[1]=predictive_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler2_new_inits(List overall_sum_trees,List overall_sum_mat,
+                              NumericVector y,NumericVector BIC_weights,int num_iter,int burnin,
+                              int num_obs,double a,double sigma,double mu_mu,double nu,double lambda,
+                              List resids,
+                              List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          for(int l=0;l<sum_term_nodes.size();l++){
+            if(l!=k){
+              if(j==0){
+                NumericVector temp_resids1= sum_resids[l];
+                sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+              }else{
+                NumericVector temp_resids1= sum_resids[l];
+                sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+              }
+            }
+          }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        //post_predictions(j,_)=pred_obs;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        //post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        NumericVector temp_predictions_PI(num_obs);
+        
+        
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+          temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        }
+        //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        //post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        
+        NumericVector temp_predictions_PI(num_obs);
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+          temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  ret[1]=predictive_dist_train_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_no_update_new_inits(List overall_sum_trees,
+                             List overall_sum_mat,
+                             NumericVector y,
+                             NumericVector BIC_weights,
+                             int num_iter,int burnin,int num_obs,int num_test_obs,
+                             double a,double sigma,double mu_mu,double nu,double lambda,
+                             List resids,
+                             NumericMatrix test_data,
+                             List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  List overall_term_test_obs_trees=test_tree_info[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  List predictive_dist_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int q=0;q<sum_tree.size();q++){
+          //   if(q!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          List updated_test_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          NumericVector temp_test_preds=updated_test_preds[0];
+          sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        //post_predictions(j,_)=pred_obs;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        //post_predictions_orig(j,_)=original_y;
+        
+        NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        
+        //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        //post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        NumericVector temp_test_predictions_PI(num_test_obs);
+        //prediction interval for test data 
+        for(int g=0;g<pred_test_obs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+          temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        }
+        
+        //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        
+        post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+        
+        
+      }
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_test_predictions(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        List updated_test_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        NumericVector temp_test_preds=updated_test_preds[0];
+        //sum_predictions(_,0)=temp_preds;
+        sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        //post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        NumericVector temp_test_predictions_PI(num_test_obs);
+        
+        //prediction interval for test data 
+        for(int g=0;g<pred_test_obs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+          temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+          
+        }
+        
+        //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  //ret[7]=predictive_dist_test_list;
+  ret[1]=predictive_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler_no_update2_new_inits(List overall_sum_trees,List overall_sum_mat,
+                                        NumericVector y,NumericVector BIC_weights,int num_iter,int burnin,
+                                        int num_obs,double a,double sigma,double mu_mu,double nu,double lambda,
+                                        List resids,
+                                        List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int l=0;l<sum_tree.size();l++){
+          //   if(l!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        //post_predictions(j,_)=pred_obs;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        //post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        
+        //prediction interval for training 
+        
+        NumericVector temp_predictions_PI(num_obs);
+        
+        
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+          temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        }
+        //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        //post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        NumericVector temp_predictions_PI(num_obs);
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+          temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[1]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  ret[1]=predictive_dist_train_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_exp_new_inits(List overall_sum_trees,
+                       List overall_sum_mat,
+                       NumericVector y,
+                       NumericVector BIC_weights,
+                       int num_iter,int burnin,int num_obs,int num_test_obs,
+                       double a,double sigma,double mu_mu,double nu,double lambda,
+                       List resids,
+                       NumericMatrix test_data,
+                       List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  List overall_term_test_obs_trees=test_tree_info[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List prediction_test_list_orig(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  List predictive_dist_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          for(int q=0;q<sum_term_nodes.size();q++){
+            if(q!=k){
+              if(j==0){
+                NumericVector temp_resids1= sum_resids[q];
+                sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+              }else{
+                NumericVector temp_resids1= sum_resids[q];
+                sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+              }
+            }
+          }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          List updated_test_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          NumericVector temp_test_preds=updated_test_preds[0];
+          sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        //post_predictions(j,_)=pred_obs;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        //post_predictions_orig(j,_)=original_y;
+        
+        NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        
+        // NumericVector temp_test_predictions_PI(num_test_obs);
+        // //prediction interval for test data 
+        // for(int g=0;g<pred_test_obs.size();g++){
+        //   //post_test_predictions_PI(j,g)=pred_test_obs[g];
+        //   //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+        //   temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        // }
+        // 
+        // //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        // NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        // 
+        // post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      ///NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_test_predictions(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        List updated_test_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        NumericVector temp_test_preds=updated_test_preds[0];
+        //sum_predictions(_,0)=temp_preds;
+        sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        //post_predictions_orig(j,_)=original_y;
+        post_test_predictions_orig(j,_)=original_test_y;
+        
+        //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        // NumericVector temp_test_predictions_PI(num_test_obs);
+        // 
+        // //prediction interval for test data 
+        // for(int g=0;g<pred_test_obs.size();g++){
+        //   //post_test_predictions_PI(j,g)=pred_test_obs[g];
+        //   //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+        //   temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        //   
+        // }
+        // 
+        // //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        // NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        // post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  //ret[2]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  //ret[7]=predictive_dist_test_list;
+  //ret[8]=predictive_dist_test_list_orig;
+  
+  
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  ret[1]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  //ret[7]=predictive_dist_test_list;
+  //ret[8]=predictive_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler2_exp_new_inits(List overall_sum_trees,List overall_sum_mat,NumericVector y,
+                                  NumericVector BIC_weights,int num_iter,int burnin,
+                                  int num_obs,double a,double sigma,double mu_mu,double nu,double lambda,
+                                  List resids,
+                                  List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          for(int l=0;l<sum_term_nodes.size();l++){
+            if(l!=k){
+              if(j==0){
+                NumericVector temp_resids1= sum_resids[l];
+                sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+              }else{
+                NumericVector temp_resids1= sum_resids[l];
+                sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+              }
+            }
+          }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        //post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        // NumericVector temp_predictions_PI(num_obs);
+        // 
+        // 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        //   temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        
+        // NumericVector temp_predictions_PI(num_obs);
+        // 
+        // //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        //   temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      
+      //prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  
+  //ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_no_update_exp_new_inits(List overall_sum_trees,
+                                 List overall_sum_mat,
+                                 NumericVector y,
+                                 NumericVector BIC_weights,
+                                 int num_iter,int burnin,int num_obs,int num_test_obs,
+                                 double a,double sigma,double mu_mu,double nu,double lambda,
+                                 List resids,
+                                 NumericMatrix test_data,
+                                 List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  List overall_term_test_obs_trees=test_tree_info[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  //List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List prediction_test_list_orig(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  //List predictive_dist_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int q=0;q<sum_tree.size();q++){
+          //   if(q!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          List updated_test_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          NumericVector temp_test_preds=updated_test_preds[0];
+          sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        //post_predictions(j,_)=pred_obs;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        //post_predictions_orig(j,_)=original_y;
+        
+        NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        
+        //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        //post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        // NumericVector temp_test_predictions_PI(num_test_obs);
+        // //prediction interval for test data 
+        // for(int g=0;g<pred_test_obs.size();g++){
+        //   //post_test_predictions_PI(j,g)=pred_test_obs[g];
+        //   //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+        //   temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        // }
+        // 
+        // //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        // NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        // 
+        // post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        // 
+        
+        
+      }
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_test_predictions(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        List updated_test_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        NumericVector temp_test_preds=updated_test_preds[0];
+        //sum_predictions(_,0)=temp_preds;
+        sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        //NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        //post_predictions_orig(j,_)=original_y;
+        post_test_predictions_orig(j,_)=original_test_y;
+        
+        //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=pred_obs[g];
+        //   post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        // NumericVector temp_test_predictions_PI(num_test_obs);
+        // 
+        // //prediction interval for test data 
+        // for(int g=0;g<pred_test_obs.size();g++){
+        //   //post_test_predictions_PI(j,g)=pred_test_obs[g];
+        //   //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+        //   temp_test_predictions_PI[g]=R::rnorm(pred_test_obs[g],sigma2);
+        //   
+        // }
+        // 
+        // //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        // NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,temp_test_predictions_PI);    
+        // post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      //prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  //ret[0]= prediction_list;
+  //ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  ret[1]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[6]=predictive_dist_train_list_orig;
+  //ret[7]=predictive_dist_test_list;
+  //ret[8]=predictive_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler_no_update2_exp_new_inits(List overall_sum_trees,List overall_sum_mat,
+                                            NumericVector y,NumericVector BIC_weights,int num_iter,int burnin,
+                                            int num_obs,double a,double sigma,double mu_mu,double nu,double lambda,
+                                            List resids,
+                                            List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  //List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  //List predictive_dist_train_list(overall_sum_trees.size());
+  //List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      //NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int l=0;l<sum_tree.size();l++){
+          //   if(l!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        //post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        
+        //prediction interval for training 
+        
+        // NumericVector temp_predictions_PI(num_obs);
+        // 
+        // 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        //   temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      //prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      //NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        //post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        // NumericVector temp_predictions_PI(num_obs);
+        // 
+        // //prediction interval for training 
+        // for(int g=0;g<pred_obs.size();g++){
+        //   //post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        //   temp_predictions_PI[g]=R::rnorm(pred_obs[g],sigma2);
+        // }
+        // 
+        // //NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        // NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,temp_predictions_PI);    
+        // post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      
+      
+      //prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      //predictive_dist_train_list[i]=post_predictions_PI;
+      //predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  List ret(2);
+  //NumericVector test2=sigma_chains[0];
+  //ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[0]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  //ret[5]=predictive_dist_train_list;
+  //ret[1]=predictive_dist_train_list_orig;
+  return(ret); 
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_ITE_new_inits(List overall_sum_trees,
+                       List overall_sum_mat,
+                       NumericVector y,
+                       NumericVector BIC_weights,
+                       int num_iter,int burnin,int num_obs,int num_test_obs,
+                       double a,double sigma,double mu_mu,double nu,double lambda,
+                       List resids,
+                       NumericMatrix all_treated_data, NumericMatrix all_control_data,
+                       List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //List overall_term_test_obs_trees=test_tree_info[1];
+  
+  
+  
+  //get terminal observations (i.e. node indices) for all observation in treated group
+  List test_tree_info_all_T=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,all_treated_data);
+  List overall_term_test_obs_trees_all_T=test_tree_info_all_T[1];
+  
+  //get terminal observations (i.e. node indices) for all observation in control group
+  List test_tree_info_all_C=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,all_control_data);
+  List overall_term_test_obs_trees_all_C=test_tree_info_all_C[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List ITE_test_list(overall_sum_trees.size());
+  List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  List ITE_dist_test_list(overall_sum_trees.size());
+  //List predictive_dist_test_list_orig(overall_sum_trees.size());
+  List ITE_dist_test_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  List ITE_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_term_test_obs_all_T=overall_term_test_obs_trees_all_T[i];
+      List sum_term_test_obs_all_C=overall_term_test_obs_trees_all_C[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions_all_T(num_test_obs,sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions_all_C(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //List term_test_obs=sum_term_test_obs[k];
+          List term_test_obs_all_T=sum_term_test_obs_all_T[k];
+          List term_test_obs_all_C=sum_term_test_obs_all_C[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          for(int q=0;q<sum_term_nodes.size();q++){
+            if(q!=k){
+              if(j==0){
+                NumericVector temp_resids1= sum_resids[q];
+                sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+              }else{
+                NumericVector temp_resids1= sum_resids[q];
+                sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+              }
+            }
+          }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+          List updated_test_preds_all_T=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_T);         
+          //NumericVector temp_test_preds_all_T=updated_test_preds_all_T[1];
+          NumericVector temp_test_preds_all_T=updated_test_preds_all_T[0];
+          sum_new_test_predictions_all_T(_,k)=temp_test_preds_all_T;
+          
+          List updated_test_preds_all_C=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_C);         
+          //NumericVector temp_test_preds_all_C=updated_test_preds_all_C[1];
+          NumericVector temp_test_preds_all_C=updated_test_preds_all_C[0];
+          sum_new_test_predictions_all_C(_,k)=temp_test_preds_all_C;
+          
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        NumericVector pred_test_ITEs=calc_rowsums(sum_new_test_predictions_all_T)-calc_rowsums(sum_new_test_predictions_all_C);
+        post_test_ITEs(j,_)=pred_test_ITEs;
+        NumericVector original_test_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_ITEs);    
+        post_test_ITEs_orig(j,_)=original_test_ITE;
+        
+        NumericVector pred_test_all_T=calc_rowsums(sum_new_test_predictions_all_T);
+        NumericVector pred_test_all_C=calc_rowsums(sum_new_test_predictions_all_C);
+        
+        
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=pred_obs[g];
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        //prediction interval for training 
+        for(int g=0;g<pred_test_ITEs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_all_T[g],sigma2) - R::rnorm(pred_test_all_C[g],sigma2);
+          post_test_ITEs_PI(j,g)=R::rnorm(pred_test_all_T[g],sigma2) - R::rnorm(pred_test_all_C[g],sigma2);
+        }
+        
+        //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        //post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        NumericVector original_ITE_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_ITEs_PI(j,_));    
+        post_test_ITEs_orig_PI(j,_)=original_ITE_PI_test;
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      ITE_test_list[i]=post_test_ITEs;
+      ITE_test_list_orig[i]=post_test_ITEs_orig;
+      
+      //predictive intervals
+      
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+      ITE_dist_test_list[i]=post_test_ITEs_PI;
+      ITE_dist_test_list_orig[i]= post_test_ITEs_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericMatrix sum_test_predictions_all_T(num_test_obs,1);
+      NumericMatrix sum_test_predictions_all_C(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //List term_test_obs=overall_term_test_obs_trees[i];
+        List term_test_obs_all_T=overall_term_test_obs_trees_all_T[i];
+        List term_test_obs_all_C=overall_term_test_obs_trees_all_C[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        List updated_test_preds_all_T=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_T);         
+        //NumericVector temp_test_preds_all_T=updated_test_preds_all_T[1];
+        NumericVector temp_test_preds_all_T=updated_test_preds_all_T[0];
+        sum_test_predictions_all_T(_,0)=temp_test_preds_all_T;
+        
+        List updated_test_preds_all_C=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_C);         
+        //NumericVector temp_test_preds_all_C=updated_test_preds_all_C[1];
+        NumericVector temp_test_preds_all_C=updated_test_preds_all_C[0];
+        sum_test_predictions_all_C(_,0)=temp_test_preds_all_C;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        NumericVector pred_test_obs_all_T=temp_test_preds_all_T;
+        NumericVector pred_test_obs_all_C=temp_test_preds_all_C;
+        NumericVector pred_test_ITEs=temp_test_preds_all_T-temp_test_preds_all_C;
+        
+        post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        post_test_ITEs(j,_)=pred_test_ITEs;
+        
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        NumericVector original_test_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_ITEs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        post_test_ITEs_orig(j,_)=original_test_ITE;
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=pred_obs[g];
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_test_ITEs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+          post_test_ITEs_PI(j,g)=R::rnorm(pred_test_obs_all_T[g],sigma2)-R::rnorm(pred_test_obs_all_C[g],sigma2);
+        }
+        
+        NumericVector original_ITE_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_ITEs_PI(j,_));    
+        //post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        post_test_ITEs_orig_PI(j,_)=original_ITE_PI_test;
+        
+      }
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      ITE_test_list[i]=post_test_ITEs;
+      ITE_test_list_orig[i]=post_test_ITEs_orig;
+      //predictive intervals
+      
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+      ITE_dist_test_list[i]=post_test_ITEs_PI;
+      ITE_dist_test_list_orig[i]= post_test_ITEs_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  
+  List ret(9);
+  NumericVector test2=sigma_chains[0];
+  ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[2]=sigma_chains;
+  ret[3]=ITE_test_list;
+  ret[4]=ITE_test_list_orig;
+  ret[5]=predictive_dist_train_list;
+  ret[6]=predictive_dist_train_list_orig;
+  ret[7]=ITE_dist_test_list;
+  ret[8]=ITE_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler_ITE2_new_inits(List overall_sum_trees,
+                        List overall_sum_mat,NumericVector y,NumericVector BIC_weights,
+                        int num_iter,int burnin,int num_obs,double a,double sigma,
+                        double mu_mu,double nu,double lambda,List resids,
+                        NumericMatrix all_treated_data, NumericMatrix all_control_data,
+                        List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  
+  
+  List tree_info_all_T=get_tree_info_testdata_overall(overall_sum_trees,num_obs,all_treated_data);
+  List overall_term_obs_trees_all_T=tree_info_all_T[1];
+  
+  //get terminal observations (i.e. node indices) for all observation in control group
+  List tree_info_all_C=get_tree_info_testdata_overall(overall_sum_trees,num_obs,all_control_data);
+  List overall_term_obs_trees_all_C=tree_info_all_C[1];
+  
+  
+  
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  List ITE_list(overall_sum_trees.size());
+  List ITE_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  List ITE_dist_train_list(overall_sum_trees.size());
+  List ITE_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_obs_all_T=overall_term_obs_trees_all_T[i];
+      List sum_term_obs_all_C=overall_term_obs_trees_all_C[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_ITEs(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_predictions_all_T(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_predictions_all_C(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_obs_all_T=sum_term_obs_all_T[k];
+          List term_obs_all_C=sum_term_obs_all_C[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          for(int l=0;l<sum_term_nodes.size();l++){
+            if(l!=k){
+              if(j==0){
+                NumericVector temp_resids1= sum_resids[l];
+                sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+              }else{
+                NumericVector temp_resids1= sum_resids[l];
+                sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+              }
+            }
+          }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          List updated_preds_all_T=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_T);         
+          //NumericVector temp_preds_all_T=updated_preds_all_T[1];
+          NumericVector temp_preds_all_T=updated_preds_all_T[0];
+          
+          List updated_preds_all_C=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_C);         
+          //NumericVector temp_preds_all_C=updated_preds_all_C[1];
+          NumericVector temp_preds_all_C=updated_preds_all_C[0];
+          
+          sum_new_predictions_all_T(_,k)=temp_preds_all_T;
+          sum_new_predictions_all_C(_,k)=temp_preds_all_C;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector pred_obs_all_T=calc_rowsums(sum_new_predictions_all_T);
+        NumericVector pred_obs_all_C=calc_rowsums(sum_new_predictions_all_C);
+        NumericVector pred_ITEs=pred_obs_all_T-pred_obs_all_C;
+        
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        post_ITEs(j,_)=pred_ITEs;
+        NumericVector original_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_ITEs);    
+        post_ITEs_orig(j,_)=original_ITE;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        for(int g=0;g<pred_obs.size();g++){
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        for(int g=0;g<pred_ITEs.size();g++){
+          post_ITEs_PI(j,g)=R::rnorm(pred_obs_all_T[g],sigma2)-R::rnorm(pred_obs_all_C[g],sigma2);
+        }
+        NumericVector original_ITE_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_ITEs_PI(j,_));    
+        post_ITEs_orig_PI(j,_)=original_ITE_PI;
+        
+        
+      }
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+      ITE_list[i]=post_ITEs;
+      ITE_list_orig[i]=post_ITEs_orig;
+      
+      ITE_dist_train_list[i]=post_ITEs_PI;
+      ITE_dist_train_list_orig[i]= post_ITEs_orig_PI;
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_ITEs(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_predictions_all_T(num_obs,1);
+      NumericMatrix sum_predictions_all_C(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_obs_all_T=overall_term_obs_trees_all_T[i];
+        List term_obs_all_C=overall_term_obs_trees_all_C[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        List updated_preds_all_T=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_T);         
+        //NumericVector temp_preds_all_T=updated_preds_all_T[1];
+        NumericVector temp_preds_all_T=updated_preds_all_T[0];
+        sum_predictions_all_T(_,0)=temp_preds_all_T;
+        
+        List updated_preds_all_C=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_C);         
+        //NumericVector temp_preds_all_C=updated_preds_all_C[1];
+        NumericVector temp_preds_all_C=updated_preds_all_C[0];
+        sum_predictions_all_C(_,0)=temp_preds_all_C;
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        NumericVector pred_obs_all_T=temp_preds_all_T;
+        NumericVector pred_obs_all_C=temp_preds_all_C;
+        NumericVector pred_ITEs=temp_preds_all_T-temp_preds_all_C;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        post_ITEs(j,_)=pred_ITEs;
+        
+        
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        NumericVector original_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_ITEs);   
+        post_ITEs_orig(j,_)=original_ITE;
+        
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_ITEs.size();g++){
+          post_ITEs_PI(j,g)=R::rnorm(pred_obs_all_T[g],sigma2)-R::rnorm(pred_obs_all_C[g],sigma2);
+        }
+        
+        NumericVector original_ITE_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_ITEs_PI(j,_));    
+        post_ITEs_orig_PI(j,_)=original_ITE_PI;
+        
+      }
+      
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+      ITE_list[i]=post_ITEs;
+      ITE_list_orig[i]=post_ITEs_orig;
+      
+      ITE_dist_train_list[i]=post_ITEs_PI;
+      ITE_dist_train_list_orig[i]= post_ITEs_orig_PI;
+      
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  List ret(9);
+  NumericVector test2=sigma_chains[0];
+  ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[2]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  ret[3]=predictive_dist_train_list;
+  ret[4]=predictive_dist_train_list_orig;
+  ret[5]=ITE_list;
+  ret[6]=ITE_list_orig;
+  ret[7]=ITE_dist_train_list;
+  ret[8]=ITE_dist_train_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain draws from gibbs sampler
+//' @export
+// [[Rcpp::export]]
+
+List gibbs_sampler_ITE_no_update_new_inits(List overall_sum_trees,
+                                 List overall_sum_mat,
+                                 NumericVector y,
+                                 NumericVector BIC_weights,
+                                 int num_iter,int burnin,int num_obs,int num_test_obs,
+                                 double a,double sigma,double mu_mu,double nu,double lambda,
+                                 List resids,
+                                 NumericMatrix all_treated_data, NumericMatrix all_control_data,
+                                 List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //List overall_term_test_obs_trees=test_tree_info[1];
+  
+  
+  
+  //get terminal observations (i.e. node indices) for all observation in treated group
+  List test_tree_info_all_T=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,all_treated_data);
+  List overall_term_test_obs_trees_all_T=test_tree_info_all_T[1];
+  
+  //get terminal observations (i.e. node indices) for all observation in control group
+  List test_tree_info_all_C=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,all_control_data);
+  List overall_term_test_obs_trees_all_C=test_tree_info_all_C[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List ITE_test_list(overall_sum_trees.size());
+  List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  //List predictive_dist_test_list(overall_sum_trees.size());
+  List ITE_dist_test_list(overall_sum_trees.size());
+  //List predictive_dist_test_list_orig(overall_sum_trees.size());
+  List ITE_dist_test_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  List ITE_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_term_test_obs_all_T=overall_term_test_obs_trees_all_T[i];
+      List sum_term_test_obs_all_C=overall_term_test_obs_trees_all_C[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(num_test_obs,sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions_all_T(num_test_obs,sum_predictions.ncol());
+      NumericMatrix sum_new_test_predictions_all_C(num_test_obs,sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          //List term_test_obs=sum_term_test_obs[k];
+          List term_test_obs_all_T=sum_term_test_obs_all_T[k];
+          List term_test_obs_all_C=sum_term_test_obs_all_C[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int q=0;q<sum_tree.size();q++){
+          //   if(q!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[q];
+          //       sum_resids[q]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+          List updated_test_preds_all_T=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_T);         
+          //NumericVector temp_test_preds_all_T=updated_test_preds_all_T[1];
+          NumericVector temp_test_preds_all_T=updated_test_preds_all_T[0];
+          sum_new_test_predictions_all_T(_,k)=temp_test_preds_all_T;
+          
+          List updated_test_preds_all_C=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_C);         
+          //NumericVector temp_test_preds_all_C=updated_test_preds_all_C[1];
+          NumericVector temp_test_preds_all_C=updated_test_preds_all_C[0];
+          sum_new_test_predictions_all_C(_,k)=temp_test_preds_all_C;
+          
+          
+        }
+        
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        
+        post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        NumericVector pred_test_ITEs=calc_rowsums(sum_new_test_predictions_all_T)-calc_rowsums(sum_new_test_predictions_all_C);
+        post_test_ITEs(j,_)=pred_test_ITEs;
+        NumericVector original_test_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_ITEs);    
+        post_test_ITEs_orig(j,_)=original_test_ITE;
+        
+        NumericVector pred_test_all_T=calc_rowsums(sum_new_test_predictions_all_T);
+        NumericVector pred_test_all_C=calc_rowsums(sum_new_test_predictions_all_C);
+        
+        
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=pred_obs[g];
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        //prediction interval for training 
+        for(int g=0;g<pred_test_ITEs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_all_T[g],sigma2) - R::rnorm(pred_test_all_C[g],sigma2);
+          post_test_ITEs_PI(j,g)=R::rnorm(pred_test_all_T[g],sigma2) - R::rnorm(pred_test_all_C[g],sigma2);
+        }
+        
+        //NumericVector original_y_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_predictions_PI(j,_));    
+        //post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        NumericVector original_ITE_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_ITEs_PI(j,_));    
+        post_test_ITEs_orig_PI(j,_)=original_ITE_PI_test;
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+      }
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      ITE_test_list[i]=post_test_ITEs;
+      ITE_test_list_orig[i]=post_test_ITEs_orig;
+      
+      //predictive intervals
+      
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+      ITE_dist_test_list[i]=post_test_ITEs_PI;
+      ITE_dist_test_list_orig[i]= post_test_ITEs_orig_PI;
+    }else{
+      
+      NumericVector sigma_its(num_iter);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_PI(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig_PI(num_iter,num_test_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix post_test_ITEs_orig(num_iter,num_test_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericMatrix sum_test_predictions_all_T(num_test_obs,1);
+      NumericMatrix sum_test_predictions_all_C(num_test_obs,1);
+      
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        //List term_test_obs=overall_term_test_obs_trees[i];
+        List term_test_obs_all_T=overall_term_test_obs_trees_all_T[i];
+        List term_test_obs_all_C=overall_term_test_obs_trees_all_C[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        List updated_test_preds_all_T=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_T);         
+        //NumericVector temp_test_preds_all_T=updated_test_preds_all_T[1];
+        NumericVector temp_test_preds_all_T=updated_test_preds_all_T[0];
+        sum_test_predictions_all_T(_,0)=temp_test_preds_all_T;
+        
+        List updated_test_preds_all_C=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs_all_C);         
+        //NumericVector temp_test_preds_all_C=updated_test_preds_all_C[1];
+        NumericVector temp_test_preds_all_C=updated_test_preds_all_C[0];
+        sum_test_predictions_all_C(_,0)=temp_test_preds_all_C;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        NumericVector pred_test_obs_all_T=temp_test_preds_all_T;
+        NumericVector pred_test_obs_all_C=temp_test_preds_all_C;
+        NumericVector pred_test_ITEs=temp_test_preds_all_T-temp_test_preds_all_C;
+        
+        post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        post_test_ITEs(j,_)=pred_test_ITEs;
+        
+        NumericVector full_resids = y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        NumericVector original_test_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_ITEs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        post_test_ITEs_orig(j,_)=original_test_ITE;
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          //post_predictions_PI(j,g)=pred_obs[g];
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_test_ITEs.size();g++){
+          //post_test_predictions_PI(j,g)=pred_test_obs[g];
+          //post_test_predictions_PI(j,g)=R::rnorm(pred_test_obs[g],sigma2);
+          post_test_ITEs_PI(j,g)=R::rnorm(pred_test_obs_all_T[g],sigma2)-R::rnorm(pred_test_obs_all_C[g],sigma2);
+        }
+        
+        NumericVector original_ITE_PI_test=get_original_gs(min(y),max(y),-0.5,0.5,post_test_ITEs_PI(j,_));    
+        //post_test_predictions_orig_PI(j,_)=original_y_PI_test;
+        post_test_ITEs_orig_PI(j,_)=original_ITE_PI_test;
+        
+      }
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      ITE_test_list[i]=post_test_ITEs;
+      ITE_test_list_orig[i]=post_test_ITEs_orig;
+      //predictive intervals
+      
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      //predictive_dist_test_list[i]=post_test_predictions_PI;
+      //predictive_dist_test_list_orig[i]= post_test_predictions_orig_PI;
+      ITE_dist_test_list[i]=post_test_ITEs_PI;
+      ITE_dist_test_list_orig[i]= post_test_ITEs_orig_PI;
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  
+  List ret(9);
+  NumericVector test2=sigma_chains[0];
+  ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[2]=sigma_chains;
+  ret[3]=ITE_test_list;
+  ret[4]=ITE_test_list_orig;
+  ret[5]=predictive_dist_train_list;
+  ret[6]=predictive_dist_train_list_orig;
+  ret[7]=ITE_dist_test_list;
+  ret[8]=ITE_dist_test_list_orig;
+  return(ret); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+
+List gibbs_sampler_ITE_no_update2_new_inits(List overall_sum_trees,
+                                  List overall_sum_mat,NumericVector y,NumericVector BIC_weights,
+                                  int num_iter,int burnin,int num_obs,double a,double sigma,
+                                  double mu_mu,double nu,double lambda,List resids,
+                                  NumericMatrix all_treated_data, NumericMatrix all_control_data,
+                                  List new_pred_list){
+  if(burnin>=num_iter){
+    throw std::range_error("Number of iterations has to be greater than the number of burn-in samples");
+  }
+  //get tree info just once don't repeat for each iteration:
+  //need terminal nodes, terminal node means and observations terminal nodes refer to
+  List tree_info=get_tree_info(overall_sum_trees,overall_sum_mat,num_obs);
+  //  List test_tree_info=get_tree_info_testdata_overall(overall_sum_trees,num_test_obs,test_data);
+  //  List overall_term_test_obs_trees=test_tree_info[1];
+  
+  double a1=nu/2;
+  double b=2/(nu*lambda);
+  double sigma2=sigma;
+  double sigma_init=sigma2;
+  List overall_term_nodes_trees=tree_info[0];
+  List overall_term_obs_trees=tree_info[1];
+  List overall_predictions=new_pred_list;
+  
+  
+  List tree_info_all_T=get_tree_info_testdata_overall(overall_sum_trees,num_obs,all_treated_data);
+  List overall_term_obs_trees_all_T=tree_info_all_T[1];
+  
+  //get terminal observations (i.e. node indices) for all observation in control group
+  List tree_info_all_C=get_tree_info_testdata_overall(overall_sum_trees,num_obs,all_control_data);
+  List overall_term_obs_trees_all_C=tree_info_all_C[1];
+  
+  
+  
+  NumericVector y_scaled=scale_response_gs(min(y),max(y),-0.5,0.5,y); 
+  List prediction_list(overall_sum_trees.size());
+  List prediction_list_orig(overall_sum_trees.size());
+  List ITE_list(overall_sum_trees.size());
+  List ITE_list_orig(overall_sum_trees.size());
+  //List prediction_test_list(overall_sum_trees.size());
+  List predictive_dist_train_list(overall_sum_trees.size());
+  List predictive_dist_train_list_orig(overall_sum_trees.size());
+  List ITE_dist_train_list(overall_sum_trees.size());
+  List ITE_dist_train_list_orig(overall_sum_trees.size());
+  //List prediction_test_list_orig(overall_sum_trees.size());
+  //List overall_sum_trees1=clone(overall_sum_trees);
+  //List overall_sum_mat1=clone(overall_sum_mat); 
+  List sigma_chains(overall_sum_trees.size());
+  //int one_tree=0;
+  for(int i=0;i<overall_sum_trees.size();i++){
+    //for each set of trees loop over individual trees    
+    NumericVector sigma_its(num_iter);
+    sigma2=sigma_init;
+    SEXP s = overall_sum_trees[i];
+    //NumericVector test_preds_sum_tree;
+    NumericMatrix sum_predictions;
+    //NumericMatrix sum_test_predictions;
+    
+    if(is<List>(s)){
+      //if current set of trees contains more than one tree
+      //List sum_tree=overall_sum_trees1[i];
+      //List sum_tree_mat=overall_sum_mat1[i];
+      List sum_term_nodes=overall_term_nodes_trees[i];
+      List sum_term_obs=overall_term_obs_trees[i];
+      List sum_term_obs_all_T=overall_term_obs_trees_all_T[i];
+      List sum_term_obs_all_C=overall_term_obs_trees_all_C[i];
+      //List sum_term_test_obs=overall_term_test_obs_trees[i];
+      List sum_resids0=resids[i];
+      List sum_resids=clone(sum_resids0);
+      NumericMatrix tree_predictions=overall_predictions[i];
+      sum_predictions=clone(tree_predictions);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_ITEs(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_test_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_test_obs);
+      NumericMatrix sum_new_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_predictions_all_T(sum_predictions.nrow(),sum_predictions.ncol());
+      NumericMatrix sum_new_predictions_all_C(sum_predictions.nrow(),sum_predictions.ncol());
+      //NumericMatrix sum_new_test_predictions(sum_predictions.nrow(),sum_predictions.ncol());
+      
+      for(int j=0;j<num_iter;j++){
+        for(int k =0;k<sum_term_nodes.size();k++){
+          //NumericMatrix tree_table=sum_tree[k];
+          //IntegerMatrix tree_mat=sum_tree_mat[k];
+          //find terminal node means and observations associated with them
+          IntegerVector term_nodes=sum_term_nodes[k];
+          List term_obs=sum_term_obs[k];
+          List term_obs_all_T=sum_term_obs_all_T[k];
+          List term_obs_all_C=sum_term_obs_all_C[k];
+          //  List term_test_obs=sum_term_test_obs[k];
+          NumericVector predictions=sum_resids[k];
+          //current predictions are the residuals for sum of trees!
+          
+          //update the means and predictions for tree
+          
+          List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+            predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+          NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);
+          NumericVector new_node_var=new_node_mean_var[1];
+          //update predictions by setting predicted value for term_obs[termnode]=new mean value!
+          
+          List updated_preds=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+          //NumericVector temp_preds=updated_preds[1];
+          NumericVector temp_preds=updated_preds[0];
+          //NOW UPDATE THE RESIDUALS FOR USE IN NEXT ITERATION
+          //THE PLACING OF THIS SECTION OF CODE HERE IS IMPORTANT
+          //MUST BE BEFORE sum_new_predictions(_,k) is updated so that the
+          //previous round's predictions can be added (i.e. removed from the residual before the new predictions are taken away to create the new residual) 
+          // for(int l=0;l<sum_tree.size();l++){
+          //   if(l!=k){
+          //     if(j==0){
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+tree_predictions(_,k)-temp_preds;
+          //     }else{
+          //       NumericVector temp_resids1= sum_resids[l];
+          //       sum_resids[l]=temp_resids1+sum_new_predictions(_,k)-temp_preds;
+          //     }
+          //   }
+          // }
+          sum_new_predictions(_,k)=temp_preds;
+          
+          List updated_preds_all_T=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_T);         
+          //NumericVector temp_preds_all_T=updated_preds_all_T[1];
+          NumericVector temp_preds_all_T=updated_preds_all_T[0];
+          
+          List updated_preds_all_C=update_predictions_gs(//tree_table,
+            new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_C);         
+          //NumericVector temp_preds_all_C=updated_preds_all_C[1];
+          NumericVector temp_preds_all_C=updated_preds_all_C[0];
+          
+          sum_new_predictions_all_T(_,k)=temp_preds_all_T;
+          sum_new_predictions_all_C(_,k)=temp_preds_all_C;
+          
+          
+          //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_obs,term_nodes,term_test_obs);         
+          //NumericVector temp_test_preds=updated_test_preds[1];
+          //sum_new_test_predictions(_,k)=temp_test_preds;
+          
+        }
+        
+        NumericVector pred_obs=calc_rowsums(sum_new_predictions);
+        NumericVector pred_obs_all_T=calc_rowsums(sum_new_predictions_all_T);
+        NumericVector pred_obs_all_C=calc_rowsums(sum_new_predictions_all_C);
+        NumericVector pred_ITEs=pred_obs_all_T-pred_obs_all_C;
+        
+        NumericVector full_resids = y_scaled-pred_obs;
+        //get overall predictions for current iteration and current sum of trees
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;  
+        
+        post_predictions(j,_)=pred_obs;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);    
+        post_predictions_orig(j,_)=original_y;
+        
+        post_ITEs(j,_)=pred_ITEs;
+        NumericVector original_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_ITEs);    
+        post_ITEs_orig(j,_)=original_ITE;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_new_test_predictions);
+        //post_test_predictions(j,_)=pred_test_obs;
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);    
+        //post_test_predictions_orig(j,_)=original_test_y;
+        //prediction interval for training 
+        
+        for(int g=0;g<pred_obs.size();g++){
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        
+        for(int g=0;g<pred_ITEs.size();g++){
+          post_ITEs_PI(j,g)=R::rnorm(pred_obs_all_T[g],sigma2)-R::rnorm(pred_obs_all_C[g],sigma2);
+        }
+        NumericVector original_ITE_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_ITEs_PI(j,_));    
+        post_ITEs_orig_PI(j,_)=original_ITE_PI;
+        
+        
+      }
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+      ITE_list[i]=post_ITEs;
+      ITE_list_orig[i]=post_ITEs_orig;
+      
+      ITE_dist_train_list[i]=post_ITEs_PI;
+      ITE_dist_train_list_orig[i]= post_ITEs_orig_PI;
+      
+    }else{
+      NumericVector sigma_its(num_iter);
+      NumericMatrix post_predictions(num_iter,num_obs);
+      NumericMatrix post_ITEs(num_iter,num_obs);
+      NumericMatrix post_predictions_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig_PI(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig_PI(num_iter,num_obs);
+      NumericMatrix post_predictions_orig(num_iter,num_obs);
+      NumericMatrix post_ITEs_orig(num_iter,num_obs);
+      //NumericMatrix post_test_predictions(num_iter,num_obs);
+      //NumericMatrix post_test_predictions_orig(num_iter,num_obs);
+      NumericMatrix sum_predictions(num_obs,1);
+      NumericMatrix sum_predictions_all_T(num_obs,1);
+      NumericMatrix sum_predictions_all_C(num_obs,1);
+      //NumericMatrix sum_test_predictions(num_test_obs,1);
+      NumericVector predictions=resids[i];
+      
+      for(int j=0;j<num_iter;j++){
+        //NumericMatrix tree_table=overall_sum_trees1[i];
+        //IntegerMatrix tree_mat=overall_sum_mat1[i];
+        IntegerVector term_nodes=overall_term_nodes_trees[i];
+        List term_obs=overall_term_obs_trees[i];
+        List term_obs_all_T=overall_term_obs_trees_all_T[i];
+        List term_obs_all_C=overall_term_obs_trees_all_C[i];
+        //  List term_test_obs=overall_term_test_obs_trees[i];
+        //find terminal node means and observations associated with them
+        
+        //current predictions are the residuals for sum of trees
+        
+        //update the means and predictions for tree
+        List new_node_mean_var=update_Gibbs_mean_var(//tree_table,
+          predictions,a,sigma2,mu_mu,term_nodes,term_obs);
+        NumericVector new_node_mean=get_new_mean(term_nodes,new_node_mean_var);      
+        NumericVector new_node_var=new_node_mean_var[1];
+        List updated_preds=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs);         
+        //NumericVector temp_preds=updated_preds[1];
+        NumericVector temp_preds=updated_preds[0];
+        sum_predictions(_,0)=temp_preds;
+        
+        List updated_preds_all_T=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_T);         
+        //NumericVector temp_preds_all_T=updated_preds_all_T[1];
+        NumericVector temp_preds_all_T=updated_preds_all_T[0];
+        sum_predictions_all_T(_,0)=temp_preds_all_T;
+        
+        List updated_preds_all_C=update_predictions_gs(//tree_table,
+          new_node_mean,new_node_var,num_obs,term_nodes,term_obs_all_C);         
+        //NumericVector temp_preds_all_C=updated_preds_all_C[1];
+        NumericVector temp_preds_all_C=updated_preds_all_C[0];
+        sum_predictions_all_C(_,0)=temp_preds_all_C;
+        
+        //get updated predictions for the test data
+        //List updated_test_preds=update_predictions_gs(tree_table,new_node_mean,new_node_var,num_test_obs,term_nodes,term_test_obs);         
+        //NumericVector temp_test_preds=updated_test_preds[1];
+        //sum_predictions(_,0)=temp_preds;
+        //sum_test_predictions(_,0)=temp_test_preds;
+        
+        //get overall predictions for current iteration and current sum of trees
+        
+        //NumericVector pred_obs=calc_rowsums(sum_predictions);
+        NumericVector pred_obs=temp_preds;
+        NumericVector pred_obs_all_T=temp_preds_all_T;
+        NumericVector pred_obs_all_C=temp_preds_all_C;
+        NumericVector pred_ITEs=temp_preds_all_T-temp_preds_all_C;
+        
+        //NumericVector pred_test_obs=calc_rowsums(sum_test_predictions);
+        //NumericVector pred_test_obs=temp_test_preds;
+        
+        post_predictions(j,_)=pred_obs;
+        //post_test_predictions(j,_)=pred_test_obs;
+        post_ITEs(j,_)=pred_ITEs;
+        
+        
+        
+        NumericVector full_resids=y_scaled-pred_obs;
+        sigma2= update_sigma(a1,b,full_resids,num_obs);
+        sigma_its[j]=sigma2;
+        NumericVector original_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_obs);   
+        //NumericVector original_test_y=get_original_gs(min(y),max(y),-0.5,0.5,pred_test_obs);   
+        post_predictions_orig(j,_)=original_y;
+        //post_test_predictions_orig(j,_)=original_test_y;
+        
+        NumericVector original_ITE=get_original_gs(min(y),max(y),-0.5,0.5,pred_ITEs);   
+        post_ITEs_orig(j,_)=original_ITE;
+        
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_obs.size();g++){
+          post_predictions_PI(j,g)=R::rnorm(pred_obs[g],sigma2);
+        }
+        
+        NumericVector original_y_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_predictions_PI(j,_));    
+        post_predictions_orig_PI(j,_)=original_y_PI;
+        
+        //prediction interval for training 
+        for(int g=0;g<pred_ITEs.size();g++){
+          post_ITEs_PI(j,g)=R::rnorm(pred_obs_all_T[g],sigma2)-R::rnorm(pred_obs_all_C[g],sigma2);
+        }
+        
+        NumericVector original_ITE_PI=get_original_gs(min(y),max(y),-0.5,0.5,post_ITEs_PI(j,_));    
+        post_ITEs_orig_PI(j,_)=original_ITE_PI;
+        
+      }
+      
+      
+      prediction_list[i]=post_predictions;
+      prediction_list_orig[i]=post_predictions_orig;
+      //prediction_test_list[i]=post_test_predictions;
+      //prediction_test_list_orig[i]=post_test_predictions_orig;
+      
+      //predictive intervals
+      predictive_dist_train_list[i]=post_predictions_PI;
+      predictive_dist_train_list_orig[i]= post_predictions_orig_PI;
+      
+      
+      ITE_list[i]=post_ITEs;
+      ITE_list_orig[i]=post_ITEs_orig;
+      
+      ITE_dist_train_list[i]=post_ITEs_PI;
+      ITE_dist_train_list_orig[i]= post_ITEs_orig_PI;
+      
+    }
+    sigma_chains[i]=sigma_its;
+    
+  }
+  
+  List ret(9);
+  NumericVector test2=sigma_chains[0];
+  ret[0]= prediction_list;
+  ret[1]= prediction_list_orig;
+  ret[2]=sigma_chains;
+  //ret[3]=prediction_test_list;
+  //ret[4]=prediction_test_list_orig;
+  ret[3]=predictive_dist_train_list;
+  ret[4]=predictive_dist_train_list_orig;
+  ret[5]=ITE_list;
+  ret[6]=ITE_list_orig;
+  ret[7]=ITE_dist_train_list;
+  ret[8]=ITE_dist_train_list_orig;
+  return(ret); 
+}
+

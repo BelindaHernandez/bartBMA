@@ -1,5 +1,5 @@
 BARTBMA_SumLik=function(x.train,y.train,a=3,nu=3,sigquant=0.9,c=1000,
-                   pen=12,num_cp=20,x.test=matrix(0.0,0,0),num_rounds=5,alpha=0.95,beta=1,split_rule_node=0,gridpoint=0,maxOWsize=100
+                        pen=12,num_cp=20,x.test=matrix(0.0,0,0),num_rounds=5,alpha=0.95,beta=1,split_rule_node=0,gridpoint=0,maxOWsize=100
 ){
   binary=FALSE
   start_mean=0
@@ -53,7 +53,7 @@ BARTBMA_SumLik=function(x.train,y.train,a=3,nu=3,sigquant=0.9,c=1000,
   # sourceCpp("010914_BART_BMA_test_data_PELTmeanvar_scaledresponse6.cpp")  
   start=proc.time()
   test_BMA34=BART_BMA_sumLikelihood(x.train,y.train,start_mean,start_sd,a,mu,nu,lambda,c,sigma_mu,
-                      pen,num_cp,x.test,num_rounds,alpha,beta,split_rule_node,gridpoint,maxOWsize)
+                                    pen,num_cp,x.test,num_rounds,alpha,beta,split_rule_node,gridpoint,maxOWsize)
   end=proc.time()
   print(c("Time is " ,start-end))
   return(test_BMA34)

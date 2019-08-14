@@ -1,9 +1,9 @@
 //#########################################################################################################################//
- 
-#include <RcppArmadillo.h>
-// [[Rcpp::depends(RcppArmadillo)]]
- #include <Rcpp.h>
-  using namespace Rcpp;
+  
+  #include <RcppArmadillo.h>
+  // [[Rcpp::depends(RcppArmadillo)]]
+#include <Rcpp.h>
+using namespace Rcpp;
 // [[Rcpp::export]]
 NumericVector get_imp_vars(NumericVector split_vars,int num_col,NumericVector current_vars){
   
@@ -16,15 +16,18 @@ NumericVector get_imp_vars(NumericVector split_vars,int num_col,NumericVector cu
     for(int i=0;i<split_vars.size();i++){      
       //if(tree_table[i]!=0){      
         current_vars[split_vars[i]-1]+=1;
-    //  }
+        //  }
       
     }
   }
   return(current_vars);
 }
 //#######################################################################################################################//
-#include <Rcpp.h>
-using namespace Rcpp;
+
+  #include <Rcpp.h>
+  using namespace Rcpp;
+//' @title Obtain weighted variable importances
+//' @export
 // [[Rcpp::export]]
 
 List get_weighted_var_imp(int num_vars,NumericVector BIC,List sum_trees){
@@ -50,8 +53,8 @@ List get_weighted_var_imp(int num_vars,NumericVector BIC,List sum_trees){
     }else{
       NumericMatrix tree_data=sum_trees[i];
       //get variables selected for current tree and add to row i or vars_for_all_trees
-        NumericVector tree_vars=tree_data(_,2);
-        selected_variables=get_imp_vars(tree_vars,num_vars,selected_variables);
+      NumericVector tree_vars=tree_data(_,2);
+      selected_variables=get_imp_vars(tree_vars,num_vars,selected_variables);
     }
     vars_for_all_trees(i,_)=selected_variables;
     weighted_vars_for_all_trees(i,_)=selected_variables*weighted_BIC[i];

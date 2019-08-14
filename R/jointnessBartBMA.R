@@ -152,8 +152,8 @@ jointnessBartBMA <- function(object , method=c("DW","LS1","LS2","YQ","YQMa","DWM
     incProbMatrixj <- t(incProbMatrixi)
     jointness <- ifelse((incProbMatrixi== 0|incProbMatrixi==1)&(incProbMatrixj== 0|incProbMatrixj==1),NA,
                         ifelse((incProbMatrixi== 0|incProbMatrixi==1),incProbMatrixj/(1-incProbMatrixj),
-                        ifelse((incProbMatrixj== 0|incProbMatrixj==1) , incProbMatrixi/(1-incProbMatrixi),
-                               log((tl*tr)/(bl*br))) ) )
+                               ifelse((incProbMatrixj== 0|incProbMatrixj==1) , incProbMatrixi/(1-incProbMatrixi),
+                                      log((tl*tr)/(bl*br))) ) )
     jointness <- round(jointness,1)
     diag(jointness) <- NA
     jointness[is.nan(jointness)]=NA #this can be an issue for YQ when tl*tr==0 and bl*br==0 # note, numerator can be negative, so can't make plus inf as for DW
