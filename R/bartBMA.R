@@ -41,7 +41,7 @@
 #' \item{a}{input parameter}
 #' \item{nu}{input parameter}
 #' \item{lambda}{parameter determined by the inputs sigma, sigquant, and nu}
-#' @useDynLib bartBMAnew, .registration = TRUE
+#' @useDynLib bartBMA, .registration = TRUE
 bartBMA<-function(x,...)UseMethod("bartBMA")
 
 #' @rdname bartBMA

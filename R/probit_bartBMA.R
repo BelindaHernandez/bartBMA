@@ -41,7 +41,7 @@
 #' \item{lambda}{parameter determined by the inputs sigma, sigquant, and nu}
 #' \item{fitted.probs}{In-sample fitted probabilities}
 #' \item{fitted.classes}{In-sample fitted classes}
-#' @useDynLib bartBMAnew, .registration = TRUE
+#' @useDynLib bartBMA, .registration = TRUE
 probit_bartBMA<-function(x,...)UseMethod("probit_bartBMA")
 
 #' @rdname probit_bartBMA
