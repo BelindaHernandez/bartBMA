@@ -9,10 +9,10 @@ Author: Belinda Hernandez [aut, cre]
     Andrew C. Parnell [aut]
     Eoghan O'Neill [ctb]
 Maintainer: Eoghan O'Neill <oneill.eoghan.1@gmail.com>
-Description: BART-BMA Bayesian Additive Regression Trees using Bayesian Model Averaging is an extension to the original BART \dQuote{sum-of-trees} model of Chipman et al. BART-BMA differs to the original BART model in two main aspects in order to implement a greedy model which 
-  will be computationally feasible for high dimensional data. Firstly BART-BMA uses a greedy search for the best split points and variables when growing decision trees within each \dQuote{sum-of-trees} 
+Description: BART-BMA Bayesian Additive Regression Trees using Bayesian Model Averaging \insertCite{hernandez2018bayesian}{bartBMA} is an extension to the original BART sum-of-trees model \insertCite{chipman2010bart}{bartBMA}. BART-BMA differs to the original BART model in two main aspects in order to implement a greedy model which 
+  will be computationally feasible for high dimensional data. Firstly BART-BMA uses a greedy search for the best split points and variables when growing decision trees within each sum-of-trees 
   model. This means trees are only grown based on the most predictive set of split rules. Also rather than using MCMC, BART-BMA uses a greedy implementation of Bayesian Model Averaging called Occam's Window 
-  which take a weighted average over multiple \dQuote{sum-of-trees} models to form its overall prediction. This means that only the set of \dQuote{sum-of-trees} for which there is high support from the data
+  which take a weighted average over multiple sum-of-trees models to form its overall prediction. This means that only the set of sum-of-trees for which there is high support from the data
   are saved to memory and used in the final model.
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.0), mvnfast, Rdpack
