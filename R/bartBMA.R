@@ -1,7 +1,7 @@
 
 #' @title Bayesian Additive Regression Trees Using Bayesian Model Averaging (BART-BMA)
 #' 
-#' @description This is an implementation of Bayesian Additive Regression Trees (Chipman et al. 2018) using Bayesian Model Averaging (Hernandez et al. 2018). 
+#' @description This is an implementation of Bayesian Additive Regression Trees \insertCite{chipman2010bart}{bartBMA} using Bayesian Model Averaging \insertCite{hernandez2018bayesian}{bartBMA}. 
 #' @param x.train Training data covariate matrix
 #' @param y.train Training data outcome vector.
 #' @param a This is a parameter that influences the variance of terminal node parameter values. Default value a=3.
@@ -25,6 +25,8 @@
 #' @param min_num_obs_after_split This integer determines the minimum number of observations in a child node resulting from a split in order for a split to occur. If the left or right chikd node has less than this number of observations, then the split can not occur.
 #' @param exact_residuals Binary variable. If equal to 1, then trees are added to sum-of-tree models within each round of the algorithm by detecting changepoints in the exact residuals. If equals zero, then changepoints are detected in residuals that are constructed from approximate predictions.
 #' @rdname bartBMA
+#' @references
+#' \insertAllCited{}
 #' @export 
 #' @return The following objects are returned by bartbma:
 #' \item{fitted.values}{The vector of predictions of the outcome for all training observations.} 

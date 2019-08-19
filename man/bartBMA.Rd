@@ -79,5 +79,8 @@ The following objects are returned by bartbma:
 \item{lambda}{parameter determined by the inputs sigma, sigquant, and nu}
 }
 \description{
-This is an implementation of Bayesian Additive Regression Trees (Chipman et al. 2018) using Bayesian Model Averaging (Hernandez et al. 2018).
+This is an implementation of Bayesian Additive Regression Trees \insertCite{chipman2010bart}{bartBMA} using Bayesian Model Averaging \insertCite{hernandez2018bayesian}{bartBMA}.
+}
+\references{
+\insertAllCited{}
 }

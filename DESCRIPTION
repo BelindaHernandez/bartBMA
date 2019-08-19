@@ -15,6 +15,7 @@ Description: BART-BMA Bayesian Additive Regression Trees using Bayesian Model Av
   which take a weighted average over multiple \dQuote{sum-of-trees} models to form its overall prediction. This means that only the set of \dQuote{sum-of-trees} for which there is high support from the data
   are saved to memory and used in the final model.
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.0.0), mvnfast
+Imports: Rcpp (>= 1.0.0), mvnfast, Rdpack
+RdMacros: Rdpack
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 6.1.1
