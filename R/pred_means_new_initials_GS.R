@@ -9,7 +9,7 @@
 #' @export 
 #' @return The output is a list of length one. The one element in this list is a vector of prediction intervals???
 
-pred_means_bbma_new_initials<-function(object,num_iter,burnin,newdata=NULL,update_resids=1,trainingdata){
+pred_means_bbma_new_initials_GS<-function(object,num_iter,burnin,newdata=NULL,update_resids=1,trainingdata){
   #object will be bartBMA object.
   
    scaled_train_y <- scale_response(min(object$response),max(object$response),-0.5,0.5,object$response)

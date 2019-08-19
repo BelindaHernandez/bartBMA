@@ -13,7 +13,7 @@ bartBMA(x, ...)
   split_rule_node = 0, gridpoint = 0, maxOWsize = 100,
   num_splits = 5, gridsize = 10, zero_split = 1,
   only_max_num_trees = 1, min_num_obs_for_split = 2,
-  min_num_obs_after_split = 2)
+  min_num_obs_after_split = 2, exact_residuals = 1)
 }
 \arguments{
 \item{x.train}{Training data covariate matrix}
@@ -57,6 +57,8 @@ bartBMA(x, ...)
 \item{min_num_obs_for_split}{This integer determines the minimum number of observations in a (parent) tree node for the algorithm to consider potential splits of the node.}
 
 \item{min_num_obs_after_split}{This integer determines the minimum number of observations in a child node resulting from a split in order for a split to occur. If the left or right chikd node has less than this number of observations, then the split can not occur.}
+
+\item{exact_residuals}{Binary variable. If equal to 1, then trees are added to sum-of-tree models within each round of the algorithm by detecting changepoints in the exact residuals. If equals zero, then changepoints are detected in residuals that are constructed from approximate predictions.}
 }
 \value{
 The following objects are returned by bartbma:

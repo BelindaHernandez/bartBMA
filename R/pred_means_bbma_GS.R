@@ -1,71 +1,67 @@
-#' @title Prediction intervals for bart-bma output
+#' @title Predictions for bart-bma output obtained from a Gibbs sampler
 #' 
-#' @description This function produces prediction intervals for f(x) in BART-BMA by post-hoc Gibbs-sampling from the full conditionals of the terminal node parameters and the variance of the error term. See Hernandez et al. (2018) Appendix D for details.
+#' @description This function produces predictions from BART-BMA by post-hoc Gibbs-sampling from the full conditionals of the terminal node parameters and the variance of the error term. See Hernandez et al. (2018) Appendix D for details.
 #' @param object bartBMA object obtained from function bartBMA
 #' @param num_iter Total number of iterations of the Gibbs sampler (including burn-in).
 #' @param burnin Number of burn-on iterations of the Gibbs sampler.
-#' @param l_quant Lower quartile of the prediction interval.
-#' @param u_quant Upper quartile of the prediction interval.
 #' @param newdata Test data for which predictions are to be produced. Default = NULL. If NULL, then produces prediction intervals for training data if no test data was used in producing the bartBMA object, or produces prediction intervals for the original test data if test data was used in producing the bartBMA object.
 #' @param update_resids Option for whether to update the partial residuals in the gibbs sampler. If equal to 1, updates partial residuals, if equal to zero, does not update partial residuals. The defaullt setting is to update the partial residua;s.
 #' @export 
 #' @return The output is a list of length one. The one element in this list is a vector of prediction intervals???
 
-pred_expectation_intervals<-function(object,num_iter,burnin,l_quant,u_quant,newdata=NULL,update_resids=1){
-  if(l_quant>0.5 ||u_quant<0 ||u_quant>1){stop("Lower quantile must be lower than 0.5 and greater than 0")}
-  if(u_quant<0.5 ||u_quant<0 ||u_quant>1){stop("Upper quantile must be greater than 0.5 and less than 1")}
+pred_means_bbma_GS<-function(object,num_iter,burnin,newdata=NULL,update_resids=1){
   #object will be bartBMA object.
   if(update_resids==0){
     if(is.null(newdata) && length(object)==16){
       #if test data specified separately
       gs_chains<-gibbs_sampler_no_update_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                             nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,object$test_data)
+                               nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,object$test_data)
     }else if(is.null(newdata) && length(object)==14){
       #else return Pred Ints for training data
       gs_chains<-gibbs_sampler_no_update2_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                              object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals)
+                                object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals)
       
     }else{
       #if test data included in call to object
       gs_chains<-gibbs_sampler_no_update_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                             nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,newdata)
+                               nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,newdata)
     }
   }else{
     if(is.null(newdata) && length(object)==16){
       #if test data specified separately
       gs_chains<-gibbs_sampler_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                   nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,object$test_data)
+                               nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,object$test_data)
     }else if(is.null(newdata) && length(object)==14){
       #else return Pred Ints for training data
       gs_chains<-gibbs_sampler2_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                    object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals)
+                                object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals)
       
     }else{
       #if test data included in call to object
       gs_chains<-gibbs_sampler_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                   nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,newdata)
+                               nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,newdata)
     }
   }
   
   #y_posterior_sum_trees<-gs_chains[[4]]
   #y_orig_post_sum_trees<-gs_chains[[5]]
   #sigma_chains<-gs_chains[[3]]
-  if(is.null(newdata) && length(object)==16){
-    #y_posterior_sum_trees<-gs_chains[[4]]
-    y_orig_post_sum_trees<-gs_chains[[2]] ##[[5]]
-    sigma_chains<-gs_chains[[1]] #[[3]]
-  }else if(is.null(newdata) && length(object)==14){
-    #y_posterior_sum_trees<-gs_chains[[1]]
-    y_orig_post_sum_trees<-gs_chains[[2]] #[[2]]
-    sigma_chains<-gs_chains[[1]] #[[3]]
-    
-  }else{
-    #y_posterior_sum_trees<-gs_chains[[4]]
-    y_orig_post_sum_trees<-gs_chains[[2]] #[[5]]
-    sigma_chains<-gs_chains[[1]] #[[3]]
-  }
+    if(is.null(newdata) && length(object)==16){
+      #y_posterior_sum_trees<-gs_chains[[4]]
+      y_orig_post_sum_trees<-gs_chains[[2]] ##[[5]]
+      sigma_chains<-gs_chains[[1]] #[[3]]
+    }else if(is.null(newdata) && length(object)==14){
+      #y_posterior_sum_trees<-gs_chains[[1]]
+      y_orig_post_sum_trees<-gs_chains[[2]] #[[2]]
+      sigma_chains<-gs_chains[[1]] #[[3]]
   
-  sum_of_tree_BIC<- object$bic
+    }else{
+      #y_posterior_sum_trees<-gs_chains[[4]]
+      y_orig_post_sum_trees<-gs_chains[[2]] #[[5]]
+      sigma_chains<-gs_chains[[1]] #[[3]]
+    } 
+  
+  sum_of_tree_BIC<- -0.5*object$bic
   weights<-exp(sum_of_tree_BIC-(max(sum_of_tree_BIC)+log(sum(exp(sum_of_tree_BIC-max(sum_of_tree_BIC))))))
   #final_length<-num_iter-burnin
   num_its_to_sample<-round(weights*(num_iter-burnin))
@@ -84,15 +80,15 @@ pred_expectation_intervals<-function(object,num_iter,burnin,l_quant,u_quant,newd
     final_yorig_chain<-rbind(final_yorig_chain,post_yorig_i[sample_its,])
     
   }
-  PI<-apply(final_yorig_chain,2,function(x)quantile(x,probs=c(l_quant,0.5,u_quant)))
   meanpreds<-apply(final_yorig_chain,2,mean)
   
+  ret<-meanpreds
+  #length(ret)<-1
+  #ret[[1]]<-meanpreds
+  #ret[[2]] <- final_y_chain
+  #ret[[3]] <- post_y_i
   
-  ret<-list()
-  length(ret)<-1
-  ret[[1]]<-PI
-  ret[[2]] <- meanpreds
-  
-  class(ret)<-"pred_intervals.bartBMA"  
+  class(ret)<-"pred_means_bbma.bartBMA"  
   ret
+  
 }

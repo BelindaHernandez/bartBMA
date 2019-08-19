@@ -3,7 +3,11 @@ Type: Package
 Title: Bayesian Additive Regression Trees using Bayesian Model Averaging
 Version: 1.0
 Date: 2018-12-16
-Author: Belinda Hernandez
+Author: Belinda Hernandez [aut, cre]
+    Adrian E. Raftery [aut]
+    Stephen R Pennington [aut]
+    Andrew C. Parnell [aut]
+    Eoghan O'Neill [ctb]
 Maintainer: Eoghan O'Neill <oneill.eoghan.1@gmail.com>
 Description: BART-BMA Bayesian Additive Regression Trees using Bayesian Model Averaging is an extension to the original BART \dQuote{sum-of-trees} model of Chipman et al. BART-BMA differs to the original BART model in two main aspects in order to implement a greedy model which 
   will be computationally feasible for high dimensional data. Firstly BART-BMA uses a greedy search for the best split points and variables when growing decision trees within each \dQuote{sum-of-trees} 

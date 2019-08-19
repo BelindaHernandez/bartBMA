@@ -11,7 +11,7 @@
 #' @export 
 #' @return The output is a list of length one. The one element in this list is a vector of prediction intervals???
 
-pred_intervals_new_initials<-function(object,num_iter,burnin,l_quant,u_quant,newdata=NULL,update_resids=1,trainingdata){
+pred_intervals_new_initials_GS<-function(object,num_iter,burnin,l_quant,u_quant,newdata=NULL,update_resids=1,trainingdata){
   if(l_quant>0.5 ||u_quant<0 ||u_quant>1){stop("Lower quantile must be lower than 0.5 and greater than 0")}
   if(u_quant<0.5 ||u_quant<0 ||u_quant>1){stop("Upper quantile must be greater than 0.5 and less than 1")}
   
