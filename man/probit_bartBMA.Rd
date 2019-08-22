@@ -13,7 +13,7 @@ probit_bartBMA(x, ...)
   split_rule_node = 0, gridpoint = 0, maxOWsize = 100,
   num_splits = 5, gridsize = 10, zero_split = 1,
   only_max_num_trees = 1, min_num_obs_for_split = 2,
-  min_num_obs_after_split = 2)
+  min_num_obs_after_split = 2, exact_residuals = 1)
 }
 \arguments{
 \item{x.train}{Training data covariate matrix}
@@ -53,6 +53,12 @@ probit_bartBMA(x, ...)
 \item{zero_split}{Binary variable. If equals 1, then zero split trees can be included in a sum-of-trees model. If equals zero, then only trees with at least one split can be included in a sum-of-trees model.}
 
 \item{only_max_num_trees}{Binary variable. If equals 1, then only sum-of-trees models containing the maximum number of trees, num_rounds, are selected. If equals 0, then sum-of-trees models containing less than num_rounds trees can be selected. The default is only_max_num_trees=1.}
+
+\item{min_num_obs_for_split}{This integer determines the minimum number of observations in a (parent) tree node for the algorithm to consider potential splits of the node.}
+
+\item{min_num_obs_after_split}{This integer determines the minimum number of observations in a child node resulting from a split in order for a split to occur. If the left or right chikd node has less than this number of observations, then the split can not occur.}
+
+\item{exact_residuals}{Binary variable. If equal to 1, then trees are added to sum-of-tree models within each round of the algorithm by detecting changepoints in the exact residuals. If equals zero, then changepoints are detected in residuals that are constructed from approximate predictions.}
 }
 \value{
 The following objects are returned by bartbma:

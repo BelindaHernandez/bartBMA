@@ -21,6 +21,9 @@
 #' @param gridsize This integer determines the size of the grid across which to search if gridpoint=1 when finding changepoints for constructing trees.
 #' @param zero_split Binary variable. If equals 1, then zero split trees can be included in a sum-of-trees model. If equals zero, then only trees with at least one split can be included in a sum-of-trees model.
 #' @param only_max_num_trees Binary variable. If equals 1, then only sum-of-trees models containing the maximum number of trees, num_rounds, are selected. If equals 0, then sum-of-trees models containing less than num_rounds trees can be selected. The default is only_max_num_trees=1.
+#' @param min_num_obs_for_split This integer determines the minimum number of observations in a (parent) tree node for the algorithm to consider potential splits of the node.
+#' @param min_num_obs_after_split This integer determines the minimum number of observations in a child node resulting from a split in order for a split to occur. If the left or right chikd node has less than this number of observations, then the split can not occur.
+#' @param exact_residuals Binary variable. If equal to 1, then trees are added to sum-of-tree models within each round of the algorithm by detecting changepoints in the exact residuals. If equals zero, then changepoints are detected in residuals that are constructed from approximate predictions.
 #' @rdname probit_bartBMA
 #' @export 
 #' @return The following objects are returned by bartbma:
@@ -52,7 +55,8 @@ probit_bartBMA.default<-function(x.train,y.train,
                           pen=12,num_cp=20,x.test=matrix(0.0,0,0),
                           num_rounds=5,alpha=0.95,beta=1,split_rule_node=0,
                           gridpoint=0,maxOWsize=100,num_splits=5,gridsize=10,zero_split=1,only_max_num_trees=1,
-                          min_num_obs_for_split=2, min_num_obs_after_split=2){
+                          min_num_obs_for_split=2, min_num_obs_after_split=2,
+                          exact_residuals=1){
   
   if(is.factor(y.train)) {
     if(length(levels(y.train)) != 2) stop("y.train is a factor with number of levels != 2")
@@ -118,7 +122,8 @@ probit_bartBMA.default<-function(x.train,y.train,
   
   bartBMA_call=BART_BMA_sumLikelihood(x.train,Zlatent.train,start_mean,start_sd,a,mu,nu,lambda,c,sigma_mu,
                                       pen,num_cp,x.test,num_rounds,alpha,beta,split_rule_node,gridpoint,maxOWsize,num_splits,gridsize,zero_split,only_max_num_trees,
-                                      min_num_obs_for_split, min_num_obs_after_split)
+                                      min_num_obs_for_split, min_num_obs_after_split,
+                                      exact_residuals)
   
   if(length(bartBMA_call)==6){
     #length of bartBMA_call is 6 if test data was included in the call
