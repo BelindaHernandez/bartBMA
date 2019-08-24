@@ -34,7 +34,27 @@ List get_weighted_var_imp(int num_vars,NumericVector BIC,List sum_trees){
   
   IntegerMatrix vars_for_all_trees(sum_trees.size(),num_vars);
   NumericMatrix weighted_vars_for_all_trees(sum_trees.size(),num_vars);
-  NumericVector weighted_BIC=BIC/sum(BIC);
+  //NumericVector weighted_BIC=BIC/sum(BIC);
+  
+  
+  NumericVector BICi=-0.5*BIC;
+  double max_BIC=max(BICi);
+  
+  // weighted_BIC is actually the posterior model probability
+  NumericVector weighted_BIC(BIC.size());
+  
+  for(int k=0;k<BIC.size();k++){
+    
+    //NumericVector BICi=-0.5*BIC_weights;
+    //double max_BIC=max(BICi);
+    double weight=exp(BICi[k]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    weighted_BIC[k]=weight;
+    //int num_its_to_sample = round(weight*(num_iter));
+    
+  }
+  
+  
+  
   
   for(int i=0;i<sum_trees.size();i++){
     NumericVector selected_variables(num_vars);
@@ -63,7 +83,7 @@ List get_weighted_var_imp(int num_vars,NumericVector BIC,List sum_trees){
   //get BIC and weight the vars by their BIC/sum(BIC)
   
   List ret(4);
-  ret[0]=weighted_BIC;
+  ret[0]=weighted_BIC; // This is actually the posterior model probability
   ret[1]=BIC;
   ret[2]=vars_for_all_trees;
   ret[3]=weighted_vars_for_all_trees;
