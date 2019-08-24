@@ -9764,6 +9764,323 @@ static inline std::vector<T> Quantile2(const std::vector<T>& inData, const std::
 }
 
 //###########################################################################################################################//
+#include <boost/math/distributions/students_t.hpp>
+
+// [[Rcpp::depends(BH)]]
+// [[Rcpp::export]]
+double mixt_eval_cdf(double x_val, double d_o_f, std::vector<double> mean_vec, std::vector<double> var_vec, std::vector<double> weights_vec, double quant_val) {
+  
+  boost::math::students_t dist(d_o_f);
+  
+  double ret_val=0;
+  for(unsigned int i=0; i < weights_vec.size();i++){
+    double tempx = (x_val-mean_vec[i])/sqrt(var_vec[i]);
+    ret_val += weights_vec[i]*boost::math::cdf(dist,tempx);
+  }
+  
+  return (ret_val-quant_val) ;  // approximation
+}
+
+//###########################################################################################################################//
+// [[Rcpp::export]]
+double rootmixt(double d_o_f, double a, double b,
+                std::vector<double> mean_vec,
+                std::vector<double> var_vec,
+                std::vector<double> weights_vec, double quant_val, double root_alg_precision){
+  
+  static const double EPS = root_alg_precision;//1e-15; // 1×10^(-15)
+
+  double fa = mixt_eval_cdf(a, d_o_f, mean_vec, var_vec, weights_vec,quant_val), fb = mixt_eval_cdf(b, d_o_f, mean_vec, var_vec, weights_vec,quant_val);
+  
+  // if either f(a) or f(b) are the root, return that
+  // nothing else to do
+  if (fa == 0) return a;
+  if (fb == 0) return b;
+  
+  // this method only works if the signs of f(a) and f(b)
+  // are different. so just assert that
+  assert(fa * fb < 0); // 8.- macro assert from header cassert.
+  
+  
+  do {
+    // calculate fun at the midpoint of a,b
+    // if that's the root, we're done
+    
+    // this line is awful, never write code like this...
+    //if ((f = fun((s = (a + b) / 2))) == 0) break;
+    
+    // prefer:
+    double midpt = (a + b) / 2;
+    double fmid = mixt_eval_cdf(midpt, d_o_f, mean_vec, var_vec, weights_vec,quant_val);
+    
+    if (fmid == 0) return midpt;
+    
+    // adjust our bounds to either [a,midpt] or [midpt,b]
+    // based on where fmid ends up being. I'm pretty
+    // sure the code in the question is wrong, so I fixed it
+    if (fa * fmid < 0) { // fmid, not f1
+      fb = fmid; 
+      b = midpt;
+    }
+    else {
+      fa = fmid; 
+      a = midpt; 
+    }
+  } while (b-a > EPS); // only loop while
+  // a and b are sufficiently far
+  // apart
+  
+  return (a + b) / 2;  // approximation
+}
+
+//###########################################################################################################################//
+
+// [[Rcpp::plugins(openmp)]]
+// Protect against compilers without OpenMP
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain BARTBMA predictions
+//' @export
+// [[Rcpp::export]]
+List pred_ints_exact_outsamp(List overall_sum_trees,
+                                        List overall_sum_mat,
+                                        NumericVector y,
+                                        NumericVector BIC_weights,
+                                        double min_possible,double max_possible,int num_obs,int num_test_obs,
+                                        double a,double sigma,double mu_mu,double nu,
+                                        double lambda,//List resids,
+                                        NumericMatrix test_data, double lower_prob, double upper_prob, int num_cores,
+                                        double root_alg_precision){
+  
+  
+  List termobs_testdata_overall= get_termobs_testdata_overall(overall_sum_trees,test_data);
+  
+  
+  //NumericMatrix preds_all_models(num_test_obs,BIC_weights.size());
+  arma::mat preds_all_models_arma(num_test_obs,BIC_weights.size());
+  arma::mat weighted_preds_all_models_arma(num_test_obs,BIC_weights.size());
+  arma::mat t_vars_arma(num_test_obs,BIC_weights.size());
+  
+  // for all sums of trees
+  
+  NumericVector BICi=-0.5*BIC_weights;
+  double max_BIC=max(BICi);
+  
+  
+  NumericVector post_weights(BIC_weights.size());
+  
+  for(int k=0;k<BIC_weights.size();k++){
+    
+    //NumericVector BICi=-0.5*BIC_weights;
+    //double max_BIC=max(BICi);
+    double weight=exp(BICi[k]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    post_weights[k]=weight;
+    //int num_its_to_sample = round(weight*(num_iter));
+    
+  }
+  
+  //int num_models= BIC_weights.size();
+  
+
+  
+  //arma::mat draws_for_preds(0,num_test_obs);
+  //arma::mat draws_for_preds(num_iter,num_test_obs);
+  
+  //  {
+  //#pragma omp for schedule(dynamic,1) 
+  
+  arma::vec yvec=Rcpp::as<arma::vec>(y);
+  arma::mat y_arma(num_obs,1);
+  y_arma.col(0)=yvec;
+  arma::mat yty=y_arma.t()*y_arma;
+  
+  
+  //#pragma omp parallel num_threads(1)
+  //#pragma omp for
+  for(int i=0;i<overall_sum_trees.size();i++){
+    
+    //Rcout << "Line 4413. i= "<< i << ".\n";
+    
+    arma::mat Wmat=W(overall_sum_trees[i],overall_sum_mat[i],num_obs);
+    
+    
+    arma::mat W_tilde=get_W_test(overall_sum_trees[i],termobs_testdata_overall[i],num_test_obs);
+    
+    
+    double b=Wmat.n_cols;
+    
+    //get exponent
+    //double expon=(n+nu)/2;
+    //get y^Tpsi^{-1}y
+    // arma::mat psi_inv=psi.i();
+    
+    
+    
+    //get t(y)inv(psi)J
+    arma::mat ytW=y_arma.t()*Wmat;
+    
+    
+    //get t(J)inv(psi)J  
+    arma::mat WtW=Wmat.t()*Wmat;
+    
+    
+    
+    
+    
+    //get jpsij +aI
+    arma::mat aI(b,b);
+    aI=a*aI.eye();
+    arma::mat sec_term=WtW+aI;
+    
+    
+    //arma::mat L_mat = arma::chol(sec_term,"lower");
+    
+    //arma::mat L_inv = arma::inv(L_mat);
+    //arma::mat L_inv = arma::inv(arma::chol(sec_term));
+    //arma::mat L_inv = arma::inv((L_mat));
+    //arma::mat L_inv_t = arma::trans(arma::inv(trimatu(L_mat)));
+    //arma::mat L_inv_t = arma::trans(arma::inv((L_mat)));
+    
+    
+    
+    //arma::mat sec_term_inv=sec_term.i();
+    arma::mat sec_term_inv=inv_sympd(sec_term);  
+    
+    
+    //get t(J)inv(psi)y
+    arma::mat third_term=Wmat.t()*y_arma;
+    
+    
+    //arma::mat coeff = solve(L_mat.t(), solve(L_mat, Wmat.t()*y_arma));
+    //arma::mat coeff = L_inv.t()*L_inv*Wmat.t()*y_arma;
+    
+    
+    
+    //get m^TV^{-1}m
+    arma::mat mvm= ytW*sec_term_inv*third_term;
+    
+    
+    
+    arma::mat w_tilde_M_inv =  W_tilde*sec_term_inv;
+    
+    //Rcout << "Line 4151";
+    
+    
+    
+    // //Obtain (lower triangular?) matrix t(L) by Cholesky decomposition such that sec_term_inv=L*t(L)
+    // arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sec_term))));
+    // //obtain the log of the root of the determinant
+    // double rootisum = arma::sum(log(rooti.diag()));
+    // 
+    // arma::mat LtWtY= rooti*(Wmat.t()*y);
+    // 
+    // arma::mat rel=(b/2)*log(a)+rootisum -expon*log(nu*lambda - arma::sum(LtWtY%LtWtY) +yty);
+    // 
+    // 
+    
+    
+    // arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sec_term))));
+    // arma::mat LtWtY= rooti*(Wmat.t()*y);
+    
+    
+    
+    arma::vec preds_temp_arma= w_tilde_M_inv*third_term;
+    
+    // arma::vec preds_temp_arma= W_tilde*sec_term_inv*(Wmat.t())*y_arma;
+    
+    //arma::vec preds_temp_arma= W_tilde*coeff;
+    //arma::mat mvm= coeff*y_arma;
+    //arma::mat mvm= y_arma.t()*Wmat*coeff;
+    
+    
+    
+    arma::mat I_test(num_test_obs,num_test_obs);
+    I_test=I_test.eye();
+    
+    arma::mat temp_for_scal = ((nu*lambda+yty-mvm)/(nu+num_obs));
+    double temp_scal= as_scalar(temp_for_scal) ;
+    //Rcout << "Line 4156";
+    //arma::mat covar_t=temp_scal*(I_test+w_tilde_M_inv*(W_tilde.t()));
+    arma::mat covar_t=temp_scal*(I_test+w_tilde_M_inv*(W_tilde.t()));
+    
+    
+    //arma::mat W_tilde_L_inv_t= W_tilde*L_inv_t; 
+    //arma::mat covar_t=temp_scal*(I_test+W_tilde_L_inv_t*(W_tilde_L_inv_t.t()));
+    
+    
+    
+    // Rcout << "Line 4459. i= "<< i << ".\n";
+    
+    
+    
+    //double weight=exp(BICi[i]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    
+    weighted_preds_all_models_arma.col(i)=preds_temp_arma*post_weights[i];
+    preds_all_models_arma.col(i)=preds_temp_arma;
+    
+    // Rcout << "Line 4468. i= "<< i << ".\n";
+    
+    
+    t_vars_arma.col(i)=covar_t.diag();
+    
+  }
+  
+  //}
+  //#pragma omp barrier  
+  
+  //arma::colvec predicted_values;
+  
+  //arma::mat M1(preds_all_models.begin(), preds_all_models.nrow(), preds_all_models.ncol(), false);
+  arma::colvec predicted_values=sum(weighted_preds_all_models_arma,1);
+  
+  //NumericMatrix draws_wrapped= wrap(draws_for_preds);
+  NumericMatrix output(3, num_test_obs);
+  //NumericVector probs_for_quantiles =  NumericVector::create(lower_prob, 0.5, upper_prob);
+  std::vector<double> probs_for_quantiles {lower_prob, 0.5, upper_prob};
+  
+  
+  
+  typedef std::vector<double> stdvec;
+  std::vector<double> weights_vec= as<stdvec>(post_weights);
+  
+  for(int i=0;i<num_test_obs;i++){
+    //output(_,i)=Quantile(draws_wrapped(_,i), probs_for_quantiles);
+    std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+    std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+    
+    
+    output(0,i)=rootmixt(nu+num_obs,  min_possible,  max_possible,
+           tempmeans,
+           tempvars,
+             weights_vec, lower_prob,root_alg_precision);
+    
+    output(1,i)=rootmixt(nu+num_obs,  min_possible,  max_possible,
+           tempmeans,
+           tempvars,
+           weights_vec, 0.5,root_alg_precision);
+    
+    output(2,i)=rootmixt(nu+num_obs,  min_possible,  max_possible,
+           tempmeans,
+             tempvars,
+             weights_vec, upper_prob,root_alg_precision);
+    
+  
+  }  
+  
+  List ret(2);
+  ret[0]= output;
+  ret[1]= wrap(predicted_values);
+  
+  
+  return(ret);
+  
+}
+
+//###########################################################################################################################//
 
 #include <RcppArmadilloExtensions/rmultinom.h>
 // [[Rcpp::depends(RcppArmadillo)]]

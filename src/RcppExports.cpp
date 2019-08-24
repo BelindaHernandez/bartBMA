@@ -1619,6 +1619,68 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// mixt_eval_cdf
+double mixt_eval_cdf(double x_val, double d_o_f, std::vector<double> mean_vec, std::vector<double> var_vec, std::vector<double> weights_vec, double quant_val);
+RcppExport SEXP _bartBMA_mixt_eval_cdf(SEXP x_valSEXP, SEXP d_o_fSEXP, SEXP mean_vecSEXP, SEXP var_vecSEXP, SEXP weights_vecSEXP, SEXP quant_valSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type x_val(x_valSEXP);
+    Rcpp::traits::input_parameter< double >::type d_o_f(d_o_fSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type mean_vec(mean_vecSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type var_vec(var_vecSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type weights_vec(weights_vecSEXP);
+    Rcpp::traits::input_parameter< double >::type quant_val(quant_valSEXP);
+    rcpp_result_gen = Rcpp::wrap(mixt_eval_cdf(x_val, d_o_f, mean_vec, var_vec, weights_vec, quant_val));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rootmixt
+double rootmixt(double d_o_f, double a, double b, std::vector<double> mean_vec, std::vector<double> var_vec, std::vector<double> weights_vec, double quant_val, double root_alg_precision);
+RcppExport SEXP _bartBMA_rootmixt(SEXP d_o_fSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mean_vecSEXP, SEXP var_vecSEXP, SEXP weights_vecSEXP, SEXP quant_valSEXP, SEXP root_alg_precisionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type d_o_f(d_o_fSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type mean_vec(mean_vecSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type var_vec(var_vecSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type weights_vec(weights_vecSEXP);
+    Rcpp::traits::input_parameter< double >::type quant_val(quant_valSEXP);
+    Rcpp::traits::input_parameter< double >::type root_alg_precision(root_alg_precisionSEXP);
+    rcpp_result_gen = Rcpp::wrap(rootmixt(d_o_f, a, b, mean_vec, var_vec, weights_vec, quant_val, root_alg_precision));
+    return rcpp_result_gen;
+END_RCPP
+}
+// pred_ints_exact_outsamp
+List pred_ints_exact_outsamp(List overall_sum_trees, List overall_sum_mat, NumericVector y, NumericVector BIC_weights, double min_possible, double max_possible, int num_obs, int num_test_obs, double a, double sigma, double mu_mu, double nu, double lambda, NumericMatrix test_data, double lower_prob, double upper_prob, int num_cores, double root_alg_precision);
+RcppExport SEXP _bartBMA_pred_ints_exact_outsamp(SEXP overall_sum_treesSEXP, SEXP overall_sum_matSEXP, SEXP ySEXP, SEXP BIC_weightsSEXP, SEXP min_possibleSEXP, SEXP max_possibleSEXP, SEXP num_obsSEXP, SEXP num_test_obsSEXP, SEXP aSEXP, SEXP sigmaSEXP, SEXP mu_muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP test_dataSEXP, SEXP lower_probSEXP, SEXP upper_probSEXP, SEXP num_coresSEXP, SEXP root_alg_precisionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type overall_sum_trees(overall_sum_treesSEXP);
+    Rcpp::traits::input_parameter< List >::type overall_sum_mat(overall_sum_matSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type BIC_weights(BIC_weightsSEXP);
+    Rcpp::traits::input_parameter< double >::type min_possible(min_possibleSEXP);
+    Rcpp::traits::input_parameter< double >::type max_possible(max_possibleSEXP);
+    Rcpp::traits::input_parameter< int >::type num_obs(num_obsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_test_obs(num_test_obsSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type mu_mu(mu_muSEXP);
+    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type test_data(test_dataSEXP);
+    Rcpp::traits::input_parameter< double >::type lower_prob(lower_probSEXP);
+    Rcpp::traits::input_parameter< double >::type upper_prob(upper_probSEXP);
+    Rcpp::traits::input_parameter< int >::type num_cores(num_coresSEXP);
+    Rcpp::traits::input_parameter< double >::type root_alg_precision(root_alg_precisionSEXP);
+    rcpp_result_gen = Rcpp::wrap(pred_ints_exact_outsamp(overall_sum_trees, overall_sum_mat, y, BIC_weights, min_possible, max_possible, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pred_ints_lin_alg_outsamp
 List pred_ints_lin_alg_outsamp(List overall_sum_trees, List overall_sum_mat, NumericVector y, NumericVector BIC_weights, int num_iter, int burnin, int num_obs, int num_test_obs, double a, double sigma, double mu_mu, double nu, double lambda, NumericMatrix test_data, double lower_prob, double upper_prob);
 RcppExport SEXP _bartBMA_pred_ints_lin_alg_outsamp(SEXP overall_sum_treesSEXP, SEXP overall_sum_matSEXP, SEXP ySEXP, SEXP BIC_weightsSEXP, SEXP num_iterSEXP, SEXP burninSEXP, SEXP num_obsSEXP, SEXP num_test_obsSEXP, SEXP aSEXP, SEXP sigmaSEXP, SEXP mu_muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP test_dataSEXP, SEXP lower_probSEXP, SEXP upper_probSEXP) {
@@ -2700,6 +2762,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bartBMA_mean_vars_lin_alg_insamp", (DL_FUNC) &_bartBMA_mean_vars_lin_alg_insamp, 13},
     {"_bartBMA_BART_BMA_sumLikelihood", (DL_FUNC) &_bartBMA_BART_BMA_sumLikelihood, 26},
     {"_bartBMA_Quantile", (DL_FUNC) &_bartBMA_Quantile, 2},
+    {"_bartBMA_mixt_eval_cdf", (DL_FUNC) &_bartBMA_mixt_eval_cdf, 6},
+    {"_bartBMA_rootmixt", (DL_FUNC) &_bartBMA_rootmixt, 8},
+    {"_bartBMA_pred_ints_exact_outsamp", (DL_FUNC) &_bartBMA_pred_ints_exact_outsamp, 18},
     {"_bartBMA_pred_ints_lin_alg_outsamp", (DL_FUNC) &_bartBMA_pred_ints_lin_alg_outsamp, 16},
     {"_bartBMA_pred_ints_lin_alg_insamp", (DL_FUNC) &_bartBMA_pred_ints_lin_alg_insamp, 14},
     {"_bartBMA_pred_ints_chol_attempt_outsamp", (DL_FUNC) &_bartBMA_pred_ints_chol_attempt_outsamp, 16},

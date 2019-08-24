@@ -377,6 +377,20 @@ Quantile <- function(x, probs) {
     .Call(`_bartBMA_Quantile`, x, probs)
 }
 
+mixt_eval_cdf <- function(x_val, d_o_f, mean_vec, var_vec, weights_vec, quant_val) {
+    .Call(`_bartBMA_mixt_eval_cdf`, x_val, d_o_f, mean_vec, var_vec, weights_vec, quant_val)
+}
+
+rootmixt <- function(d_o_f, a, b, mean_vec, var_vec, weights_vec, quant_val, root_alg_precision) {
+    .Call(`_bartBMA_rootmixt`, d_o_f, a, b, mean_vec, var_vec, weights_vec, quant_val, root_alg_precision)
+}
+
+#' @title Obtain BARTBMA predictions
+#' @export
+pred_ints_exact_outsamp <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, min_possible, max_possible, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision) {
+    .Call(`_bartBMA_pred_ints_exact_outsamp`, overall_sum_trees, overall_sum_mat, y, BIC_weights, min_possible, max_possible, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision)
+}
+
 #' @title Obtain BARTBMA predictions
 #' @export
 pred_ints_lin_alg_outsamp <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, num_iter, burnin, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob) {
