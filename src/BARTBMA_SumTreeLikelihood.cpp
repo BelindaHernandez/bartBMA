@@ -1235,7 +1235,7 @@ double likelihood_function2(NumericVector y_temp,NumericMatrix treetable_temp,Nu
   
   
   //arma::mat rel=(b/2)*log(a)-(1/2)*log(det(sec_term))-expon*log(nu*lambda - mvm +yty);
-  arma::mat rel=(b/2)*log(a)-0.5*log(det(sec_term))-expon*log(nu*lambda - mvm +yty);
+  arma::mat rel=(b*0.5)*log(a)-0.5*log(det(sec_term))-expon*log(nu*lambda - mvm +yty);
   
   
   double rel2=as<double>(wrap(rel));
@@ -1284,7 +1284,7 @@ List likelihood_function2_exact(NumericVector y_temp,NumericMatrix treetable_tem
   
   
   //arma::mat rel=(b/2)*log(a)-(1/2)*log(det(sec_term))-expon*log(nu*lambda - mvm +yty);
-  arma::mat rel=(b/2)*log(a)-0.5*log(det(sec_term))-expon*log(nu*lambda - mvm +yty);
+  arma::mat rel=(b*0.5)*log(a)-0.5*log(det(sec_term))-expon*log(nu*lambda - mvm +yty);
   
   
   double rel2=as<double>(wrap(rel));
@@ -4156,7 +4156,7 @@ List get_best_trees(arma::mat& D1,NumericMatrix resids,double a,double mu,double
     lik_subset_curr_round.resize(count);
     parent_curr_round.resize(count);
     
-    NumericVector testparvec = wrap(parent_curr_round);
+    //NumericVector testparvec = wrap(parent_curr_round);
     //Rcout << "parent_curr_round" << testparvec << " .\n";
     
     if(table_subset_curr_round.size()==0){
@@ -4521,7 +4521,7 @@ List get_best_trees_update_splits(arma::mat& D1,NumericMatrix resids,double a,do
     lik_subset_curr_round.resize(count);
     parent_curr_round.resize(count);
     
-    NumericVector testparvec = wrap(parent_curr_round);
+    //NumericVector testparvec = wrap(parent_curr_round);
     //Rcout << "parent_curr_round" << testparvec << " .\n";
     
     if(table_subset_curr_round.size()==0){
@@ -6065,7 +6065,7 @@ List get_best_trees_exact(arma::mat& D1,NumericMatrix resids,double a,double mu,
     parent_curr_round.resize(count);
     predvecs_curr_round=resize(predvecs_curr_round,count);
     
-    NumericVector testparvec = wrap(parent_curr_round);
+    //NumericVector testparvec = wrap(parent_curr_round);
     //Rcout << "parent_curr_round" << testparvec << " .\n";
     
     if(table_subset_curr_round.size()==0){
@@ -6493,7 +6493,7 @@ List get_best_trees_update_splits_exact(arma::mat& D1,NumericMatrix resids,doubl
     parent_curr_round.resize(count);
     predvecs_curr_round=resize(predvecs_curr_round,count);
     
-    NumericVector testparvec = wrap(parent_curr_round);
+    //NumericVector testparvec = wrap(parent_curr_round);
     //Rcout << "parent_curr_round" << testparvec << " .\n";
     
     if(table_subset_curr_round.size()==0){
@@ -9833,6 +9833,25 @@ double rootmixt(double d_o_f, double a, double b,
   return (a + b) / 2;  // approximation
 }
 
+
+//###########################################################################################################################//
+
+std::vector<double> mixt_find_boundsQ(double d_o_f, std::vector<double> mean_vec, std::vector<double> var_vec, double quant_val) {
+  //boost::math::students_t dist1(d_o_f);
+  
+  std::vector<double> tempbounds(mean_vec.size());
+  
+  for(unsigned int i=0; i< mean_vec.size();i++){
+    //tempbounds[i]= mean_vec[i]+sqrt(var_vec[i])*boost::math::quantile(dist1,quant_val);
+    tempbounds[i]= mean_vec[i]+sqrt(var_vec[i])*quant_val;
+  }
+  
+  std::vector<double> ret(2);
+  ret[0]= *std::min_element(tempbounds.begin(), tempbounds.end()); 
+  ret[1]= *std::max_element(tempbounds.begin(), tempbounds.end()); 
+    
+  return(ret) ; 
+}
 //###########################################################################################################################//
 
 // [[Rcpp::plugins(openmp)]]
@@ -9849,8 +9868,8 @@ double rootmixt(double d_o_f, double a, double b,
 List pred_ints_exact_outsamp(List overall_sum_trees,
                                         List overall_sum_mat,
                                         NumericVector y,
-                                        NumericVector BIC_weights,
-                                        double min_possible,double max_possible,int num_obs,int num_test_obs,
+                                        NumericVector BIC_weights,//double min_possible,double max_possible,
+                                        int num_obs,int num_test_obs,
                                         double a,double sigma,double mu_mu,double nu,
                                         double lambda,//List resids,
                                         NumericMatrix test_data, double lower_prob, double upper_prob, int num_cores,
@@ -10040,39 +10059,69 @@ List pred_ints_exact_outsamp(List overall_sum_trees,
   //NumericMatrix draws_wrapped= wrap(draws_for_preds);
   NumericMatrix output(3, num_test_obs);
   //NumericVector probs_for_quantiles =  NumericVector::create(lower_prob, 0.5, upper_prob);
-  std::vector<double> probs_for_quantiles {lower_prob, 0.5, upper_prob};
+  
+  //std::vector<double> probs_for_quantiles {lower_prob, 0.5, upper_prob};
   
   
   
   typedef std::vector<double> stdvec;
   std::vector<double> weights_vec= as<stdvec>(post_weights);
   
-  for(int i=0;i<num_test_obs;i++){
-    //output(_,i)=Quantile(draws_wrapped(_,i), probs_for_quantiles);
+  boost::math::students_t dist2(nu+num_obs);
+  double lq_tstandard= boost::math::quantile(dist2,lower_prob);
+  double med_tstandard= boost::math::quantile(dist2,0.5); //This is just 0 ??
+  double uq_tstandard= boost::math::quantile(dist2,upper_prob);
+  
+  if(weights_vec.size()==1){
     
-    //The two lines below can be removed by replacing the standard vectors with armadillo vectors in teh functions below
-    std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
-    std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
-    
-    
-    output(0,i)=rootmixt(nu+num_obs,  min_possible,  max_possible,
-           tempmeans,
-           tempvars,
-             weights_vec, lower_prob,root_alg_precision);
-    
-    output(1,i)=rootmixt(nu+num_obs,  min_possible,  max_possible,
-           tempmeans,
-           tempvars,
-           weights_vec, 0.5,root_alg_precision);
-    
-    output(2,i)=rootmixt(nu+num_obs,  min_possible,  max_possible,
-           tempmeans,
+    for(int i=0;i<num_test_obs;i++){
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      boost::math::students_t dist2(nu+num_obs);
+      
+
+      output(0,i)= tempmeans[0]+sqrt(tempvars[0])*lq_tstandard;
+      output(1,i)= tempmeans[0]+sqrt(tempvars[0])*med_tstandard;
+      output(2,i)= tempmeans[0]+sqrt(tempvars[0])*uq_tstandard;
+      
+      
+    }
+  }else{
+  
+    for(int i=0;i<num_test_obs;i++){
+      //output(_,i)=Quantile(draws_wrapped(_,i), probs_for_quantiles);
+      
+      //The two lines below can be removed by replacing the standard vectors with armadillo vectors in teh functions below
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      
+      std::vector<double> bounds_lQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, lq_tstandard);
+      
+      output(0,i)=rootmixt(nu+num_obs,  bounds_lQ[0],  bounds_lQ[1],
+             tempmeans,
              tempvars,
-             weights_vec, upper_prob,root_alg_precision);
+               weights_vec, lower_prob,root_alg_precision);
+      
+      std::vector<double> bounds_med = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, med_tstandard);
+      
+      output(1,i)=rootmixt(nu+num_obs,  bounds_med[0],  bounds_med[1],
+             tempmeans,
+             tempvars,
+             weights_vec, 0.5,root_alg_precision);
+      
+      std::vector<double> bounds_uQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, uq_tstandard);
+      
+      
+      output(2,i)=rootmixt(nu+num_obs,  bounds_uQ[0],  bounds_uQ[1],
+             tempmeans,
+               tempvars,
+               weights_vec, upper_prob,root_alg_precision);
+      
     
-  
-  }  
-  
+    }  
+  }
   List ret(2);
   ret[0]= output;
   ret[1]= wrap(predicted_values);
@@ -10097,8 +10146,8 @@ List pred_ints_exact_outsamp(List overall_sum_trees,
 List pred_ints_exact_outsamp_par(List overall_sum_trees,
                              List overall_sum_mat,
                              NumericVector y,
-                             NumericVector BIC_weights,
-                             double min_possible,double max_possible,int num_obs,int num_test_obs,
+                             NumericVector BIC_weights,//double min_possible,double max_possible,
+                             int num_obs,int num_test_obs,
                              double a,double sigma,double mu_mu,double nu,
                              double lambda,//List resids,
                              NumericMatrix test_data, double lower_prob, double upper_prob, int num_cores,
@@ -10446,13 +10495,38 @@ List pred_ints_exact_outsamp_par(List overall_sum_trees,
   //NumericMatrix draws_wrapped= wrap(draws_for_preds);
   arma::mat output(3, num_test_obs);
   //NumericVector probs_for_quantiles =  NumericVector::create(lower_prob, 0.5, upper_prob);
-  std::vector<double> probs_for_quantiles {lower_prob, 0.5, upper_prob};
+  
+  //std::vector<double> probs_for_quantiles {lower_prob, 0.5, upper_prob};
   
   
   
   typedef std::vector<double> stdvec;
   std::vector<double> weights_vec= as<stdvec>(post_weights);
   
+  boost::math::students_t dist2(nu+num_obs);
+  double lq_tstandard= boost::math::quantile(dist2,lower_prob);
+  double med_tstandard= boost::math::quantile(dist2,0.5); //This is just 0 ??
+  double uq_tstandard= boost::math::quantile(dist2,upper_prob);
+  
+  
+  if(weights_vec.size()==1){
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+    for(int i=0;i<num_test_obs;i++){
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      //boost::math::students_t dist2(nu+num_obs);
+      
+      
+      output(0,i)= tempmeans[0]+sqrt(tempvars[0])*lq_tstandard;
+      output(1,i)= tempmeans[0]+sqrt(tempvars[0])*med_tstandard;
+      output(2,i)= tempmeans[0]+sqrt(tempvars[0])*uq_tstandard;
+      
+      
+    }
+#pragma omp barrier  
+  }else{
 #pragma omp parallel num_threads(num_cores)
 #pragma omp for
   for(int i=0;i<num_test_obs;i++){
@@ -10461,17 +10535,24 @@ List pred_ints_exact_outsamp_par(List overall_sum_trees,
     std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
     
     
-    output(0,i)=rootmixt(nu+num_obs,  min_possible,  max_possible,
+    std::vector<double> bounds_lQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, lq_tstandard);
+    
+    output(0,i)=rootmixt(nu+num_obs,  bounds_lQ[0],  bounds_lQ[1],
            tempmeans,
            tempvars,
            weights_vec, lower_prob,root_alg_precision);
     
-    output(1,i)=rootmixt(nu+num_obs,  min_possible,  max_possible,
+    
+    std::vector<double> bounds_med = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, med_tstandard);
+    
+    output(1,i)=rootmixt(nu+num_obs,  bounds_med[0],  bounds_med[1],
            tempmeans,
            tempvars,
            weights_vec, 0.5,root_alg_precision);
     
-    output(2,i)=rootmixt(nu+num_obs,  min_possible,  max_possible,
+    std::vector<double> bounds_uQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, uq_tstandard);
+    
+    output(2,i)=rootmixt(nu+num_obs,  bounds_uQ[0],  bounds_uQ[1],
            tempmeans,
            tempvars,
            weights_vec, upper_prob,root_alg_precision);
@@ -10479,6 +10560,7 @@ List pred_ints_exact_outsamp_par(List overall_sum_trees,
     
   }  
 #pragma omp barrier  
+  }
   
   List ret(2);
   ret[0]= wrap(output);

@@ -5,9 +5,8 @@
 \title{Obtain BARTBMA predictions}
 \usage{
 pred_ints_exact_outsamp_par(overall_sum_trees, overall_sum_mat, y,
-  BIC_weights, min_possible, max_possible, num_obs, num_test_obs, a, sigma,
-  mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores,
-  root_alg_precision)
+  BIC_weights, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda,
+  test_data, lower_prob, upper_prob, num_cores, root_alg_precision)
 }
 \description{
 Obtain BARTBMA predictions

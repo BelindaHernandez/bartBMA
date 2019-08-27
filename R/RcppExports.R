@@ -387,14 +387,14 @@ rootmixt <- function(d_o_f, a, b, mean_vec, var_vec, weights_vec, quant_val, roo
 
 #' @title Obtain BARTBMA predictions
 #' @export
-pred_ints_exact_outsamp <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, min_possible, max_possible, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision) {
-    .Call(`_bartBMA_pred_ints_exact_outsamp`, overall_sum_trees, overall_sum_mat, y, BIC_weights, min_possible, max_possible, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision)
+pred_ints_exact_outsamp <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision) {
+    .Call(`_bartBMA_pred_ints_exact_outsamp`, overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision)
 }
 
 #' @title Obtain BARTBMA predictions
 #' @export
-pred_ints_exact_outsamp_par <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, min_possible, max_possible, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision) {
-    .Call(`_bartBMA_pred_ints_exact_outsamp_par`, overall_sum_trees, overall_sum_mat, y, BIC_weights, min_possible, max_possible, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision)
+pred_ints_exact_outsamp_par <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision) {
+    .Call(`_bartBMA_pred_ints_exact_outsamp_par`, overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision)
 }
 
 #' @title Obtain BARTBMA predictions
