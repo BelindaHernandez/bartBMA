@@ -8532,7 +8532,9 @@ arma::mat get_J_test(List curr_termobs,NumericVector tree_term_nodes, int n){
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 
-arma::mat get_W_test(List sum_treetable ,List termobs_testdata_onemodel,int n){
+arma::mat get_W_test(List sum_treetable ,
+                     List termobs_testdata_onemodel,
+                     int n){
   //this will take in a list of obs to node matrices for each tree in the sum make the J matrix assigning observations to terminal nodes
   //J is an nxb_j matrix. It will then iteratively append the J matrix to itself to get the overall W matrix which has dimensions nxsumb_j
   
@@ -9774,8 +9776,15 @@ double mixt_eval_cdf(double x_val, double d_o_f, std::vector<double> mean_vec, s
   
   double ret_val=0;
   for(unsigned int i=0; i < weights_vec.size();i++){
+    if(var_vec[i]>0){
     double tempx = (x_val-mean_vec[i])/sqrt(var_vec[i]);
     ret_val += weights_vec[i]*boost::math::cdf(dist,tempx);
+    }else{//in some cases (for ITEs) there is zero variance, and can't divide by zero
+      //Rcout << " \n \n VARIANCE = " << var_vec[i] << ".\n \n" ;
+      if(x_val>=mean_vec[i]){ //if no variance, cdf is zero below mean, and one above mean
+        ret_val += weights_vec[i];
+      } // no else statement because add zero if below mean (when there is zero variance)
+    }
   }
   
   return (ret_val-quant_val) ;  // approximation
@@ -9796,6 +9805,11 @@ double rootmixt(double d_o_f, double a, double b,
   // nothing else to do
   if (fa == 0) return a;
   if (fb == 0) return b;
+  
+  //Rcout << "quant_val = " << quant_val << ".\n";
+  
+  //Rcout << "fa = " << fa << ".\n";
+  //Rcout << "fb = " << fb << ".\n";
   
   // this method only works if the signs of f(a) and f(b)
   // are different. so just assert that
@@ -9829,7 +9843,8 @@ double rootmixt(double d_o_f, double a, double b,
   } while (b-a > EPS); // only loop while
   // a and b are sufficiently far
   // apart
-  
+  //Rcout << "a = " << a << ".\n";
+  //Rcout << "b = " << b << ".\n";
   return (a + b) / 2;  // approximation
 }
 
@@ -12768,4 +12783,2605 @@ List mean_vars_lin_alg_parallel_outsamp(List overall_sum_trees,
   ret[3]=wrap(covar_matricesF);
   
   return(ret);
+}
+//###########################################################################################################################//
+
+// [[Rcpp::plugins(openmp)]]
+// Protect against compilers without OpenMP
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain BARTBMA predictions
+//' @export
+// [[Rcpp::export]]
+List pred_ints_ITE_outsamp_par(List overall_sum_trees,
+                                 List overall_sum_mat,
+                                 NumericVector y,
+                                 NumericVector BIC_weights,//double min_possible,double max_possible,
+                                 int num_obs,int num_test_obs,
+                                 double a,double sigma,double mu_mu,double nu,
+                                 double lambda,//List resids,
+                                 NumericMatrix test_data, double lower_prob, double upper_prob, int num_cores,
+                                 double root_alg_precision,
+                                 NumericMatrix training_data){
+  
+  
+  //List termobs_testdata_overall= get_termobs_testdata_overall(overall_sum_trees,test_data);
+  
+  NumericVector onevec1(training_data.nrow(),1.0);
+  NumericMatrix Test1data= cbind(onevec1,test_data);
+
+  NumericVector zerovec1(training_data.nrow(),0.0);
+  NumericMatrix Test0data= cbind(zerovec1,test_data);
+  
+  arma::field<arma::field<arma::field<arma::uvec>>> termobs_testdata1_overallF=get_termobs_testdata_fields_overall(overall_sum_trees,Test1data);
+  arma::field<arma::field<arma::field<arma::uvec>>> termobs_testdata0_overallF=get_termobs_testdata_fields_overall(overall_sum_trees,Test0data);
+  
+  //NumericMatrix preds_all_models(num_test_obs,BIC_weights.size());
+  arma::mat preds_all_models_arma(num_test_obs,BIC_weights.size());
+  arma::mat weighted_preds_all_models_arma(num_test_obs,BIC_weights.size());
+  arma::mat t_vars_arma(num_test_obs,BIC_weights.size());
+  
+  arma::vec cate_means_arma(BIC_weights.size());
+  arma::vec cate_means_weighted_arma(BIC_weights.size());
+  
+  arma::vec cate_vars_arma(BIC_weights.size());
+  
+  
+  // for all sums of trees
+  
+  NumericVector BICi=-0.5*BIC_weights;
+  double max_BIC=max(BICi);
+  
+  
+  NumericVector post_weights(BIC_weights.size());
+  
+  for(int k=0;k<BIC_weights.size();k++){
+    
+    //NumericVector BICi=-0.5*BIC_weights;
+    //double max_BIC=max(BICi);
+    double weight=exp(BICi[k]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    post_weights[k]=weight;
+    //int num_its_to_sample = round(weight*(num_iter));
+    
+  }
+  
+  arma::vec post_weights_arma = as<arma::vec>(post_weights);
+  
+  //int num_models= BIC_weights.size();
+  
+  
+  arma::vec averagingvec=(1/double(num_test_obs))*arma::ones<arma::vec>(num_test_obs);
+  
+  
+  
+  arma::vec yvec=Rcpp::as<arma::vec>(y);
+  arma::mat y_arma(num_obs,1);
+  y_arma.col(0)=yvec;
+  arma::mat yty=y_arma.t()*y_arma;
+  
+  
+  //arma::mat I_test(num_test_obs,num_test_obs);
+  //I_test=I_test.eye();
+  
+  //create field (armadillo list) of models
+  //each model is a field (armadillo list) of trees represented by matrices
+  arma::field<arma::field<arma::mat>> modelsF(overall_sum_trees.size());
+  for(int i=0;i<overall_sum_trees.size();i++){
+    List temp_tree_list = overall_sum_trees[i];
+    //Rcout << "Line 5661.\n";
+    
+    arma::field<arma::mat> treesF(temp_tree_list.size());
+    for(int q=0;q<temp_tree_list.size();q++){
+      //Rcout << "Line 5663.\n";
+      arma::mat temp_tree_mat = Rcpp::as<arma::mat>(temp_tree_list[q]);
+      treesF(q)=temp_tree_mat;
+    }
+    //Rcout << "Line 5669.\n";
+    
+    modelsF(i)=treesF;
+  }
+  
+  
+  arma::field<arma::field<arma::mat>> matsF(overall_sum_mat.size());
+  for(int i=0;i<overall_sum_mat.size();i++){
+    List temp_tree_list = overall_sum_mat[i];
+    arma::field<arma::mat> treesF(temp_tree_list.size());
+    for(int q=0;q<temp_tree_list.size();q++){
+      arma::mat temp_tree_mat = Rcpp::as<arma::mat>(temp_tree_list[q]);
+      treesF(q)=temp_tree_mat;
+    }
+    matsF(i)=treesF;
+  }
+  
+  
+  
+  
+  
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+  for(int i=0;i<overall_sum_trees.size();i++){
+    
+    
+    
+    
+    arma::field<arma::mat> tree_list = modelsF(i);
+    
+    arma::mat W(num_obs,0);
+    int upsilon=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat curr_tree=(modelsF(i))(j);
+      arma::mat curr_obs_nodes=(matsF(i))(j);
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      int b_j=term_nodes.n_elem;
+      //begin J function
+      
+      //will make J as we go in BART-BMA no need to create it again here....
+      // arma::mat Jmat=J(curr_obs_nodes,tree_term_nodes);
+      arma::mat tree_matrix_temp = (matsF(i))(j);
+      arma::mat Jmat(tree_matrix_temp.n_rows, b_j);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(int q=0;q<b_j;q++){
+        //double tn=term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        
+        //begin find_term_obs
+        
+        //arma::mat arma_tree_mat(tree_matrix_temp.begin(),tree_matrix_temp.nrow(), tree_matrix_temp.ncol(), false); 
+        //for reference arma_tree_mat == matsF(i)(j) == tree_matrix_temp
+        
+        arma::uvec term_obs;
+        
+        for(unsigned int r=0;r<tree_matrix_temp.n_cols;r++){
+          //arma::vec colmat=arma_tree_mat.col(r);
+          arma::vec colmat=tree_matrix_temp.col(r);
+          term_obs=arma::find(colmat==term_nodes[q]);
+          if(term_obs.size()>0){
+            break;
+          }
+        }
+        
+        //end find_term_obs
+        
+        
+        //assign term_obs to the correct index of J
+        //NumericVector term_obs2=as<NumericVector>(wrap(term_obs));
+        //NumericVector obs_col(obs_to_nodes_temp.nrow());
+        arma::vec obs_col= arma::zeros<arma::vec>(tree_matrix_temp.n_rows);
+        //Rcout << "Line 5747.\n";
+        obs_col.elem(term_obs)= arma::ones<arma::vec>(term_obs.n_elem);
+        //Rcout << "Line 5749.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(i)= colmat;
+      }
+      
+      
+      
+      
+      W.insert_cols(upsilon,Jmat);
+      upsilon+=b_j;
+    }
+    
+    
+    //Rcout << "Line 5759.\n";
+    
+    
+    //arma::mat W_tilde=get_W_test(overall_sum_trees[i],termobs_testdata_overall[i],num_test_obs);
+    
+    
+    ////////////////////////////////////////
+    
+    arma::mat W_tilde1(num_test_obs,0);
+    int upsilon2=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat  curr_tree=(modelsF(i))(j);
+      arma::field<arma::uvec> curr_termobs=(termobs_testdata1_overallF(i))(j);
+      
+      //begin find termnodes
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      
+      //arma::mat arma_tree(tree_table.begin(),tree_table.nrow(), tree_table.ncol(), false); 
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      //return(wrap(term_nodes));
+      //Rcout << "Line 5782.\n";
+      
+      //end find termnodes
+      
+      int b_j=term_nodes.size();
+      //will make J as we go in BART-BMA no need to create it again here....
+      //arma::mat Jmat=get_J_test(curr_termobs,tree_term_nodes,n);
+      //arma::mat Jmat=get_J_test(curr_termobs,term_nodes,num_test_obs);
+      
+      //begin J test function
+      arma::mat Jmat(num_test_obs, term_nodes.n_elem);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(unsigned int q=0;q<term_nodes.n_elem;q++){
+        //double tn=tree_term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        //assign term_obs to the correct index of J
+        arma::uvec term_obs2=curr_termobs(q);
+        arma::vec obs_col= arma::zeros<arma::vec>(num_test_obs);
+        //Rcout << "Line 5809.\n";
+        obs_col.elem(term_obs2)=arma::ones<arma::vec>(term_obs2.n_elem);
+        //Rcout << "Line 5811.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(q)= colmat;
+      }
+      //return(Jmat);
+      
+      //end J test function
+      
+      W_tilde1.insert_cols(upsilon2,Jmat);
+      upsilon2+=b_j;
+    }
+    
+    ////////////////////////////////////////
+    
+    ////////////////////////////////////////
+    
+    arma::mat W_tilde0(num_test_obs,0);
+    int upsilon3=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat  curr_tree=(modelsF(i))(j);
+      arma::field<arma::uvec> curr_termobs=(termobs_testdata0_overallF(i))(j);
+      
+      //begin find termnodes
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      
+      //arma::mat arma_tree(tree_table.begin(),tree_table.nrow(), tree_table.ncol(), false); 
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      //return(wrap(term_nodes));
+      //Rcout << "Line 5782.\n";
+      
+      //end find termnodes
+      
+      int b_j=term_nodes.size();
+      //will make J as we go in BART-BMA no need to create it again here....
+      //arma::mat Jmat=get_J_test(curr_termobs,tree_term_nodes,n);
+      //arma::mat Jmat=get_J_test(curr_termobs,term_nodes,num_test_obs);
+      
+      //begin J test function
+      arma::mat Jmat(num_test_obs, term_nodes.n_elem);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(unsigned int q=0;q<term_nodes.n_elem;q++){
+        //double tn=tree_term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        //assign term_obs to the correct index of J
+        arma::uvec term_obs2=curr_termobs(q);
+        arma::vec obs_col= arma::zeros<arma::vec>(num_test_obs);
+        //Rcout << "Line 5809.\n";
+        obs_col.elem(term_obs2)=arma::ones<arma::vec>(term_obs2.n_elem);
+        //Rcout << "Line 5811.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(q)= colmat;
+      }
+      //return(Jmat);
+      
+      //end J test function
+      
+      W_tilde0.insert_cols(upsilon3,Jmat);
+      upsilon3+=b_j;
+    }
+    
+    ////////////////////////////////////////
+    
+    //Rcout << "Line 5819.\n";
+    
+    
+    double b=W.n_cols;
+    
+    
+    //get t(y)inv(psi)J
+    arma::mat ytW=y_arma.t()*W;
+    
+    
+    //get t(J)inv(psi)J  
+    arma::mat WtW=W.t()*W;
+    
+    
+    
+    
+    
+    //get jpsij +aI
+    arma::mat aI(b,b);
+    aI=a*aI.eye();
+    arma::mat sec_term=WtW+aI;
+    
+    
+    //arma::mat L_mat = arma::chol(sec_term,"lower");
+    
+    //arma::mat L_inv = arma::inv(L_mat);
+    //arma::mat L_inv = arma::inv(arma::chol(sec_term));
+    //arma::mat L_inv = arma::inv((L_mat));
+    //arma::mat L_inv_t = arma::trans(arma::inv(trimatu(L_mat)));
+    //arma::mat L_inv_t = arma::trans(arma::inv((L_mat)));
+    
+    
+    
+    //arma::mat sec_term_inv=sec_term.i();
+    arma::mat sec_term_inv=inv_sympd(sec_term);  
+    
+    
+    //get t(J)inv(psi)y
+    arma::mat third_term=W.t()*y_arma;
+    
+    
+    //arma::mat coeff = solve(L_mat.t(), solve(L_mat, Wmat.t()*y_arma));
+    //arma::mat coeff = L_inv.t()*L_inv*Wmat.t()*y_arma;
+    
+    
+    
+    //get m^TV^{-1}m
+    arma::mat mvm= ytW*sec_term_inv*third_term;
+    
+    arma::mat Treat_diff = W_tilde1-W_tilde0;
+    
+    arma::mat w_tilde_M_inv =  Treat_diff*sec_term_inv;
+    
+    //Rcout << "Line 4151";
+    
+    
+    
+    // //Obtain (lower triangular?) matrix t(L) by Cholesky decomposition such that sec_term_inv=L*t(L)
+    // arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sec_term))));
+    // //obtain the log of the root of the determinant
+    // double rootisum = arma::sum(log(rooti.diag()));
+    // 
+    // arma::mat LtWtY= rooti*(Wmat.t()*y);
+    // 
+    // arma::mat rel=(b/2)*log(a)+rootisum -expon*log(nu*lambda - arma::sum(LtWtY%LtWtY) +yty);
+    // 
+    // 
+    
+    
+    // arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sec_term))));
+    // arma::mat LtWtY= rooti*(Wmat.t()*y);
+    
+    
+    
+    arma::vec preds_temp_arma= w_tilde_M_inv*third_term;
+    
+    // arma::vec preds_temp_arma= W_tilde*sec_term_inv*(Wmat.t())*y_arma;
+    
+    //arma::vec preds_temp_arma= W_tilde*coeff;
+    //arma::mat mvm= coeff*y_arma;
+    //arma::mat mvm= y_arma.t()*Wmat*coeff;
+    
+    
+    
+    
+    
+    arma::mat temp_for_scal = ((nu*lambda+yty-mvm)/(nu+num_obs));
+    double temp_scal= as_scalar(temp_for_scal) ;
+    //Rcout << "Line 4156";
+    //arma::mat covar_t=temp_scal*(I_test+w_tilde_M_inv*(W_tilde.t()));
+    arma::mat covar_t=temp_scal*(w_tilde_M_inv*(Treat_diff.t()));
+    
+    arma::mat catevartemp=temp_scal*(averagingvec.t()*w_tilde_M_inv*(Treat_diff.t())*averagingvec);
+    
+    //arma::mat W_tilde_L_inv_t= W_tilde*L_inv_t; 
+    //arma::mat covar_t=temp_scal*(I_test+W_tilde_L_inv_t*(W_tilde_L_inv_t.t()));
+    
+    
+    
+    // Rcout << "Line 4459. i= "<< i << ".\n";
+    
+    
+    
+    //double weight=exp(BICi[i]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    
+    weighted_preds_all_models_arma.col(i)=preds_temp_arma*post_weights_arma[i];
+    
+    preds_all_models_arma.col(i)=preds_temp_arma;
+    t_vars_arma.col(i)=covar_t.diag();
+    
+    cate_means_arma(i)=as_scalar(averagingvec.t()*preds_temp_arma);
+    cate_means_weighted_arma(i)=cate_means_arma(i)*post_weights_arma(i); 
+    
+    cate_vars_arma(i)=as_scalar(catevartemp);
+    
+  }
+  
+  //}
+#pragma omp barrier  
+  
+  //arma::colvec predicted_values;
+  
+  //arma::mat M1(preds_all_models.begin(), preds_all_models.nrow(), preds_all_models.ncol(), false);
+  arma::colvec predicted_values=sum(weighted_preds_all_models_arma,1);
+  
+  double cate_pred=sum(cate_means_weighted_arma);
+  
+  //NumericMatrix draws_wrapped= wrap(draws_for_preds);
+  arma::mat output(3, num_test_obs);
+  //NumericVector probs_for_quantiles =  NumericVector::create(lower_prob, 0.5, upper_prob);
+  
+  //std::vector<double> probs_for_quantiles {lower_prob, 0.5, upper_prob};
+  arma::mat cate_ints(3, 1);
+  
+  
+  
+  typedef std::vector<double> stdvec;
+  std::vector<double> weights_vec= as<stdvec>(post_weights);
+  
+  boost::math::students_t dist2(nu+num_obs);
+  double lq_tstandard= boost::math::quantile(dist2,lower_prob);
+  double med_tstandard= boost::math::quantile(dist2,0.5); //This is just 0 ??
+  double uq_tstandard= boost::math::quantile(dist2,upper_prob);
+  
+  
+  if(weights_vec.size()==1){
+    
+    cate_ints(0,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*lq_tstandard;
+    cate_ints(1,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*med_tstandard;
+    cate_ints(2,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*uq_tstandard;   
+    
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+    for(int i=0;i<num_test_obs;i++){
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      //boost::math::students_t dist2(nu+num_obs);
+      
+      //Rcout << "Line 13812 tempvars" << t_vars_arma.row(i) << ".\n";
+      //Rcout << "tempmeans" << preds_all_models_arma.row(i) << ".\n";
+      
+      
+      output(0,i)= tempmeans[0]+sqrt(tempvars[0])*lq_tstandard;
+      output(1,i)= tempmeans[0]+sqrt(tempvars[0])*med_tstandard;
+      output(2,i)= tempmeans[0]+sqrt(tempvars[0])*uq_tstandard;
+      
+      
+    }
+#pragma omp barrier  
+  }else{
+    std::vector<double> tempmeans_cate= arma::conv_to<stdvec>::from(cate_means_arma);
+    std::vector<double> tempvars_cate= arma::conv_to<stdvec>::from(cate_vars_arma);
+    
+    std::vector<double> bounds_lQ_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, lq_tstandard);
+    
+    //Rcout << "line 13828 cate_vars_arma = " << cate_vars_arma << ".\n";
+    //Rcout << "cate_means_arma = " << cate_means_arma << ".\n";
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(0,0)= rootmixt(nu+num_obs,  
+              bounds_lQ_cate[0]-0.0001,
+              bounds_lQ_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, lower_prob,root_alg_precision);
+    
+    std::vector<double> bounds_med_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, med_tstandard);
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(1,0)= rootmixt(nu+num_obs,  
+              bounds_med_cate[0]-0.0001,  
+              bounds_med_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, 0.5, root_alg_precision);
+    
+    std::vector<double> bounds_uQ_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, uq_tstandard);
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(2,0)= rootmixt(nu+num_obs,  
+              bounds_uQ_cate[0]-0.0001,  
+              bounds_uQ_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, upper_prob, root_alg_precision);
+    
+    //Rcout << "line 13871 cate_ints = " << cate_ints << ".\n";
+    
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+    for(int i=0;i<num_test_obs;i++){
+      //output(_,i)=Quantile(draws_wrapped(_,i), probs_for_quantiles);
+      
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      //Rcout << "Line 13859. tempvars" << t_vars_arma.row(i) << ".\n";
+      //Rcout << "tempmeans" << preds_all_models_arma.row(i) << ".\n";
+      
+      std::vector<double> bounds_lQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, lq_tstandard);
+      
+      output(0,i)=rootmixt(nu+num_obs,  
+             bounds_lQ[0]-0.0001,  
+             bounds_lQ[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, lower_prob,root_alg_precision);
+      
+      
+      std::vector<double> bounds_med = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, med_tstandard);
+      
+      output(1,i)=rootmixt(nu+num_obs,  
+             bounds_med[0]-0.0001,  
+             bounds_med[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, 0.5,root_alg_precision);
+      
+      std::vector<double> bounds_uQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, uq_tstandard);
+      
+      output(2,i)=rootmixt(nu+num_obs, 
+             bounds_uQ[0]-0.0001,  
+             bounds_uQ[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, upper_prob,root_alg_precision);
+      
+      
+    }  
+#pragma omp barrier  
+  }
+  
+  
+  List ret(4);
+  ret[0]= wrap(output);
+  ret[1]= wrap(predicted_values);
+  ret[2]= cate_pred;
+  ret[3]= wrap(cate_ints);
+  
+  return(ret);
+  
+}
+
+//###########################################################################################################################//
+
+// [[Rcpp::plugins(openmp)]]
+// Protect against compilers without OpenMP
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain BARTBMA predictions
+//' @export
+// [[Rcpp::export]]
+List pred_ints_ITE_insamp_par(List overall_sum_trees,
+                               List overall_sum_mat,
+                               NumericVector y,
+                               NumericVector BIC_weights,//double min_possible,double max_possible,
+                               int num_obs,//int num_test_obs,
+                               double a,double sigma,
+                               double mu_mu,double nu,
+                               double lambda,//List resids,NumericMatrix test_data, 
+                               double lower_prob, double upper_prob, 
+                               int num_cores,
+                               double root_alg_precision,
+                               NumericMatrix training_data){
+  
+  
+  //List termobs_testdata_overall= get_termobs_testdata_overall(overall_sum_trees,test_data);
+  
+  NumericVector onevec1(training_data.nrow(),1.0);
+  NumericMatrix Training1data= cbind(onevec1,training_data);
+  
+  NumericVector zerovec1(training_data.nrow(),0.0);
+  NumericMatrix Training0data= cbind(zerovec1,training_data);
+  
+  arma::field<arma::field<arma::field<arma::uvec>>> termobs_testdata1_overallF=get_termobs_testdata_fields_overall(overall_sum_trees,Training1data);
+  arma::field<arma::field<arma::field<arma::uvec>>> termobs_testdata0_overallF=get_termobs_testdata_fields_overall(overall_sum_trees,Training0data);
+  
+  //NumericMatrix preds_all_models(num_test_obs,BIC_weights.size());
+  arma::mat preds_all_models_arma(num_obs,BIC_weights.size());
+  arma::mat weighted_preds_all_models_arma(num_obs,BIC_weights.size());
+  arma::mat t_vars_arma(num_obs,BIC_weights.size());
+  
+  arma::vec cate_means_arma(BIC_weights.size());
+  arma::vec cate_means_weighted_arma(BIC_weights.size());
+  
+  arma::vec cate_vars_arma(BIC_weights.size());
+  
+  
+  // for all sums of trees
+  
+  NumericVector BICi=-0.5*BIC_weights;
+  double max_BIC=max(BICi);
+  
+  
+  NumericVector post_weights(BIC_weights.size());
+  
+  for(int k=0;k<BIC_weights.size();k++){
+    
+    //NumericVector BICi=-0.5*BIC_weights;
+    //double max_BIC=max(BICi);
+    double weight=exp(BICi[k]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    post_weights[k]=weight;
+    //int num_its_to_sample = round(weight*(num_iter));
+    
+  }
+  
+  arma::vec post_weights_arma = as<arma::vec>(post_weights);
+  
+  //int num_models= BIC_weights.size();
+  
+  
+  arma::vec averagingvec=(1/double(num_obs))*arma::ones<arma::vec>(num_obs);
+  
+  
+  
+  arma::vec yvec=Rcpp::as<arma::vec>(y);
+  arma::mat y_arma(num_obs,1);
+  y_arma.col(0)=yvec;
+  arma::mat yty=y_arma.t()*y_arma;
+  
+  
+  //arma::mat I_test(num_test_obs,num_test_obs);
+  //I_test=I_test.eye();
+  
+  //create field (armadillo list) of models
+  //each model is a field (armadillo list) of trees represented by matrices
+  arma::field<arma::field<arma::mat>> modelsF(overall_sum_trees.size());
+  for(int i=0;i<overall_sum_trees.size();i++){
+    List temp_tree_list = overall_sum_trees[i];
+    //Rcout << "Line 5661.\n";
+    
+    arma::field<arma::mat> treesF(temp_tree_list.size());
+    for(int q=0;q<temp_tree_list.size();q++){
+      //Rcout << "Line 5663.\n";
+      arma::mat temp_tree_mat = Rcpp::as<arma::mat>(temp_tree_list[q]);
+      treesF(q)=temp_tree_mat;
+    }
+    //Rcout << "Line 5669.\n";
+    
+    modelsF(i)=treesF;
+  }
+  
+  
+  arma::field<arma::field<arma::mat>> matsF(overall_sum_mat.size());
+  for(int i=0;i<overall_sum_mat.size();i++){
+    List temp_tree_list = overall_sum_mat[i];
+    arma::field<arma::mat> treesF(temp_tree_list.size());
+    for(int q=0;q<temp_tree_list.size();q++){
+      arma::mat temp_tree_mat = Rcpp::as<arma::mat>(temp_tree_list[q]);
+      treesF(q)=temp_tree_mat;
+    }
+    matsF(i)=treesF;
+  }
+  
+  
+  
+  
+  
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+  for(int i=0;i<overall_sum_trees.size();i++){
+    
+    
+    
+    
+    arma::field<arma::mat> tree_list = modelsF(i);
+    
+    arma::mat W(num_obs,0);
+    int upsilon=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat curr_tree=(modelsF(i))(j);
+      arma::mat curr_obs_nodes=(matsF(i))(j);
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      int b_j=term_nodes.n_elem;
+      //begin J function
+      
+      //will make J as we go in BART-BMA no need to create it again here....
+      // arma::mat Jmat=J(curr_obs_nodes,tree_term_nodes);
+      arma::mat tree_matrix_temp = (matsF(i))(j);
+      arma::mat Jmat(tree_matrix_temp.n_rows, b_j);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(int q=0;q<b_j;q++){
+        //double tn=term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        
+        //begin find_term_obs
+        
+        //arma::mat arma_tree_mat(tree_matrix_temp.begin(),tree_matrix_temp.nrow(), tree_matrix_temp.ncol(), false); 
+        //for reference arma_tree_mat == matsF(i)(j) == tree_matrix_temp
+        
+        arma::uvec term_obs;
+        
+        for(unsigned int r=0;r<tree_matrix_temp.n_cols;r++){
+          //arma::vec colmat=arma_tree_mat.col(r);
+          arma::vec colmat=tree_matrix_temp.col(r);
+          term_obs=arma::find(colmat==term_nodes[q]);
+          if(term_obs.size()>0){
+            break;
+          }
+        }
+        
+        //end find_term_obs
+        
+        
+        //assign term_obs to the correct index of J
+        //NumericVector term_obs2=as<NumericVector>(wrap(term_obs));
+        //NumericVector obs_col(obs_to_nodes_temp.nrow());
+        arma::vec obs_col= arma::zeros<arma::vec>(tree_matrix_temp.n_rows);
+        //Rcout << "Line 5747.\n";
+        obs_col.elem(term_obs)= arma::ones<arma::vec>(term_obs.n_elem);
+        //Rcout << "Line 5749.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(i)= colmat;
+      }
+      
+      
+      
+      
+      W.insert_cols(upsilon,Jmat);
+      upsilon+=b_j;
+    }
+    
+    
+    //Rcout << "Line 5759.\n";
+    
+    
+    //arma::mat W_tilde=get_W_test(overall_sum_trees[i],termobs_testdata_overall[i],num_test_obs);
+    
+    
+    ////////////////////////////////////////
+    
+    arma::mat W_tilde1(num_obs,0);
+    int upsilon2=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat  curr_tree=(modelsF(i))(j);
+      arma::field<arma::uvec> curr_termobs=(termobs_testdata1_overallF(i))(j);
+      
+      //begin find termnodes
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      
+      //arma::mat arma_tree(tree_table.begin(),tree_table.nrow(), tree_table.ncol(), false); 
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      //return(wrap(term_nodes));
+      //Rcout << "Line 5782.\n";
+      
+      //end find termnodes
+      
+      int b_j=term_nodes.size();
+      //will make J as we go in BART-BMA no need to create it again here....
+      //arma::mat Jmat=get_J_test(curr_termobs,tree_term_nodes,n);
+      //arma::mat Jmat=get_J_test(curr_termobs,term_nodes,num_test_obs);
+      
+      //begin J test function
+      arma::mat Jmat(num_obs, term_nodes.n_elem);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(unsigned int q=0;q<term_nodes.n_elem;q++){
+        //double tn=tree_term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        //assign term_obs to the correct index of J
+        arma::uvec term_obs2=curr_termobs(q);
+        arma::vec obs_col= arma::zeros<arma::vec>(num_obs);
+        //Rcout << "Line 5809.\n";
+        obs_col.elem(term_obs2)=arma::ones<arma::vec>(term_obs2.n_elem);
+        //Rcout << "Line 5811.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(q)= colmat;
+      }
+      //return(Jmat);
+      
+      //end J test function
+      
+      W_tilde1.insert_cols(upsilon2,Jmat);
+      upsilon2+=b_j;
+    }
+    
+    ////////////////////////////////////////
+    
+    ////////////////////////////////////////
+    
+    arma::mat W_tilde0(num_obs,0);
+    int upsilon3=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat  curr_tree=(modelsF(i))(j);
+      arma::field<arma::uvec> curr_termobs=(termobs_testdata0_overallF(i))(j);
+      
+      //begin find termnodes
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      
+      //arma::mat arma_tree(tree_table.begin(),tree_table.nrow(), tree_table.ncol(), false); 
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      //return(wrap(term_nodes));
+      //Rcout << "Line 5782.\n";
+      
+      //end find termnodes
+      
+      int b_j=term_nodes.size();
+      //will make J as we go in BART-BMA no need to create it again here....
+      //arma::mat Jmat=get_J_test(curr_termobs,tree_term_nodes,n);
+      //arma::mat Jmat=get_J_test(curr_termobs,term_nodes,num_test_obs);
+      
+      //begin J test function
+      arma::mat Jmat(num_obs, term_nodes.n_elem);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(unsigned int q=0;q<term_nodes.n_elem;q++){
+        //double tn=tree_term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        //assign term_obs to the correct index of J
+        arma::uvec term_obs2=curr_termobs(q);
+        arma::vec obs_col= arma::zeros<arma::vec>(num_obs);
+        //Rcout << "Line 5809.\n";
+        obs_col.elem(term_obs2)=arma::ones<arma::vec>(term_obs2.n_elem);
+        //Rcout << "Line 5811.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(q)= colmat;
+      }
+      //return(Jmat);
+      
+      //end J test function
+      
+      W_tilde0.insert_cols(upsilon3,Jmat);
+      upsilon3+=b_j;
+    }
+    
+    ////////////////////////////////////////
+    
+    //Rcout << "Line 5819.\n";
+    
+    
+    double b=W.n_cols;
+    
+    
+    //get t(y)inv(psi)J
+    arma::mat ytW=y_arma.t()*W;
+    
+    
+    //get t(J)inv(psi)J  
+    arma::mat WtW=W.t()*W;
+    
+    
+    
+    
+    
+    //get jpsij +aI
+    arma::mat aI(b,b);
+    aI=a*aI.eye();
+    arma::mat sec_term=WtW+aI;
+    
+    
+    //arma::mat L_mat = arma::chol(sec_term,"lower");
+    
+    //arma::mat L_inv = arma::inv(L_mat);
+    //arma::mat L_inv = arma::inv(arma::chol(sec_term));
+    //arma::mat L_inv = arma::inv((L_mat));
+    //arma::mat L_inv_t = arma::trans(arma::inv(trimatu(L_mat)));
+    //arma::mat L_inv_t = arma::trans(arma::inv((L_mat)));
+    
+    
+    
+    //arma::mat sec_term_inv=sec_term.i();
+    arma::mat sec_term_inv=inv_sympd(sec_term);  
+    
+    
+    //get t(J)inv(psi)y
+    arma::mat third_term=W.t()*y_arma;
+    
+    
+    //arma::mat coeff = solve(L_mat.t(), solve(L_mat, Wmat.t()*y_arma));
+    //arma::mat coeff = L_inv.t()*L_inv*Wmat.t()*y_arma;
+    
+    
+    
+    //get m^TV^{-1}m
+    arma::mat mvm= ytW*sec_term_inv*third_term;
+    
+    arma::mat Treat_diff = W_tilde1-W_tilde0;
+    
+    arma::mat w_tilde_M_inv =  Treat_diff*sec_term_inv;
+    
+    //Rcout << "Line 4151";
+    
+    
+    
+    // //Obtain (lower triangular?) matrix t(L) by Cholesky decomposition such that sec_term_inv=L*t(L)
+    // arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sec_term))));
+    // //obtain the log of the root of the determinant
+    // double rootisum = arma::sum(log(rooti.diag()));
+    // 
+    // arma::mat LtWtY= rooti*(Wmat.t()*y);
+    // 
+    // arma::mat rel=(b/2)*log(a)+rootisum -expon*log(nu*lambda - arma::sum(LtWtY%LtWtY) +yty);
+    // 
+    // 
+    
+    
+    // arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sec_term))));
+    // arma::mat LtWtY= rooti*(Wmat.t()*y);
+    
+    
+    
+    arma::vec preds_temp_arma= w_tilde_M_inv*third_term;
+    
+    // arma::vec preds_temp_arma= W_tilde*sec_term_inv*(Wmat.t())*y_arma;
+    
+    //arma::vec preds_temp_arma= W_tilde*coeff;
+    //arma::mat mvm= coeff*y_arma;
+    //arma::mat mvm= y_arma.t()*Wmat*coeff;
+    
+    
+    
+    
+    
+    arma::mat temp_for_scal = ((nu*lambda+yty-mvm)/(nu+num_obs));
+    double temp_scal= as_scalar(temp_for_scal) ;
+    //Rcout << "Line 4156";
+    //arma::mat covar_t=temp_scal*(I_test+w_tilde_M_inv*(W_tilde.t()));
+    arma::mat covar_t=temp_scal*(w_tilde_M_inv*(Treat_diff.t()));
+    
+    arma::mat catevartemp=temp_scal*(averagingvec.t()*w_tilde_M_inv*(Treat_diff.t())*averagingvec);
+    
+    //arma::mat W_tilde_L_inv_t= W_tilde*L_inv_t; 
+    //arma::mat covar_t=temp_scal*(I_test+W_tilde_L_inv_t*(W_tilde_L_inv_t.t()));
+    
+    
+    
+    // Rcout << "Line 4459. i= "<< i << ".\n";
+    
+    
+    
+    //double weight=exp(BICi[i]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    
+    weighted_preds_all_models_arma.col(i)=preds_temp_arma*post_weights_arma(i);
+    
+    preds_all_models_arma.col(i)=preds_temp_arma;
+    t_vars_arma.col(i)=covar_t.diag();
+    
+    cate_means_arma(i)=as_scalar(averagingvec.t()*preds_temp_arma);
+    cate_means_weighted_arma(i)=cate_means_arma(i)*post_weights_arma(i); 
+    
+    cate_vars_arma(i)=as_scalar(catevartemp);
+    
+  }
+  
+  //}
+#pragma omp barrier  
+  
+  //arma::colvec predicted_values;
+  
+  //arma::mat M1(preds_all_models.begin(), preds_all_models.nrow(), preds_all_models.ncol(), false);
+  arma::colvec predicted_values=sum(weighted_preds_all_models_arma,1);
+  
+  double cate_pred=sum(cate_means_weighted_arma);
+  
+  //NumericMatrix draws_wrapped= wrap(draws_for_preds);
+  arma::mat output(3, num_obs);
+  //NumericVector probs_for_quantiles =  NumericVector::create(lower_prob, 0.5, upper_prob);
+  
+  //std::vector<double> probs_for_quantiles {lower_prob, 0.5, upper_prob};
+  arma::mat cate_ints(3, 1);
+  
+  
+  
+  typedef std::vector<double> stdvec;
+  std::vector<double> weights_vec= as<stdvec>(post_weights);
+  
+  boost::math::students_t dist2(nu+num_obs);
+  double lq_tstandard= boost::math::quantile(dist2,lower_prob);
+  double med_tstandard= boost::math::quantile(dist2,0.5); //This is just 0 ??
+  double uq_tstandard= boost::math::quantile(dist2,upper_prob);
+  
+  //Rcout << "cate_vars_arma line 13795" << cate_vars_arma << ".\n";
+  //Rcout << "cate_means_arma" << cate_means_arma << ".\n";
+  
+  if(weights_vec.size()==1){
+    
+    cate_ints(0,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*lq_tstandard;
+    cate_ints(1,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*med_tstandard;
+    cate_ints(2,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*uq_tstandard;   
+    
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+    for(int i=0;i<num_obs;i++){
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      //boost::math::students_t dist2(nu+num_obs);
+      
+      //Rcout << "Line 13812 tempvars" << t_vars_arma.row(i) << ".\n";
+      //Rcout << "tempmeans" << preds_all_models_arma.row(i) << ".\n";
+      
+      
+      output(0,i)= tempmeans[0]+sqrt(tempvars[0])*lq_tstandard;
+      output(1,i)= tempmeans[0]+sqrt(tempvars[0])*med_tstandard;
+      output(2,i)= tempmeans[0]+sqrt(tempvars[0])*uq_tstandard;
+      
+      
+    }
+#pragma omp barrier  
+  }else{
+    std::vector<double> tempmeans_cate= arma::conv_to<stdvec>::from(cate_means_arma);
+    std::vector<double> tempvars_cate= arma::conv_to<stdvec>::from(cate_vars_arma);
+    
+    std::vector<double> bounds_lQ_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, lq_tstandard);
+    
+    //Rcout << "line 13828 cate_vars_arma = " << cate_vars_arma << ".\n";
+    //Rcout << "cate_means_arma = " << cate_means_arma << ".\n";
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+
+    cate_ints(0,0)= rootmixt(nu+num_obs,  
+              bounds_lQ_cate[0]-0.0001,
+              bounds_lQ_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, lower_prob,root_alg_precision);
+    
+    std::vector<double> bounds_med_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, med_tstandard);
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(1,0)= rootmixt(nu+num_obs,  
+              bounds_med_cate[0]-0.0001,  
+              bounds_med_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, 0.5, root_alg_precision);
+    
+    std::vector<double> bounds_uQ_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, uq_tstandard);
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(2,0)= rootmixt(nu+num_obs,  
+              bounds_uQ_cate[0]-0.0001,  
+              bounds_uQ_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, upper_prob, root_alg_precision);
+    
+    //Rcout << "line 13871 cate_ints = " << cate_ints << ".\n";
+    
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+    for(int i=0;i<num_obs;i++){
+      //output(_,i)=Quantile(draws_wrapped(_,i), probs_for_quantiles);
+      
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      //Rcout << "Line 13859. tempvars" << t_vars_arma.row(i) << ".\n";
+      //Rcout << "tempmeans" << preds_all_models_arma.row(i) << ".\n";
+      
+      std::vector<double> bounds_lQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, lq_tstandard);
+      
+      output(0,i)=rootmixt(nu+num_obs,  
+             bounds_lQ[0]-0.0001,  
+                      bounds_lQ[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, lower_prob,root_alg_precision);
+      
+      
+      std::vector<double> bounds_med = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, med_tstandard);
+      
+      output(1,i)=rootmixt(nu+num_obs,  
+             bounds_med[0]-0.0001,  
+                       bounds_med[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, 0.5,root_alg_precision);
+      
+      std::vector<double> bounds_uQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, uq_tstandard);
+      
+      output(2,i)=rootmixt(nu+num_obs, 
+             bounds_uQ[0]-0.0001,  
+                      bounds_uQ[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, upper_prob,root_alg_precision);
+      
+      
+    }  
+#pragma omp barrier  
+  }
+  
+  List ret(4);
+  ret[0]= wrap(output);
+  ret[1]= wrap(predicted_values);
+  ret[2]= wrap(cate_ints);
+  ret[3]= cate_pred;
+  
+  return(ret);
+  
+}
+
+//###########################################################################################################################//
+
+// [[Rcpp::plugins(openmp)]]
+// Protect against compilers without OpenMP
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain BARTBMA predictions
+//' @export
+// [[Rcpp::export]]
+List pred_ints_ITE_CATT_outsamp_par(List overall_sum_trees,
+                               List overall_sum_mat,
+                               NumericVector y,
+                               NumericVector BIC_weights,//double min_possible,double max_possible,
+                               int num_obs,int num_test_obs,
+                               double a,double sigma,double mu_mu,double nu,
+                               double lambda,//List resids,
+                               NumericMatrix test_data, double lower_prob, double upper_prob, int num_cores,
+                               double root_alg_precision,
+                               NumericMatrix training_data,NumericVector ztest){
+  
+  
+  //List termobs_testdata_overall= get_termobs_testdata_overall(overall_sum_trees,test_data);
+  
+  NumericVector onevec1(training_data.nrow(),1.0);
+  NumericMatrix Test1data= cbind(onevec1,test_data);
+  
+  NumericVector zerovec1(training_data.nrow(),0.0);
+  NumericMatrix Test0data= cbind(zerovec1,test_data);
+  
+  arma::field<arma::field<arma::field<arma::uvec>>> termobs_testdata1_overallF=get_termobs_testdata_fields_overall(overall_sum_trees,Test1data);
+  arma::field<arma::field<arma::field<arma::uvec>>> termobs_testdata0_overallF=get_termobs_testdata_fields_overall(overall_sum_trees,Test0data);
+  
+  //NumericMatrix preds_all_models(num_test_obs,BIC_weights.size());
+  arma::mat preds_all_models_arma(num_test_obs,BIC_weights.size());
+  arma::mat weighted_preds_all_models_arma(num_test_obs,BIC_weights.size());
+  arma::mat t_vars_arma(num_test_obs,BIC_weights.size());
+  
+  arma::vec cate_means_arma(BIC_weights.size());
+  arma::vec cate_means_weighted_arma(BIC_weights.size());
+  arma::vec cate_vars_arma(BIC_weights.size());
+  
+  arma::vec catt_means_arma(BIC_weights.size());
+  arma::vec catt_means_weighted_arma(BIC_weights.size());
+  arma::vec catt_vars_arma(BIC_weights.size());
+  
+  arma::vec catnt_means_arma(BIC_weights.size());
+  arma::vec catnt_means_weighted_arma(BIC_weights.size());
+  arma::vec catnt_vars_arma(BIC_weights.size());
+  
+  // for all sums of trees
+  
+  NumericVector BICi=-0.5*BIC_weights;
+  double max_BIC=max(BICi);
+  
+  
+  NumericVector post_weights(BIC_weights.size());
+  
+  for(int k=0;k<BIC_weights.size();k++){
+    
+    //NumericVector BICi=-0.5*BIC_weights;
+    //double max_BIC=max(BICi);
+    double weight=exp(BICi[k]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    post_weights[k]=weight;
+    //int num_its_to_sample = round(weight*(num_iter));
+    
+  }
+  
+  arma::vec post_weights_arma = as<arma::vec>(post_weights);
+  arma::vec ztest_arma = as<arma::vec>(ztest);
+  
+  
+  //int num_models= BIC_weights.size();
+  
+  
+  arma::vec averagingvec=(1/double(num_test_obs))*arma::ones<arma::vec>(num_test_obs);
+  
+  arma::vec catt_averagingvec=(1/arma::sum(ztest_arma))*ztest_arma;
+  arma::vec catnt_averagingvec=(1/(num_test_obs-arma::sum(ztest_arma)))*(1-ztest_arma);
+  
+  
+  arma::vec yvec=Rcpp::as<arma::vec>(y);
+  arma::mat y_arma(num_obs,1);
+  y_arma.col(0)=yvec;
+  arma::mat yty=y_arma.t()*y_arma;
+  
+  
+  //arma::mat I_test(num_test_obs,num_test_obs);
+  //I_test=I_test.eye();
+  
+  //create field (armadillo list) of models
+  //each model is a field (armadillo list) of trees represented by matrices
+  arma::field<arma::field<arma::mat>> modelsF(overall_sum_trees.size());
+  for(int i=0;i<overall_sum_trees.size();i++){
+    List temp_tree_list = overall_sum_trees[i];
+    //Rcout << "Line 5661.\n";
+    
+    arma::field<arma::mat> treesF(temp_tree_list.size());
+    for(int q=0;q<temp_tree_list.size();q++){
+      //Rcout << "Line 5663.\n";
+      arma::mat temp_tree_mat = Rcpp::as<arma::mat>(temp_tree_list[q]);
+      treesF(q)=temp_tree_mat;
+    }
+    //Rcout << "Line 5669.\n";
+    
+    modelsF(i)=treesF;
+  }
+  
+  
+  arma::field<arma::field<arma::mat>> matsF(overall_sum_mat.size());
+  for(int i=0;i<overall_sum_mat.size();i++){
+    List temp_tree_list = overall_sum_mat[i];
+    arma::field<arma::mat> treesF(temp_tree_list.size());
+    for(int q=0;q<temp_tree_list.size();q++){
+      arma::mat temp_tree_mat = Rcpp::as<arma::mat>(temp_tree_list[q]);
+      treesF(q)=temp_tree_mat;
+    }
+    matsF(i)=treesF;
+  }
+  
+  
+  
+  
+  
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+  for(int i=0;i<overall_sum_trees.size();i++){
+    
+    
+    
+    
+    arma::field<arma::mat> tree_list = modelsF(i);
+    
+    arma::mat W(num_obs,0);
+    int upsilon=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat curr_tree=(modelsF(i))(j);
+      arma::mat curr_obs_nodes=(matsF(i))(j);
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      int b_j=term_nodes.n_elem;
+      //begin J function
+      
+      //will make J as we go in BART-BMA no need to create it again here....
+      // arma::mat Jmat=J(curr_obs_nodes,tree_term_nodes);
+      arma::mat tree_matrix_temp = (matsF(i))(j);
+      arma::mat Jmat(tree_matrix_temp.n_rows, b_j);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(int q=0;q<b_j;q++){
+        //double tn=term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        
+        //begin find_term_obs
+        
+        //arma::mat arma_tree_mat(tree_matrix_temp.begin(),tree_matrix_temp.nrow(), tree_matrix_temp.ncol(), false); 
+        //for reference arma_tree_mat == matsF(i)(j) == tree_matrix_temp
+        
+        arma::uvec term_obs;
+        
+        for(unsigned int r=0;r<tree_matrix_temp.n_cols;r++){
+          //arma::vec colmat=arma_tree_mat.col(r);
+          arma::vec colmat=tree_matrix_temp.col(r);
+          term_obs=arma::find(colmat==term_nodes[q]);
+          if(term_obs.size()>0){
+            break;
+          }
+        }
+        
+        //end find_term_obs
+        
+        
+        //assign term_obs to the correct index of J
+        //NumericVector term_obs2=as<NumericVector>(wrap(term_obs));
+        //NumericVector obs_col(obs_to_nodes_temp.nrow());
+        arma::vec obs_col= arma::zeros<arma::vec>(tree_matrix_temp.n_rows);
+        //Rcout << "Line 5747.\n";
+        obs_col.elem(term_obs)= arma::ones<arma::vec>(term_obs.n_elem);
+        //Rcout << "Line 5749.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(i)= colmat;
+      }
+      
+      
+      
+      
+      W.insert_cols(upsilon,Jmat);
+      upsilon+=b_j;
+    }
+    
+    
+    //Rcout << "Line 5759.\n";
+    
+    
+    //arma::mat W_tilde=get_W_test(overall_sum_trees[i],termobs_testdata_overall[i],num_test_obs);
+    
+    
+    ////////////////////////////////////////
+    
+    arma::mat W_tilde1(num_test_obs,0);
+    int upsilon2=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat  curr_tree=(modelsF(i))(j);
+      arma::field<arma::uvec> curr_termobs=(termobs_testdata1_overallF(i))(j);
+      
+      //begin find termnodes
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      
+      //arma::mat arma_tree(tree_table.begin(),tree_table.nrow(), tree_table.ncol(), false); 
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      //return(wrap(term_nodes));
+      //Rcout << "Line 5782.\n";
+      
+      //end find termnodes
+      
+      int b_j=term_nodes.size();
+      //will make J as we go in BART-BMA no need to create it again here....
+      //arma::mat Jmat=get_J_test(curr_termobs,tree_term_nodes,n);
+      //arma::mat Jmat=get_J_test(curr_termobs,term_nodes,num_test_obs);
+      
+      //begin J test function
+      arma::mat Jmat(num_test_obs, term_nodes.n_elem);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(unsigned int q=0;q<term_nodes.n_elem;q++){
+        //double tn=tree_term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        //assign term_obs to the correct index of J
+        arma::uvec term_obs2=curr_termobs(q);
+        arma::vec obs_col= arma::zeros<arma::vec>(num_test_obs);
+        //Rcout << "Line 5809.\n";
+        obs_col.elem(term_obs2)=arma::ones<arma::vec>(term_obs2.n_elem);
+        //Rcout << "Line 5811.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(q)= colmat;
+      }
+      //return(Jmat);
+      
+      //end J test function
+      
+      W_tilde1.insert_cols(upsilon2,Jmat);
+      upsilon2+=b_j;
+    }
+    
+    ////////////////////////////////////////
+    
+    ////////////////////////////////////////
+    
+    arma::mat W_tilde0(num_test_obs,0);
+    int upsilon3=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat  curr_tree=(modelsF(i))(j);
+      arma::field<arma::uvec> curr_termobs=(termobs_testdata0_overallF(i))(j);
+      
+      //begin find termnodes
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      
+      //arma::mat arma_tree(tree_table.begin(),tree_table.nrow(), tree_table.ncol(), false); 
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      //return(wrap(term_nodes));
+      //Rcout << "Line 5782.\n";
+      
+      //end find termnodes
+      
+      int b_j=term_nodes.size();
+      //will make J as we go in BART-BMA no need to create it again here....
+      //arma::mat Jmat=get_J_test(curr_termobs,tree_term_nodes,n);
+      //arma::mat Jmat=get_J_test(curr_termobs,term_nodes,num_test_obs);
+      
+      //begin J test function
+      arma::mat Jmat(num_test_obs, term_nodes.n_elem);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(unsigned int q=0;q<term_nodes.n_elem;q++){
+        //double tn=tree_term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        //assign term_obs to the correct index of J
+        arma::uvec term_obs2=curr_termobs(q);
+        arma::vec obs_col= arma::zeros<arma::vec>(num_test_obs);
+        //Rcout << "Line 5809.\n";
+        obs_col.elem(term_obs2)=arma::ones<arma::vec>(term_obs2.n_elem);
+        //Rcout << "Line 5811.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(q)= colmat;
+      }
+      //return(Jmat);
+      
+      //end J test function
+      
+      W_tilde0.insert_cols(upsilon3,Jmat);
+      upsilon3+=b_j;
+    }
+    
+    ////////////////////////////////////////
+    
+    //Rcout << "Line 5819.\n";
+    
+    
+    double b=W.n_cols;
+    
+    
+    //get t(y)inv(psi)J
+    arma::mat ytW=y_arma.t()*W;
+    
+    
+    //get t(J)inv(psi)J  
+    arma::mat WtW=W.t()*W;
+    
+    
+    
+    
+    
+    //get jpsij +aI
+    arma::mat aI(b,b);
+    aI=a*aI.eye();
+    arma::mat sec_term=WtW+aI;
+    
+    
+    //arma::mat L_mat = arma::chol(sec_term,"lower");
+    
+    //arma::mat L_inv = arma::inv(L_mat);
+    //arma::mat L_inv = arma::inv(arma::chol(sec_term));
+    //arma::mat L_inv = arma::inv((L_mat));
+    //arma::mat L_inv_t = arma::trans(arma::inv(trimatu(L_mat)));
+    //arma::mat L_inv_t = arma::trans(arma::inv((L_mat)));
+    
+    
+    
+    //arma::mat sec_term_inv=sec_term.i();
+    arma::mat sec_term_inv=inv_sympd(sec_term);  
+    
+    
+    //get t(J)inv(psi)y
+    arma::mat third_term=W.t()*y_arma;
+    
+    
+    //arma::mat coeff = solve(L_mat.t(), solve(L_mat, Wmat.t()*y_arma));
+    //arma::mat coeff = L_inv.t()*L_inv*Wmat.t()*y_arma;
+    
+    
+    
+    //get m^TV^{-1}m
+    arma::mat mvm= ytW*sec_term_inv*third_term;
+    
+    arma::mat Treat_diff = W_tilde1-W_tilde0;
+    
+    arma::mat w_tilde_M_inv =  Treat_diff*sec_term_inv;
+    
+    //Rcout << "Line 4151";
+    
+    
+    
+    // //Obtain (lower triangular?) matrix t(L) by Cholesky decomposition such that sec_term_inv=L*t(L)
+    // arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sec_term))));
+    // //obtain the log of the root of the determinant
+    // double rootisum = arma::sum(log(rooti.diag()));
+    // 
+    // arma::mat LtWtY= rooti*(Wmat.t()*y);
+    // 
+    // arma::mat rel=(b/2)*log(a)+rootisum -expon*log(nu*lambda - arma::sum(LtWtY%LtWtY) +yty);
+    // 
+    // 
+    
+    
+    // arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sec_term))));
+    // arma::mat LtWtY= rooti*(Wmat.t()*y);
+    
+    
+    
+    arma::vec preds_temp_arma= w_tilde_M_inv*third_term;
+    
+    // arma::vec preds_temp_arma= W_tilde*sec_term_inv*(Wmat.t())*y_arma;
+    
+    //arma::vec preds_temp_arma= W_tilde*coeff;
+    //arma::mat mvm= coeff*y_arma;
+    //arma::mat mvm= y_arma.t()*Wmat*coeff;
+    
+    
+    
+    
+    
+    arma::mat temp_for_scal = ((nu*lambda+yty-mvm)/(nu+num_obs));
+    double temp_scal= as_scalar(temp_for_scal) ;
+    //Rcout << "Line 4156";
+    //arma::mat covar_t=temp_scal*(I_test+w_tilde_M_inv*(W_tilde.t()));
+    arma::mat covar_t=temp_scal*(w_tilde_M_inv*(Treat_diff.t()));
+    
+    arma::mat catevartemp=temp_scal*(averagingvec.t()*w_tilde_M_inv*(Treat_diff.t())*averagingvec);
+    
+    arma::mat cattvartemp=temp_scal*(catt_averagingvec.t()*w_tilde_M_inv*(Treat_diff.t())*catt_averagingvec);
+    arma::mat catntvartemp=temp_scal*(catnt_averagingvec.t()*w_tilde_M_inv*(Treat_diff.t())*catnt_averagingvec);
+    
+    //arma::mat W_tilde_L_inv_t= W_tilde*L_inv_t; 
+    //arma::mat covar_t=temp_scal*(I_test+W_tilde_L_inv_t*(W_tilde_L_inv_t.t()));
+    
+    
+    
+    // Rcout << "Line 4459. i= "<< i << ".\n";
+    
+    
+    
+    //double weight=exp(BICi[i]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    
+    weighted_preds_all_models_arma.col(i)=preds_temp_arma*post_weights_arma[i];
+    
+    preds_all_models_arma.col(i)=preds_temp_arma;
+    t_vars_arma.col(i)=covar_t.diag();
+    
+    cate_means_arma(i)=as_scalar(averagingvec.t()*preds_temp_arma);
+    cate_means_weighted_arma(i)=cate_means_arma(i)*post_weights_arma(i); 
+    
+    cate_vars_arma(i)=as_scalar(catevartemp);
+    
+    
+    catt_means_arma(i)=as_scalar(catt_averagingvec.t()*preds_temp_arma);
+    catt_means_weighted_arma(i)=catt_means_arma(i)*post_weights_arma(i); 
+    
+    catt_vars_arma(i)=as_scalar(cattvartemp);
+    
+    
+    catnt_means_arma(i)=as_scalar(catnt_averagingvec.t()*preds_temp_arma);
+    catnt_means_weighted_arma(i)=catnt_means_arma(i)*post_weights_arma(i); 
+    
+    catnt_vars_arma(i)=as_scalar(catntvartemp);
+    
+    
+  }
+  
+  //}
+#pragma omp barrier  
+  
+  //arma::colvec predicted_values;
+  
+  //arma::mat M1(preds_all_models.begin(), preds_all_models.nrow(), preds_all_models.ncol(), false);
+  arma::colvec predicted_values=sum(weighted_preds_all_models_arma,1);
+  
+  double cate_pred=sum(cate_means_weighted_arma);
+  double catt_pred=sum(catt_means_weighted_arma);
+  double catnt_pred=sum(catnt_means_weighted_arma);
+  
+  //NumericMatrix draws_wrapped= wrap(draws_for_preds);
+  arma::mat output(3, num_test_obs);
+  //NumericVector probs_for_quantiles =  NumericVector::create(lower_prob, 0.5, upper_prob);
+  
+  //std::vector<double> probs_for_quantiles {lower_prob, 0.5, upper_prob};
+  arma::mat cate_ints(3, 1);
+  arma::mat catt_ints(3, 1);
+  arma::mat catnt_ints(3, 1);
+  
+  
+  
+  typedef std::vector<double> stdvec;
+  std::vector<double> weights_vec= as<stdvec>(post_weights);
+  
+  boost::math::students_t dist2(nu+num_obs);
+  double lq_tstandard= boost::math::quantile(dist2,lower_prob);
+  double med_tstandard= boost::math::quantile(dist2,0.5); //This is just 0 ??
+  double uq_tstandard= boost::math::quantile(dist2,upper_prob);
+  
+  
+  if(weights_vec.size()==1){
+    
+    cate_ints(0,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*lq_tstandard;
+    cate_ints(1,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*med_tstandard;
+    cate_ints(2,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*uq_tstandard;   
+    
+    catt_ints(0,0)= catt_means_arma(0)+sqrt(catt_vars_arma(0))*lq_tstandard;
+    catt_ints(1,0)= catt_means_arma(0)+sqrt(catt_vars_arma(0))*med_tstandard;
+    catt_ints(2,0)= catt_means_arma(0)+sqrt(catt_vars_arma(0))*uq_tstandard;   
+    
+    catnt_ints(0,0)= catnt_means_arma(0)+sqrt(catnt_vars_arma(0))*lq_tstandard;
+    catnt_ints(1,0)= catnt_means_arma(0)+sqrt(catnt_vars_arma(0))*med_tstandard;
+    catnt_ints(2,0)= catnt_means_arma(0)+sqrt(catnt_vars_arma(0))*uq_tstandard;   
+    
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+    for(int i=0;i<num_test_obs;i++){
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      //boost::math::students_t dist2(nu+num_obs);
+      
+      //Rcout << "Line 13812 tempvars" << t_vars_arma.row(i) << ".\n";
+      //Rcout << "tempmeans" << preds_all_models_arma.row(i) << ".\n";
+      
+      
+      output(0,i)= tempmeans[0]+sqrt(tempvars[0])*lq_tstandard;
+      output(1,i)= tempmeans[0]+sqrt(tempvars[0])*med_tstandard;
+      output(2,i)= tempmeans[0]+sqrt(tempvars[0])*uq_tstandard;
+      
+      
+    }
+#pragma omp barrier  
+  }else{
+    std::vector<double> tempmeans_cate= arma::conv_to<stdvec>::from(cate_means_arma);
+    std::vector<double> tempvars_cate= arma::conv_to<stdvec>::from(cate_vars_arma);
+    
+    std::vector<double> bounds_lQ_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, lq_tstandard);
+    
+    //Rcout << "line 13828 cate_vars_arma = " << cate_vars_arma << ".\n";
+    //Rcout << "cate_means_arma = " << cate_means_arma << ".\n";
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(0,0)= rootmixt(nu+num_obs,  
+              bounds_lQ_cate[0]-0.0001,
+              bounds_lQ_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, lower_prob,root_alg_precision);
+    
+    std::vector<double> bounds_med_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, med_tstandard);
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(1,0)= rootmixt(nu+num_obs,  
+              bounds_med_cate[0]-0.0001,  
+              bounds_med_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, 0.5, root_alg_precision);
+    
+    std::vector<double> bounds_uQ_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, uq_tstandard);
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(2,0)= rootmixt(nu+num_obs,  
+              bounds_uQ_cate[0]-0.0001,  
+              bounds_uQ_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, upper_prob, root_alg_precision);
+    
+    //Rcout << "line 13871 cate_ints = " << cate_ints << ".\n";
+    
+    
+    //
+    
+    std::vector<double> tempmeans_catt= arma::conv_to<stdvec>::from(catt_means_arma);
+    std::vector<double> tempvars_catt= arma::conv_to<stdvec>::from(catt_vars_arma);
+    
+    std::vector<double> bounds_lQ_catt = mixt_find_boundsQ( nu+num_obs, tempmeans_catt, tempvars_catt, lq_tstandard);
+    
+
+    catt_ints(0,0)= rootmixt(nu+num_obs,  
+              bounds_lQ_catt[0]-0.0001,
+              bounds_lQ_catt[1]+0.0001,
+              tempmeans_catt,
+              tempvars_catt,
+              weights_vec, lower_prob,root_alg_precision);
+    
+    std::vector<double> bounds_med_catt = mixt_find_boundsQ( nu+num_obs, tempmeans_catt, tempvars_catt, med_tstandard);
+    
+    //Rcout << "bounds_lQ_catt[0] = " << bounds_lQ_catt[0] << ".\n"; 
+    //Rcout << "bounds_lQ_catt[1] = " << bounds_lQ_catt[1] << ".\n";
+    
+    catt_ints(1,0)= rootmixt(nu+num_obs,  
+              bounds_med_catt[0]-0.0001,  
+              bounds_med_catt[1]+0.0001,
+              tempmeans_catt,
+              tempvars_catt,
+              weights_vec, 0.5, root_alg_precision);
+    
+    std::vector<double> bounds_uQ_catt = mixt_find_boundsQ( nu+num_obs, tempmeans_catt, tempvars_catt, uq_tstandard);
+    
+    //Rcout << "bounds_lQ_catt[0] = " << bounds_lQ_catt[0] << ".\n"; 
+    //Rcout << "bounds_lQ_catt[1] = " << bounds_lQ_catt[1] << ".\n";
+    
+    catt_ints(2,0)= rootmixt(nu+num_obs,  
+              bounds_uQ_catt[0]-0.0001,  
+              bounds_uQ_catt[1]+0.0001,
+              tempmeans_catt,
+              tempvars_catt,
+              weights_vec, upper_prob, root_alg_precision);
+    
+    
+    
+    //
+    
+    
+    std::vector<double> tempmeans_catnt= arma::conv_to<stdvec>::from(catnt_means_arma);
+    std::vector<double> tempvars_catnt= arma::conv_to<stdvec>::from(catnt_vars_arma);
+    
+    std::vector<double> bounds_lQ_catnt = mixt_find_boundsQ( nu+num_obs, tempmeans_catnt, tempvars_catnt, lq_tstandard);
+    
+
+    
+    catnt_ints(0,0)= rootmixt(nu+num_obs,  
+              bounds_lQ_catnt[0]-0.0001,
+              bounds_lQ_catnt[1]+0.0001,
+              tempmeans_catnt,
+              tempvars_catnt,
+              weights_vec, lower_prob,root_alg_precision);
+    
+    std::vector<double> bounds_med_catnt = mixt_find_boundsQ( nu+num_obs, tempmeans_catnt, tempvars_catnt, med_tstandard);
+    
+    //Rcout << "bounds_lQ_catnt[0] = " << bounds_lQ_catnt[0] << ".\n"; 
+    //Rcout << "bounds_lQ_catnt[1] = " << bounds_lQ_catnt[1] << ".\n";
+    
+    catnt_ints(1,0)= rootmixt(nu+num_obs,  
+              bounds_med_catnt[0]-0.0001,  
+              bounds_med_catnt[1]+0.0001,
+              tempmeans_catnt,
+              tempvars_catnt,
+              weights_vec, 0.5, root_alg_precision);
+    
+    std::vector<double> bounds_uQ_catnt = mixt_find_boundsQ( nu+num_obs, tempmeans_catnt, tempvars_catnt, uq_tstandard);
+    
+    //Rcout << "bounds_lQ_catnt[0] = " << bounds_lQ_catnt[0] << ".\n"; 
+    //Rcout << "bounds_lQ_catnt[1] = " << bounds_lQ_catnt[1] << ".\n";
+    
+    catnt_ints(2,0)= rootmixt(nu+num_obs,  
+              bounds_uQ_catnt[0]-0.0001,  
+              bounds_uQ_catnt[1]+0.0001,
+              tempmeans_catnt,
+              tempvars_catnt,
+              weights_vec, upper_prob, root_alg_precision);
+    
+    
+    
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+    for(int i=0;i<num_test_obs;i++){
+      //output(_,i)=Quantile(draws_wrapped(_,i), probs_for_quantiles);
+      
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      //Rcout << "Line 13859. tempvars" << t_vars_arma.row(i) << ".\n";
+      //Rcout << "tempmeans" << preds_all_models_arma.row(i) << ".\n";
+      
+      std::vector<double> bounds_lQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, lq_tstandard);
+      
+      output(0,i)=rootmixt(nu+num_obs,  
+             bounds_lQ[0]-0.0001,  
+             bounds_lQ[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, lower_prob,root_alg_precision);
+      
+      
+      std::vector<double> bounds_med = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, med_tstandard);
+      
+      output(1,i)=rootmixt(nu+num_obs,  
+             bounds_med[0]-0.0001,  
+             bounds_med[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, 0.5,root_alg_precision);
+      
+      std::vector<double> bounds_uQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, uq_tstandard);
+      
+      output(2,i)=rootmixt(nu+num_obs, 
+             bounds_uQ[0]-0.0001,  
+             bounds_uQ[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, upper_prob,root_alg_precision);
+      
+      
+    }  
+#pragma omp barrier  
+  }
+  
+  
+  List ret(8);
+  ret[0]= wrap(output);
+  ret[1]= wrap(predicted_values);
+  ret[2]= cate_pred;
+  ret[3]= wrap(cate_ints);
+  ret[4]= catt_pred;
+  ret[5]= wrap(catt_ints);
+  ret[6]= catnt_pred;
+  ret[7]= wrap(catnt_ints);
+  
+  return(ret);
+  
+}
+
+//###########################################################################################################################//
+
+// [[Rcpp::plugins(openmp)]]
+// Protect against compilers without OpenMP
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @title Obtain BARTBMA predictions
+//' @export
+// [[Rcpp::export]]
+List pred_ints_ITE_CATT_insamp_par(List overall_sum_trees,
+                              List overall_sum_mat,
+                              NumericVector y,
+                              NumericVector BIC_weights,//double min_possible,double max_possible,
+                              int num_obs,//int num_test_obs,
+                              double a,double sigma,
+                              double mu_mu,double nu,
+                              double lambda,//List resids,NumericMatrix test_data, 
+                              double lower_prob, double upper_prob, 
+                              int num_cores,
+                              double root_alg_precision,
+                              NumericMatrix training_data,
+                              NumericVector ztrain){
+  
+  
+  //List termobs_testdata_overall= get_termobs_testdata_overall(overall_sum_trees,test_data);
+  
+  NumericVector onevec1(training_data.nrow(),1.0);
+  NumericMatrix Training1data= cbind(onevec1,training_data);
+  
+  NumericVector zerovec1(training_data.nrow(),0.0);
+  NumericMatrix Training0data= cbind(zerovec1,training_data);
+  
+  arma::field<arma::field<arma::field<arma::uvec>>> termobs_testdata1_overallF=get_termobs_testdata_fields_overall(overall_sum_trees,Training1data);
+  arma::field<arma::field<arma::field<arma::uvec>>> termobs_testdata0_overallF=get_termobs_testdata_fields_overall(overall_sum_trees,Training0data);
+  
+  //NumericMatrix preds_all_models(num_test_obs,BIC_weights.size());
+  arma::mat preds_all_models_arma(num_obs,BIC_weights.size());
+  arma::mat weighted_preds_all_models_arma(num_obs,BIC_weights.size());
+  arma::mat t_vars_arma(num_obs,BIC_weights.size());
+  
+  arma::vec cate_means_arma(BIC_weights.size());
+  arma::vec cate_means_weighted_arma(BIC_weights.size());
+  arma::vec cate_vars_arma(BIC_weights.size());
+  
+  arma::vec catt_means_arma(BIC_weights.size());
+  arma::vec catt_means_weighted_arma(BIC_weights.size());
+  arma::vec catt_vars_arma(BIC_weights.size());
+  
+  arma::vec catnt_means_arma(BIC_weights.size());
+  arma::vec catnt_means_weighted_arma(BIC_weights.size());
+  arma::vec catnt_vars_arma(BIC_weights.size());
+  
+  // for all sums of trees
+  
+  NumericVector BICi=-0.5*BIC_weights;
+  double max_BIC=max(BICi);
+  
+  
+  NumericVector post_weights(BIC_weights.size());
+  
+  for(int k=0;k<BIC_weights.size();k++){
+    
+    //NumericVector BICi=-0.5*BIC_weights;
+    //double max_BIC=max(BICi);
+    double weight=exp(BICi[k]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    post_weights[k]=weight;
+    //int num_its_to_sample = round(weight*(num_iter));
+    
+  }
+  
+  arma::vec post_weights_arma = as<arma::vec>(post_weights);
+  
+  
+  arma::vec ztrain_arma = as<arma::vec>(ztrain);
+  
+  
+  
+  arma::vec averagingvec=(1/double(num_obs))*arma::ones<arma::vec>(num_obs);
+  
+  arma::vec catt_averagingvec=(1/arma::sum(ztrain_arma))*ztrain_arma;
+  arma::vec catnt_averagingvec=(1/(num_obs-arma::sum(ztrain_arma)))*(1-ztrain_arma);
+  
+  
+  arma::vec yvec=Rcpp::as<arma::vec>(y);
+  arma::mat y_arma(num_obs,1);
+  y_arma.col(0)=yvec;
+  arma::mat yty=y_arma.t()*y_arma;
+  
+  
+  //arma::mat I_test(num_test_obs,num_test_obs);
+  //I_test=I_test.eye();
+  
+  //create field (armadillo list) of models
+  //each model is a field (armadillo list) of trees represented by matrices
+  arma::field<arma::field<arma::mat>> modelsF(overall_sum_trees.size());
+  for(int i=0;i<overall_sum_trees.size();i++){
+    List temp_tree_list = overall_sum_trees[i];
+    //Rcout << "Line 5661.\n";
+    
+    arma::field<arma::mat> treesF(temp_tree_list.size());
+    for(int q=0;q<temp_tree_list.size();q++){
+      //Rcout << "Line 5663.\n";
+      arma::mat temp_tree_mat = Rcpp::as<arma::mat>(temp_tree_list[q]);
+      treesF(q)=temp_tree_mat;
+    }
+    //Rcout << "Line 5669.\n";
+    
+    modelsF(i)=treesF;
+  }
+  
+  
+  arma::field<arma::field<arma::mat>> matsF(overall_sum_mat.size());
+  for(int i=0;i<overall_sum_mat.size();i++){
+    List temp_tree_list = overall_sum_mat[i];
+    arma::field<arma::mat> treesF(temp_tree_list.size());
+    for(int q=0;q<temp_tree_list.size();q++){
+      arma::mat temp_tree_mat = Rcpp::as<arma::mat>(temp_tree_list[q]);
+      treesF(q)=temp_tree_mat;
+    }
+    matsF(i)=treesF;
+  }
+  
+  
+  
+  
+  
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+  for(int i=0;i<overall_sum_trees.size();i++){
+    
+    
+    
+    
+    arma::field<arma::mat> tree_list = modelsF(i);
+    
+    arma::mat W(num_obs,0);
+    int upsilon=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat curr_tree=(modelsF(i))(j);
+      arma::mat curr_obs_nodes=(matsF(i))(j);
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      int b_j=term_nodes.n_elem;
+      //begin J function
+      
+      //will make J as we go in BART-BMA no need to create it again here....
+      // arma::mat Jmat=J(curr_obs_nodes,tree_term_nodes);
+      arma::mat tree_matrix_temp = (matsF(i))(j);
+      arma::mat Jmat(tree_matrix_temp.n_rows, b_j);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(int q=0;q<b_j;q++){
+        //double tn=term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        
+        //begin find_term_obs
+        
+        //arma::mat arma_tree_mat(tree_matrix_temp.begin(),tree_matrix_temp.nrow(), tree_matrix_temp.ncol(), false); 
+        //for reference arma_tree_mat == matsF(i)(j) == tree_matrix_temp
+        
+        arma::uvec term_obs;
+        
+        for(unsigned int r=0;r<tree_matrix_temp.n_cols;r++){
+          //arma::vec colmat=arma_tree_mat.col(r);
+          arma::vec colmat=tree_matrix_temp.col(r);
+          term_obs=arma::find(colmat==term_nodes[q]);
+          if(term_obs.size()>0){
+            break;
+          }
+        }
+        
+        //end find_term_obs
+        
+        
+        //assign term_obs to the correct index of J
+        //NumericVector term_obs2=as<NumericVector>(wrap(term_obs));
+        //NumericVector obs_col(obs_to_nodes_temp.nrow());
+        arma::vec obs_col= arma::zeros<arma::vec>(tree_matrix_temp.n_rows);
+        //Rcout << "Line 5747.\n";
+        obs_col.elem(term_obs)= arma::ones<arma::vec>(term_obs.n_elem);
+        //Rcout << "Line 5749.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(i)= colmat;
+      }
+      
+      
+      
+      
+      W.insert_cols(upsilon,Jmat);
+      upsilon+=b_j;
+    }
+    
+    
+    //Rcout << "Line 5759.\n";
+    
+    
+    //arma::mat W_tilde=get_W_test(overall_sum_trees[i],termobs_testdata_overall[i],num_test_obs);
+    
+    
+    ////////////////////////////////////////
+    
+    arma::mat W_tilde1(num_obs,0);
+    int upsilon2=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat  curr_tree=(modelsF(i))(j);
+      arma::field<arma::uvec> curr_termobs=(termobs_testdata1_overallF(i))(j);
+      
+      //begin find termnodes
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      
+      //arma::mat arma_tree(tree_table.begin(),tree_table.nrow(), tree_table.ncol(), false); 
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      //return(wrap(term_nodes));
+      //Rcout << "Line 5782.\n";
+      
+      //end find termnodes
+      
+      int b_j=term_nodes.size();
+      //will make J as we go in BART-BMA no need to create it again here....
+      //arma::mat Jmat=get_J_test(curr_termobs,tree_term_nodes,n);
+      //arma::mat Jmat=get_J_test(curr_termobs,term_nodes,num_test_obs);
+      
+      //begin J test function
+      arma::mat Jmat(num_obs, term_nodes.n_elem);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(unsigned int q=0;q<term_nodes.n_elem;q++){
+        //double tn=tree_term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        //assign term_obs to the correct index of J
+        arma::uvec term_obs2=curr_termobs(q);
+        arma::vec obs_col= arma::zeros<arma::vec>(num_obs);
+        //Rcout << "Line 5809.\n";
+        obs_col.elem(term_obs2)=arma::ones<arma::vec>(term_obs2.n_elem);
+        //Rcout << "Line 5811.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(q)= colmat;
+      }
+      //return(Jmat);
+      
+      //end J test function
+      
+      W_tilde1.insert_cols(upsilon2,Jmat);
+      upsilon2+=b_j;
+    }
+    
+    ////////////////////////////////////////
+    
+    ////////////////////////////////////////
+    
+    arma::mat W_tilde0(num_obs,0);
+    int upsilon3=0;
+    for(unsigned int j=0;j<modelsF(i).n_elem;j++){
+      
+      arma::mat  curr_tree=(modelsF(i))(j);
+      arma::field<arma::uvec> curr_termobs=(termobs_testdata0_overallF(i))(j);
+      
+      //begin find termnodes
+      //NumericVector tree_term_nodes=find_term_nodes(curr_tree);
+      
+      //arma::mat arma_tree(tree_table.begin(),tree_table.nrow(), tree_table.ncol(), false); 
+      arma::vec colmat=curr_tree.col(4);
+      arma::uvec term_nodes=arma::find(colmat==-1);
+      term_nodes=term_nodes+1;
+      
+      //return(wrap(term_nodes));
+      //Rcout << "Line 5782.\n";
+      
+      //end find termnodes
+      
+      int b_j=term_nodes.size();
+      //will make J as we go in BART-BMA no need to create it again here....
+      //arma::mat Jmat=get_J_test(curr_termobs,tree_term_nodes,n);
+      //arma::mat Jmat=get_J_test(curr_termobs,term_nodes,num_test_obs);
+      
+      //begin J test function
+      arma::mat Jmat(num_obs, term_nodes.n_elem);
+      Jmat.zeros();
+      
+      //for each terminal node get the observations associated with it and set column
+      for(unsigned int q=0;q<term_nodes.n_elem;q++){
+        //double tn=tree_term_nodes[q];
+        //arma::uvec term_obs=find_term_obs(obs_to_nodes_temp,tn);
+        //assign term_obs to the correct index of J
+        arma::uvec term_obs2=curr_termobs(q);
+        arma::vec obs_col= arma::zeros<arma::vec>(num_obs);
+        //Rcout << "Line 5809.\n";
+        obs_col.elem(term_obs2)=arma::ones<arma::vec>(term_obs2.n_elem);
+        //Rcout << "Line 5811.\n";
+        //arma::vec colmat=Rcpp::as<arma::vec>(obs_col);
+        Jmat.col(q)= obs_col;
+        
+        // arma::vec  colmat=arma::zeros(Jmat.n_rows) ;// colmattest(Jmat.n_rows,0);
+        // colmat.elem(term_obs).fill(1);
+        // Jmat.col(q)= colmat;
+      }
+      //return(Jmat);
+      
+      //end J test function
+      
+      W_tilde0.insert_cols(upsilon3,Jmat);
+      upsilon3+=b_j;
+    }
+    
+    ////////////////////////////////////////
+    
+    //Rcout << "Line 5819.\n";
+    
+    
+    double b=W.n_cols;
+    
+    
+    //get t(y)inv(psi)J
+    arma::mat ytW=y_arma.t()*W;
+    
+    
+    //get t(J)inv(psi)J  
+    arma::mat WtW=W.t()*W;
+    
+    
+    
+    
+    
+    //get jpsij +aI
+    arma::mat aI(b,b);
+    aI=a*aI.eye();
+    arma::mat sec_term=WtW+aI;
+    
+    
+    //arma::mat L_mat = arma::chol(sec_term,"lower");
+    
+    //arma::mat L_inv = arma::inv(L_mat);
+    //arma::mat L_inv = arma::inv(arma::chol(sec_term));
+    //arma::mat L_inv = arma::inv((L_mat));
+    //arma::mat L_inv_t = arma::trans(arma::inv(trimatu(L_mat)));
+    //arma::mat L_inv_t = arma::trans(arma::inv((L_mat)));
+    
+    
+    
+    //arma::mat sec_term_inv=sec_term.i();
+    arma::mat sec_term_inv=inv_sympd(sec_term);  
+    
+    
+    //get t(J)inv(psi)y
+    arma::mat third_term=W.t()*y_arma;
+    
+    
+    //arma::mat coeff = solve(L_mat.t(), solve(L_mat, Wmat.t()*y_arma));
+    //arma::mat coeff = L_inv.t()*L_inv*Wmat.t()*y_arma;
+    
+    
+    
+    //get m^TV^{-1}m
+    arma::mat mvm= ytW*sec_term_inv*third_term;
+    
+    arma::mat Treat_diff = W_tilde1-W_tilde0;
+    
+    arma::mat w_tilde_M_inv =  Treat_diff*sec_term_inv;
+    
+    //Rcout << "Line 4151";
+    
+    
+    
+    // //Obtain (lower triangular?) matrix t(L) by Cholesky decomposition such that sec_term_inv=L*t(L)
+    // arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sec_term))));
+    // //obtain the log of the root of the determinant
+    // double rootisum = arma::sum(log(rooti.diag()));
+    // 
+    // arma::mat LtWtY= rooti*(Wmat.t()*y);
+    // 
+    // arma::mat rel=(b/2)*log(a)+rootisum -expon*log(nu*lambda - arma::sum(LtWtY%LtWtY) +yty);
+    // 
+    // 
+    
+    
+    // arma::mat rooti = arma::trans(arma::inv(trimatu(arma::chol(sec_term))));
+    // arma::mat LtWtY= rooti*(Wmat.t()*y);
+    
+    
+    
+    arma::vec preds_temp_arma= w_tilde_M_inv*third_term;
+    
+    // arma::vec preds_temp_arma= W_tilde*sec_term_inv*(Wmat.t())*y_arma;
+    
+    //arma::vec preds_temp_arma= W_tilde*coeff;
+    //arma::mat mvm= coeff*y_arma;
+    //arma::mat mvm= y_arma.t()*Wmat*coeff;
+    
+    
+    
+    
+    
+    arma::mat temp_for_scal = ((nu*lambda+yty-mvm)/(nu+num_obs));
+    double temp_scal= as_scalar(temp_for_scal) ;
+    //Rcout << "Line 4156";
+    //arma::mat covar_t=temp_scal*(I_test+w_tilde_M_inv*(W_tilde.t()));
+    arma::mat covar_t=temp_scal*(w_tilde_M_inv*(Treat_diff.t()));
+    
+    arma::mat catevartemp=temp_scal*(averagingvec.t()*w_tilde_M_inv*(Treat_diff.t())*averagingvec);
+    arma::mat cattvartemp=temp_scal*(catt_averagingvec.t()*w_tilde_M_inv*(Treat_diff.t())*catt_averagingvec);
+    arma::mat catntvartemp=temp_scal*(catnt_averagingvec.t()*w_tilde_M_inv*(Treat_diff.t())*catnt_averagingvec);
+    
+    //arma::mat W_tilde_L_inv_t= W_tilde*L_inv_t; 
+    //arma::mat covar_t=temp_scal*(I_test+W_tilde_L_inv_t*(W_tilde_L_inv_t.t()));
+    
+    
+    
+    // Rcout << "Line 4459. i= "<< i << ".\n";
+    
+    
+    
+    //double weight=exp(BICi[i]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
+    
+    weighted_preds_all_models_arma.col(i)=preds_temp_arma*post_weights_arma[i];
+    
+    preds_all_models_arma.col(i)=preds_temp_arma;
+    t_vars_arma.col(i)=covar_t.diag();
+    
+    cate_means_arma(i)=as_scalar(averagingvec.t()*preds_temp_arma);
+    cate_means_weighted_arma(i)=cate_means_arma(i)*post_weights_arma(i); 
+    
+    cate_vars_arma(i)=as_scalar(catevartemp);
+    
+    
+    catt_means_arma(i)=as_scalar(catt_averagingvec.t()*preds_temp_arma);
+    catt_means_weighted_arma(i)=catt_means_arma(i)*post_weights_arma(i); 
+    
+    catt_vars_arma(i)=as_scalar(cattvartemp);
+    
+    
+    catnt_means_arma(i)=as_scalar(catnt_averagingvec.t()*preds_temp_arma);
+    catnt_means_weighted_arma(i)=catnt_means_arma(i)*post_weights_arma(i); 
+    
+    catnt_vars_arma(i)=as_scalar(catntvartemp);
+    
+  }
+  
+  //}
+#pragma omp barrier  
+  
+  //arma::colvec predicted_values;
+  
+  //arma::mat M1(preds_all_models.begin(), preds_all_models.nrow(), preds_all_models.ncol(), false);
+  arma::colvec predicted_values=sum(weighted_preds_all_models_arma,1);
+  
+  double cate_pred=sum(cate_means_weighted_arma);
+  double catt_pred=sum(catt_means_weighted_arma);
+  double catnt_pred=sum(catnt_means_weighted_arma);
+  
+  //NumericMatrix draws_wrapped= wrap(draws_for_preds);
+  arma::mat output(3, num_obs);
+  //NumericVector probs_for_quantiles =  NumericVector::create(lower_prob, 0.5, upper_prob);
+  
+  //std::vector<double> probs_for_quantiles {lower_prob, 0.5, upper_prob};
+  arma::mat cate_ints(3, 1);
+  arma::mat catt_ints(3, 1);
+  arma::mat catnt_ints(3, 1);
+  
+  
+  typedef std::vector<double> stdvec;
+  std::vector<double> weights_vec= as<stdvec>(post_weights);
+  
+  boost::math::students_t dist2(nu+num_obs);
+  double lq_tstandard= boost::math::quantile(dist2,lower_prob);
+  double med_tstandard= boost::math::quantile(dist2,0.5); //This is just 0 ??
+  double uq_tstandard= boost::math::quantile(dist2,upper_prob);
+  
+  //Rcout << "cate_vars_arma line 13795" << cate_vars_arma << ".\n";
+  //Rcout << "cate_means_arma" << cate_means_arma << ".\n";
+  
+  if(weights_vec.size()==1){
+    
+    cate_ints(0,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*lq_tstandard;
+    cate_ints(1,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*med_tstandard;
+    cate_ints(2,0)= cate_means_arma(0)+sqrt(cate_vars_arma(0))*uq_tstandard;
+    
+    catt_ints(0,0)= catt_means_arma(0)+sqrt(catt_vars_arma(0))*lq_tstandard;
+    catt_ints(1,0)= catt_means_arma(0)+sqrt(catt_vars_arma(0))*med_tstandard;
+    catt_ints(2,0)= catt_means_arma(0)+sqrt(catt_vars_arma(0))*uq_tstandard;   
+    
+    catnt_ints(0,0)= catnt_means_arma(0)+sqrt(catnt_vars_arma(0))*lq_tstandard;
+    catnt_ints(1,0)= catnt_means_arma(0)+sqrt(catnt_vars_arma(0))*med_tstandard;
+    catnt_ints(2,0)= catnt_means_arma(0)+sqrt(catnt_vars_arma(0))*uq_tstandard; 
+    
+    
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+    for(int i=0;i<num_obs;i++){
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      //boost::math::students_t dist2(nu+num_obs);
+      
+      //Rcout << "Line 13812 tempvars" << t_vars_arma.row(i) << ".\n";
+      //Rcout << "tempmeans" << preds_all_models_arma.row(i) << ".\n";
+      
+      
+      output(0,i)= tempmeans[0]+sqrt(tempvars[0])*lq_tstandard;
+      output(1,i)= tempmeans[0]+sqrt(tempvars[0])*med_tstandard;
+      output(2,i)= tempmeans[0]+sqrt(tempvars[0])*uq_tstandard;
+      
+      
+    }
+#pragma omp barrier  
+  }else{
+    std::vector<double> tempmeans_cate= arma::conv_to<stdvec>::from(cate_means_arma);
+    std::vector<double> tempvars_cate= arma::conv_to<stdvec>::from(cate_vars_arma);
+    
+    std::vector<double> bounds_lQ_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, lq_tstandard);
+    
+    //Rcout << "line 13828 cate_vars_arma = " << cate_vars_arma << ".\n";
+    //Rcout << "cate_means_arma = " << cate_means_arma << ".\n";
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(0,0)= rootmixt(nu+num_obs,  
+              bounds_lQ_cate[0]-0.0001,
+              bounds_lQ_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, lower_prob,root_alg_precision);
+    
+    std::vector<double> bounds_med_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, med_tstandard);
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(1,0)= rootmixt(nu+num_obs,  
+              bounds_med_cate[0]-0.0001,  
+              bounds_med_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, 0.5, root_alg_precision);
+    
+    std::vector<double> bounds_uQ_cate = mixt_find_boundsQ( nu+num_obs, tempmeans_cate, tempvars_cate, uq_tstandard);
+    
+    //Rcout << "bounds_lQ_cate[0] = " << bounds_lQ_cate[0] << ".\n"; 
+    //Rcout << "bounds_lQ_cate[1] = " << bounds_lQ_cate[1] << ".\n";
+    
+    cate_ints(2,0)= rootmixt(nu+num_obs,  
+              bounds_uQ_cate[0]-0.0001,  
+              bounds_uQ_cate[1]+0.0001,
+              tempmeans_cate,
+              tempvars_cate,
+              weights_vec, upper_prob, root_alg_precision);
+    
+    //Rcout << "line 13871 cate_ints = " << cate_ints << ".\n";
+    
+    
+    
+    
+    //
+    
+    std::vector<double> tempmeans_catt= arma::conv_to<stdvec>::from(catt_means_arma);
+    std::vector<double> tempvars_catt= arma::conv_to<stdvec>::from(catt_vars_arma);
+    
+    std::vector<double> bounds_lQ_catt = mixt_find_boundsQ( nu+num_obs, tempmeans_catt, tempvars_catt, lq_tstandard);
+    
+    
+    catt_ints(0,0)= rootmixt(nu+num_obs,  
+              bounds_lQ_catt[0]-0.0001,
+              bounds_lQ_catt[1]+0.0001,
+              tempmeans_catt,
+              tempvars_catt,
+              weights_vec, lower_prob,root_alg_precision);
+    
+    std::vector<double> bounds_med_catt = mixt_find_boundsQ( nu+num_obs, tempmeans_catt, tempvars_catt, med_tstandard);
+    
+    //Rcout << "bounds_lQ_catt[0] = " << bounds_lQ_catt[0] << ".\n"; 
+    //Rcout << "bounds_lQ_catt[1] = " << bounds_lQ_catt[1] << ".\n";
+    
+    catt_ints(1,0)= rootmixt(nu+num_obs,  
+              bounds_med_catt[0]-0.0001,  
+              bounds_med_catt[1]+0.0001,
+              tempmeans_catt,
+              tempvars_catt,
+              weights_vec, 0.5, root_alg_precision);
+    
+    std::vector<double> bounds_uQ_catt = mixt_find_boundsQ( nu+num_obs, tempmeans_catt, tempvars_catt, uq_tstandard);
+    
+    //Rcout << "bounds_lQ_catt[0] = " << bounds_lQ_catt[0] << ".\n"; 
+    //Rcout << "bounds_lQ_catt[1] = " << bounds_lQ_catt[1] << ".\n";
+    
+    catt_ints(2,0)= rootmixt(nu+num_obs,  
+              bounds_uQ_catt[0]-0.0001,  
+              bounds_uQ_catt[1]+0.0001,
+              tempmeans_catt,
+              tempvars_catt,
+              weights_vec, upper_prob, root_alg_precision);
+    
+    
+    
+    //
+    
+    
+    std::vector<double> tempmeans_catnt= arma::conv_to<stdvec>::from(catnt_means_arma);
+    std::vector<double> tempvars_catnt= arma::conv_to<stdvec>::from(catnt_vars_arma);
+    
+    std::vector<double> bounds_lQ_catnt = mixt_find_boundsQ( nu+num_obs, tempmeans_catnt, tempvars_catnt, lq_tstandard);
+    
+    
+    
+    catnt_ints(0,0)= rootmixt(nu+num_obs,  
+               bounds_lQ_catnt[0]-0.0001,
+               bounds_lQ_catnt[1]+0.0001,
+               tempmeans_catnt,
+               tempvars_catnt,
+               weights_vec, lower_prob,root_alg_precision);
+    
+    std::vector<double> bounds_med_catnt = mixt_find_boundsQ( nu+num_obs, tempmeans_catnt, tempvars_catnt, med_tstandard);
+    
+    //Rcout << "bounds_lQ_catnt[0] = " << bounds_lQ_catnt[0] << ".\n"; 
+    //Rcout << "bounds_lQ_catnt[1] = " << bounds_lQ_catnt[1] << ".\n";
+    
+    catnt_ints(1,0)= rootmixt(nu+num_obs,  
+               bounds_med_catnt[0]-0.0001,  
+               bounds_med_catnt[1]+0.0001,
+               tempmeans_catnt,
+               tempvars_catnt,
+               weights_vec, 0.5, root_alg_precision);
+    
+    std::vector<double> bounds_uQ_catnt = mixt_find_boundsQ( nu+num_obs, tempmeans_catnt, tempvars_catnt, uq_tstandard);
+    
+    //Rcout << "bounds_lQ_catnt[0] = " << bounds_lQ_catnt[0] << ".\n"; 
+    //Rcout << "bounds_lQ_catnt[1] = " << bounds_lQ_catnt[1] << ".\n";
+    
+    catnt_ints(2,0)= rootmixt(nu+num_obs,  
+               bounds_uQ_catnt[0]-0.0001,  
+               bounds_uQ_catnt[1]+0.0001,
+               tempmeans_catnt,
+               tempvars_catnt,
+               weights_vec, upper_prob, root_alg_precision);
+    
+    
+    
+#pragma omp parallel num_threads(num_cores)
+#pragma omp for
+    for(int i=0;i<num_obs;i++){
+      //output(_,i)=Quantile(draws_wrapped(_,i), probs_for_quantiles);
+      
+      std::vector<double> tempmeans= arma::conv_to<stdvec>::from(preds_all_models_arma.row(i));
+      std::vector<double> tempvars= arma::conv_to<stdvec>::from(t_vars_arma.row(i));
+      
+      //Rcout << "Line 13859. tempvars" << t_vars_arma.row(i) << ".\n";
+      //Rcout << "tempmeans" << preds_all_models_arma.row(i) << ".\n";
+      
+      std::vector<double> bounds_lQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, lq_tstandard);
+      
+      output(0,i)=rootmixt(nu+num_obs,  
+             bounds_lQ[0]-0.0001,  
+             bounds_lQ[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, lower_prob,root_alg_precision);
+      
+      
+      std::vector<double> bounds_med = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, med_tstandard);
+      
+      output(1,i)=rootmixt(nu+num_obs,  
+             bounds_med[0]-0.0001,  
+             bounds_med[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, 0.5,root_alg_precision);
+      
+      std::vector<double> bounds_uQ = mixt_find_boundsQ( nu+num_obs, tempmeans, tempvars, uq_tstandard);
+      
+      output(2,i)=rootmixt(nu+num_obs, 
+             bounds_uQ[0]-0.0001,  
+             bounds_uQ[1]+0.0001,
+             tempmeans,
+             tempvars,
+             weights_vec, upper_prob,root_alg_precision);
+      
+      
+    }  
+#pragma omp barrier  
+  }
+  
+  List ret(8);
+  ret[0]= wrap(output);
+  ret[1]= wrap(predicted_values);
+  ret[2]= cate_pred;
+  ret[3]= wrap(cate_ints);
+  ret[4]= catt_pred;
+  ret[5]= wrap(catt_ints);
+  ret[6]= catnt_pred;
+  ret[7]= wrap(catnt_ints);
+  
+  
+  return(ret);
+  
 }

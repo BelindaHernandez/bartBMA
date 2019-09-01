@@ -439,6 +439,30 @@ mean_vars_lin_alg_parallel_outsamp <- function(overall_sum_trees, overall_sum_ma
     .Call(`_bartBMA_mean_vars_lin_alg_parallel_outsamp`, overall_sum_trees, overall_sum_mat, y, BIC_weights, num_iter, burnin, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, num_cores)
 }
 
+#' @title Obtain BARTBMA predictions
+#' @export
+pred_ints_ITE_outsamp_par <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision, training_data) {
+    .Call(`_bartBMA_pred_ints_ITE_outsamp_par`, overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision, training_data)
+}
+
+#' @title Obtain BARTBMA predictions
+#' @export
+pred_ints_ITE_insamp_par <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, a, sigma, mu_mu, nu, lambda, lower_prob, upper_prob, num_cores, root_alg_precision, training_data) {
+    .Call(`_bartBMA_pred_ints_ITE_insamp_par`, overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, a, sigma, mu_mu, nu, lambda, lower_prob, upper_prob, num_cores, root_alg_precision, training_data)
+}
+
+#' @title Obtain BARTBMA predictions
+#' @export
+pred_ints_ITE_CATT_outsamp_par <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision, training_data, ztest) {
+    .Call(`_bartBMA_pred_ints_ITE_CATT_outsamp_par`, overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, num_test_obs, a, sigma, mu_mu, nu, lambda, test_data, lower_prob, upper_prob, num_cores, root_alg_precision, training_data, ztest)
+}
+
+#' @title Obtain BARTBMA predictions
+#' @export
+pred_ints_ITE_CATT_insamp_par <- function(overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, a, sigma, mu_mu, nu, lambda, lower_prob, upper_prob, num_cores, root_alg_precision, training_data, ztrain) {
+    .Call(`_bartBMA_pred_ints_ITE_CATT_insamp_par`, overall_sum_trees, overall_sum_mat, y, BIC_weights, num_obs, a, sigma, mu_mu, nu, lambda, lower_prob, upper_prob, num_cores, root_alg_precision, training_data, ztrain)
+}
+
 find_term_nodes_gs <- function(tree_table) {
     .Call(`_bartBMA_find_term_nodes_gs`, tree_table)
 }

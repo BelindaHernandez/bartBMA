@@ -53,7 +53,7 @@ probit_bartBMA<-function(x,...)UseMethod("probit_bartBMA")
 probit_bartBMA.default<-function(x.train,y.train,
                           a=3,nu=3,sigquant=0.9,c=1000,
                           pen=12,num_cp=20,x.test=matrix(0.0,0,0),
-                          num_rounds=5,alpha=0.95,beta=1,split_rule_node=0,
+                          num_rounds=5,alpha=0.95,beta=2,split_rule_node=0,
                           gridpoint=0,maxOWsize=100,num_splits=5,gridsize=10,zero_split=1,only_max_num_trees=1,
                           min_num_obs_for_split=2, min_num_obs_after_split=2,
                           exact_residuals=1){

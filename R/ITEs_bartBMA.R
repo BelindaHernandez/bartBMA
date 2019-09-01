@@ -29,7 +29,7 @@
 ITEs_bartBMA<-function(x_covariates,z_train ,y_train,
                        a1=3,nu1=3,sigquant1=0.9,c1=1000,
                        pen1=12,num_cp1=20,x.test1=matrix(0.0,0,0),
-                       num_rounds1=5,alpha1=0.95,beta1=1,split_rule_node1=0,
+                       num_rounds1=5,alpha1=0.95,beta1=2,split_rule_node1=0,
                        gridpoint1=0,maxOWsize1=100,num_splits1=5,gridsize1=10,zero_split1=1,only_max_num_trees1=1,
                        min_num_obs_for_split1=2, min_num_obs_after_split1=2){
   
