@@ -24,6 +24,8 @@
 #' @param min_num_obs_for_split This integer determines the minimum number of observations in a (parent) tree node for the algorithm to consider potential splits of the node.
 #' @param min_num_obs_after_split This integer determines the minimum number of observations in a child node resulting from a split in order for a split to occur. If the left or right chikd node has less than this number of observations, then the split can not occur.
 #' @param exact_residuals Binary variable. If equal to 1, then trees are added to sum-of-tree models within each round of the algorithm by detecting changepoints in the exact residuals. If equals zero, then changepoints are detected in residuals that are constructed from approximate predictions.
+#' @param spike_tree If equal to 1, then the Spike-and-Tree prior will be used, otherwise the standard BART prior will be used. The number of splitting variables has a beta-binomial prior. The number of terminal nodes has a truncated Poisson prior, and then a uniform prior is placed on the set of valid constructions of trees given the splitting variables and number of terminal nodes.
+#' @param lambda_poisson This is a parameter for the Spike-and-Tree prior. It is the parameter for the (truncated and conditional on the number of splitting variables) Poisson prior on the number of terminal nodes.
 #' @rdname probit_bartBMA
 #' @export 
 #' @return The following objects are returned by bartbma:
@@ -56,7 +58,7 @@ probit_bartBMA.default<-function(x.train,y.train,
                           num_rounds=5,alpha=0.95,beta=2,split_rule_node=0,
                           gridpoint=0,maxOWsize=100,num_splits=5,gridsize=10,zero_split=1,only_max_num_trees=1,
                           min_num_obs_for_split=2, min_num_obs_after_split=2,
-                          exact_residuals=1){
+                          exact_residuals=1,spike_tree=0,lambda_poisson=10){
   
   if(is.factor(y.train)) {
     if(length(levels(y.train)) != 2) stop("y.train is a factor with number of levels != 2")
@@ -120,8 +122,10 @@ probit_bartBMA.default<-function(x.train,y.train,
   if(c<1)stop("Value of Occam's Window has to be greater than 0."); 
   if(num_cp<0 || num_cp>100)stop("Value of num_cp should be a value between 1 and 100."); 
   
-  bartBMA_call=BART_BMA_sumLikelihood(x.train,Zlatent.train,start_mean,start_sd,a,mu,nu,lambda,c,sigma_mu,
-                                      pen,num_cp,x.test,num_rounds,alpha,beta,split_rule_node,gridpoint,maxOWsize,num_splits,gridsize,zero_split,only_max_num_trees,
+  bartBMA_call=BART_BMA_sumLikelihood(spike_tree,num_obs,num_vars,lambda_poisson,
+                                      x.train,Zlatent.train,start_mean,start_sd,a,mu,nu,lambda,c,sigma_mu,
+                                      pen,num_cp,x.test,num_rounds,alpha,beta,split_rule_node,gridpoint,maxOWsize,
+                                      num_splits,gridsize,zero_split,only_max_num_trees,
                                       min_num_obs_for_split, min_num_obs_after_split,
                                       exact_residuals)
   

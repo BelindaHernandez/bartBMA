@@ -6,6 +6,8 @@
 #' @param newdata Test data for which predictions are to be produced. Default = NULL. If NULL, then produces prediction intervals for training data if no test data was used in producing the bartBMA object, or produces prediction intervals for the original test data if test data was used in producing the bartBMA object.
 #' @param update_resids Option for whether to update the partial residuals in the gibbs sampler. If equal to 1, updates partial residuals, if equal to zero, does not update partial residuals. The defaullt setting is to update the partial residuals.
 #' @param root_alg_precision The algorithm should obtain approximate bounds that are within the distance root_alg_precision of the true quantile for the chosen average of models.
+#' @param spike_tree If equal to 1, then the Spike-and-Tree prior will be used, otherwise the standard BART prior will be used. The number of splitting variables has a beta-binomial prior. The number of terminal nodes has a truncated Poisson prior, and then a uniform prior is placed on the set of valid constructions of trees given the splitting variables and number of terminal nodes.
+#' @param lambda_poisson This is a parameter for the Spike-and-Tree prior. It is the parameter for the (truncated and conditional on the number of splitting variables) Poisson prior on the number of terminal nodes.
 #' @export 
 #' @return The output is a list of length one. The one element in this list is a vector of prediction intervals???
 
@@ -18,7 +20,7 @@ bartBMA_with_ITEs_exact_par <-function(l_quant,u_quant,newdata=NULL,update_resid
                                        gridpoint1=0,maxOWsize1=100,num_splits1=5,
                                        gridsize1=10,zero_split1=1,only_max_num_trees1=1,
                                        min_num_obs_for_split1=2, min_num_obs_after_split1=2,
-                                       exact_residuals1=1){
+                                       exact_residuals1=1,spike_tree1=0,lambda_poisson1=10){
   
   
   x_train <- cbind(z_train,x_covariates)
@@ -30,7 +32,7 @@ bartBMA_with_ITEs_exact_par <-function(l_quant,u_quant,newdata=NULL,update_resid
                     gridpoint=gridpoint1,maxOWsize=maxOWsize1,num_splits=num_splits1,
                     gridsize=gridsize1,zero_split=zero_split1,only_max_num_trees=only_max_num_trees1,
                     min_num_obs_for_split=min_num_obs_for_split1, min_num_obs_after_split=min_num_obs_after_split1,
-                    exact_residuals=exact_residuals1)
+                    exact_residuals=exact_residuals1,spike_tree=spike_tree1,lambda_poisson=lambda_poisson1)
   
   
   

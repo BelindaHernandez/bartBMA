@@ -30,6 +30,9 @@
 #' @param only_max_num_trees Binary variable. If equals 1, then only sum-of-trees models containing the maximum number of trees, num_rounds, are selected. If equals 0, then sum-of-trees models containing less than num_rounds trees can be selected. The default is only_max_num_trees=1.
 #' @param min_num_obs_for_split This integer determines the minimum number of observations in a (parent) tree node for the algorithm to consider potential splits of the node.
 #' @param min_num_obs_after_split This integer determines the minimum number of observations in a child node resulting from a split in order for a split to occur. If the left or right chikd node has less than this number of observations, then the split can not occur.
+#' @param exact_residuals Binary variable. If equal to 1, then trees are added to sum-of-tree models within each round of the algorithm by detecting changepoints in the exact residuals. If equals zero, then changepoints are detected in residuals that are constructed from approximate predictions.
+#' @param spike_tree If equal to 1, then the Spike-and-Tree prior will be used, otherwise the standard BART prior will be used. The number of splitting variables has a beta-binomial prior. The number of terminal nodes has a truncated Poisson prior, and then a uniform prior is placed on the set of valid constructions of trees given the splitting variables and number of terminal nodes.
+#' @param lambda_poisson This is a parameter for the Spike-and-Tree prior. It is the parameter for the (truncated and conditional on the number of splitting variables) Poisson prior on the number of terminal nodes.
 #' @export 
 #' @return A vector of Individual Treatment Effect Estimates.
 
@@ -39,7 +42,8 @@ GS_ITEs_PIs_bartBMA_new_initials<-function(num_iter,burnin,l_quant,u_quant,newda
                               pen1=12,num_cp1=20,x.test1=matrix(0.0,0,0),
                               num_rounds1=5,alpha1=0.95,beta1=2,split_rule_node1=0,
                               gridpoint1=0,maxOWsize1=100,num_splits1=5,gridsize1=10,zero_split1=1,only_max_num_trees1=1,
-                              min_num_obs_for_split1=2, min_num_obs_after_split1=2){
+                              min_num_obs_for_split1=2, min_num_obs_after_split1=2,
+                              exact_residuals1=1,spike_tree1=0,lambda_poisson1=10){
   
   
   
@@ -54,7 +58,8 @@ GS_ITEs_PIs_bartBMA_new_initials<-function(num_iter,burnin,l_quant,u_quant,newda
                               pen=pen1,num_cp=num_cp1,x.test=x.test1,
                               num_rounds=num_rounds1,alpha=alpha1,beta=beta1,split_rule_node=split_rule_node1,
                               gridpoint=gridpoint1,maxOWsize=maxOWsize1,num_splits=num_splits1,gridsize=gridsize1,zero_split=zero_split1,only_max_num_trees=only_max_num_trees1,
-                              min_num_obs_for_split=min_num_obs_for_split1, min_num_obs_after_split=min_num_obs_after_split1)
+                              min_num_obs_for_split=min_num_obs_for_split1, min_num_obs_after_split=min_num_obs_after_split1,
+                              exact_residuals=exact_residuals1,spike_tree=spike_tree1,lambda_poisson=lambda_poisson1)
   
   
   scaled_train_y <- scale_response(min(trained_bart_BMA$response),max(trained_bart_BMA$response),-0.5,0.5,trained_bart_BMA$response)

@@ -12,7 +12,7 @@ bartBMA_with_ITEs_exact_par(l_quant, u_quant, newdata = NULL,
   gridpoint1 = 0, maxOWsize1 = 100, num_splits1 = 5,
   gridsize1 = 10, zero_split1 = 1, only_max_num_trees1 = 1,
   min_num_obs_for_split1 = 2, min_num_obs_after_split1 = 2,
-  exact_residuals1 = 1)
+  exact_residuals1 = 1, spike_tree1 = 0, lambda_poisson1 = 10)
 }
 \arguments{
 \item{newdata}{Test data for which predictions are to be produced. Default = NULL. If NULL, then produces prediction intervals for training data if no test data was used in producing the bartBMA object, or produces prediction intervals for the original test data if test data was used in producing the bartBMA object.}
@@ -24,6 +24,10 @@ bartBMA_with_ITEs_exact_par(l_quant, u_quant, newdata = NULL,
 \item{min_possible}{The highest value that the upper quantile of any prediction interval could possibly take. This is required for a bisection root finding algorithm.}
 
 \item{max_possible}{The lowest value that the upper quantile of any prediction interval could possibly take. This is required for a bisection root finding algorithm.}
+
+\item{spike_tree}{If equal to 1, then the Spike-and-Tree prior will be used, otherwise the standard BART prior will be used. The number of splitting variables has a beta-binomial prior. The number of terminal nodes has a truncated Poisson prior, and then a uniform prior is placed on the set of valid constructions of trees given the splitting variables and number of terminal nodes.}
+
+\item{lambda_poisson}{This is a parameter for the Spike-and-Tree prior. It is the parameter for the (truncated and conditional on the number of splitting variables) Poisson prior on the number of terminal nodes.}
 }
 \value{
 The output is a list of length one. The one element in this list is a vector of prediction intervals???
