@@ -12,7 +12,8 @@ bartBMA_with_ITEs_exact_par(l_quant, u_quant, newdata = NULL,
   gridpoint1 = 0, maxOWsize1 = 100, num_splits1 = 5,
   gridsize1 = 10, zero_split1 = 1, only_max_num_trees1 = 1,
   min_num_obs_for_split1 = 2, min_num_obs_after_split1 = 2,
-  exact_residuals1 = 1, spike_tree1 = 0, lambda_poisson1 = 10)
+  exact_residuals1 = 1, spike_tree1 = 0, lambda_poisson1 = 10,
+  less_greedy1 = 0)
 }
 \arguments{
 \item{newdata}{Test data for which predictions are to be produced. Default = NULL. If NULL, then produces prediction intervals for training data if no test data was used in producing the bartBMA object, or produces prediction intervals for the original test data if test data was used in producing the bartBMA object.}

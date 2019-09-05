@@ -43,7 +43,7 @@ GS_ITEs_PIs_bartBMA_new_initials<-function(num_iter,burnin,l_quant,u_quant,newda
                               num_rounds1=5,alpha1=0.95,beta1=2,split_rule_node1=0,
                               gridpoint1=0,maxOWsize1=100,num_splits1=5,gridsize1=10,zero_split1=1,only_max_num_trees1=1,
                               min_num_obs_for_split1=2, min_num_obs_after_split1=2,
-                              exact_residuals1=1,spike_tree1=0,lambda_poisson1=10){
+                              exact_residuals1=1,spike_tree1=0,lambda_poisson1=10, less_greedy1=0){
   
   
   
@@ -59,7 +59,7 @@ GS_ITEs_PIs_bartBMA_new_initials<-function(num_iter,burnin,l_quant,u_quant,newda
                               num_rounds=num_rounds1,alpha=alpha1,beta=beta1,split_rule_node=split_rule_node1,
                               gridpoint=gridpoint1,maxOWsize=maxOWsize1,num_splits=num_splits1,gridsize=gridsize1,zero_split=zero_split1,only_max_num_trees=only_max_num_trees1,
                               min_num_obs_for_split=min_num_obs_for_split1, min_num_obs_after_split=min_num_obs_after_split1,
-                              exact_residuals=exact_residuals1,spike_tree=spike_tree1,lambda_poisson=lambda_poisson1)
+                              exact_residuals=exact_residuals1,spike_tree=spike_tree1,lambda_poisson=lambda_poisson1,less_greedy1=less_greedy)
   
   
   scaled_train_y <- scale_response(min(trained_bart_BMA$response),max(trained_bart_BMA$response),-0.5,0.5,trained_bart_BMA$response)

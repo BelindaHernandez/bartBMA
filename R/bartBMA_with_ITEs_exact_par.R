@@ -20,7 +20,7 @@ bartBMA_with_ITEs_exact_par <-function(l_quant,u_quant,newdata=NULL,update_resid
                                        gridpoint1=0,maxOWsize1=100,num_splits1=5,
                                        gridsize1=10,zero_split1=1,only_max_num_trees1=1,
                                        min_num_obs_for_split1=2, min_num_obs_after_split1=2,
-                                       exact_residuals1=1,spike_tree1=0,lambda_poisson1=10){
+                                       exact_residuals1=1,spike_tree1=0,lambda_poisson1=10,less_greedy1=0){
   
   
   x_train <- cbind(z_train,x_covariates)
@@ -32,7 +32,7 @@ bartBMA_with_ITEs_exact_par <-function(l_quant,u_quant,newdata=NULL,update_resid
                     gridpoint=gridpoint1,maxOWsize=maxOWsize1,num_splits=num_splits1,
                     gridsize=gridsize1,zero_split=zero_split1,only_max_num_trees=only_max_num_trees1,
                     min_num_obs_for_split=min_num_obs_for_split1, min_num_obs_after_split=min_num_obs_after_split1,
-                    exact_residuals=exact_residuals1,spike_tree=spike_tree1,lambda_poisson=lambda_poisson1)
+                    exact_residuals=exact_residuals1,spike_tree=spike_tree1,lambda_poisson=lambda_poisson1,less_greedy1=less_greedy)
   
   
   
@@ -82,9 +82,9 @@ bartBMA_with_ITEs_exact_par <-function(l_quant,u_quant,newdata=NULL,update_resid
   
   
   names(ret)<-c("ITE_intervals",
-                         "ITE_estimates",
-                         "CATE_Interval",
-                         "CATE_estimate")
+                "ITE_estimates",
+                "CATE_Interval",
+                "CATE_estimate")
   
   
   ret
