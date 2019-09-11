@@ -4452,7 +4452,7 @@ List get_best_trees(double less_greedy, double spike_tree, double num_obs, doubl
       parent=-1;
       
       if(split_rule_node==1){
-        if(i==0){
+        if(j==0){
           best_subset=get_best_split(less_greedy,spike_tree,num_obs,num_vars,lambda_poisson,resids(_,0),D1,tree_table[i],tree_mat[i],a,mu,nu,lambda,log(c),
                                      lowest_BIC,parent[0],cp_mat_list[0],alpha,beta,maxOWsize,
                                      min_num_obs_for_split,min_num_obs_after_split//,first_round
@@ -6447,7 +6447,7 @@ List get_best_trees_exact(double less_greedy, double spike_tree, double num_obs,
       parent=-1;
       
       if(split_rule_node==1){
-        if(i==0){
+        if(j==0){
           best_subset=get_best_split_exact(less_greedy,spike_tree,num_obs,num_vars,lambda_poisson,resids(_,0),D1,tree_table[i],tree_mat[i],a,mu,nu,lambda,log(c),
                                            lowest_BIC,parent[0],cp_mat_list[0],alpha,beta,maxOWsize,
                                            min_num_obs_for_split,min_num_obs_after_split//,first_round
