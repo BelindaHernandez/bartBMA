@@ -414,12 +414,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_tree_prior
-double get_tree_prior(double spike_tree, double num_obs, double num_vars, double lambda_poisson, NumericMatrix tree_table, NumericMatrix tree_matrix, double alpha, double beta);
-RcppExport SEXP _bartBMA_get_tree_prior(SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP tree_tableSEXP, SEXP tree_matrixSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+double get_tree_prior(double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, NumericMatrix tree_table, NumericMatrix tree_matrix, double alpha, double beta);
+RcppExport SEXP _bartBMA_get_tree_prior(SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP tree_tableSEXP, SEXP tree_matrixSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -427,7 +431,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type tree_matrix(tree_matrixSEXP);
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_tree_prior(spike_tree, num_obs, num_vars, lambda_poisson, tree_table, tree_matrix, alpha, beta));
+    rcpp_result_gen = Rcpp::wrap(get_tree_prior(spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, tree_table, tree_matrix, alpha, beta));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -703,13 +707,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_best_split
-List get_best_split(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, NumericVector resids, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, NumericMatrix cp_mat, double alpha, double beta, int maxOWsize, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_split(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP residsSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_split(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, NumericVector resids, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, NumericMatrix cp_mat, double alpha, double beta, int maxOWsize, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_split(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP residsSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -730,18 +738,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type maxOWsize(maxOWsizeSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_split(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_split(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_split_2
-List get_best_split_2(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, NumericVector resids, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, List cp_matlist, double alpha, double beta, int maxOWsize, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_split_2(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP residsSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matlistSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_split_2(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, NumericVector resids, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, List cp_matlist, double alpha, double beta, int maxOWsize, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_split_2(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP residsSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matlistSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -762,18 +774,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type maxOWsize(maxOWsizeSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_split_2(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_split_2(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_split_sum
-List get_best_split_sum(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, NumericMatrix cp_mat, double alpha, double beta, int maxOWsize, List sum_trees, List sum_trees_mat, NumericVector y_scaled, IntegerVector parent2, int i, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_split_sum(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP sum_treesSEXP, SEXP sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP parent2SEXP, SEXP iSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_split_sum(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, NumericMatrix cp_mat, double alpha, double beta, int maxOWsize, List sum_trees, List sum_trees_mat, NumericVector y_scaled, IntegerVector parent2, int i, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_split_sum(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP sum_treesSEXP, SEXP sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP parent2SEXP, SEXP iSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -798,18 +814,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type i(iSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_split_sum(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_split_sum(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_split_sum_2
-List get_best_split_sum_2(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, List cp_matlist, double alpha, double beta, int maxOWsize, List sum_trees, List sum_trees_mat, NumericVector y_scaled, IntegerVector parent2, int i, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_split_sum_2(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matlistSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP sum_treesSEXP, SEXP sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP parent2SEXP, SEXP iSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_split_sum_2(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, List cp_matlist, double alpha, double beta, int maxOWsize, List sum_trees, List sum_trees_mat, NumericVector y_scaled, IntegerVector parent2, int i, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_split_sum_2(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matlistSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP sum_treesSEXP, SEXP sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP parent2SEXP, SEXP iSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -834,18 +854,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type i(iSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_split_sum_2(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_split_sum_2(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_split_exact
-List get_best_split_exact(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, NumericVector resids, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, NumericMatrix cp_mat, double alpha, double beta, int maxOWsize, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_split_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP residsSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_split_exact(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, NumericVector resids, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, NumericMatrix cp_mat, double alpha, double beta, int maxOWsize, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_split_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP residsSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -866,18 +890,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type maxOWsize(maxOWsizeSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_split_exact(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_split_exact(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_split_2_exact
-List get_best_split_2_exact(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, NumericVector resids, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, List cp_matlist, double alpha, double beta, int maxOWsize, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_split_2_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP residsSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matlistSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_split_2_exact(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, NumericVector resids, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, List cp_matlist, double alpha, double beta, int maxOWsize, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_split_2_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP residsSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matlistSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -898,18 +926,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type maxOWsize(maxOWsizeSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_split_2_exact(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_split_2_exact(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_split_sum_exact
-List get_best_split_sum_exact(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, NumericMatrix cp_mat, double alpha, double beta, int maxOWsize, List sum_trees, List sum_trees_mat, NumericVector y_scaled, IntegerVector parent2, int i, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_split_sum_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP sum_treesSEXP, SEXP sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP parent2SEXP, SEXP iSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_split_sum_exact(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, NumericMatrix cp_mat, double alpha, double beta, int maxOWsize, List sum_trees, List sum_trees_mat, NumericVector y_scaled, IntegerVector parent2, int i, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_split_sum_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP sum_treesSEXP, SEXP sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP parent2SEXP, SEXP iSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -934,18 +966,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type i(iSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_split_sum_exact(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_split_sum_exact(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_split_sum_2_exact
-List get_best_split_sum_2_exact(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, List cp_matlist, double alpha, double beta, int maxOWsize, List sum_trees, List sum_trees_mat, NumericVector y_scaled, IntegerVector parent2, int i, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_split_sum_2_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matlistSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP sum_treesSEXP, SEXP sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP parent2SEXP, SEXP iSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_split_sum_2_exact(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& data, NumericMatrix treetable, NumericMatrix tree_mat, double a, double mu, double nu, double lambda, double c, double lowest_BIC, int parent, List cp_matlist, double alpha, double beta, int maxOWsize, List sum_trees, List sum_trees_mat, NumericVector y_scaled, IntegerVector parent2, int i, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_split_sum_2_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP dataSEXP, SEXP treetableSEXP, SEXP tree_matSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_matlistSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP maxOWsizeSEXP, SEXP sum_treesSEXP, SEXP sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP parent2SEXP, SEXP iSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -970,7 +1006,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type i(iSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_split_sum_2_exact(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_split_sum_2_exact(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1119,13 +1155,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_best_trees
-List get_best_trees(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_trees(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_trees(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_trees(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -1156,18 +1196,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type zero_split(zero_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_trees(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_trees(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_trees_update_splits
-List get_best_trees_update_splits(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_trees_update_splits(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_trees_update_splits(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_trees_update_splits(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -1198,18 +1242,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type zero_split(zero_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_trees_update_splits(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_trees_update_splits(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_trees_sum
-List get_best_trees_sum(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, IntegerVector err_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, List prev_sum_trees, List prev_sum_trees_mat, NumericVector y_scaled, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_trees_sum(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP err_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP prev_sum_treesSEXP, SEXP prev_sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_trees_sum(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, IntegerVector err_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, List prev_sum_trees, List prev_sum_trees_mat, NumericVector y_scaled, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_trees_sum(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP err_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP prev_sum_treesSEXP, SEXP prev_sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -1244,18 +1292,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type zero_split(zero_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_trees_sum(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_trees_sum(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_trees_sum_update_splits
-List get_best_trees_sum_update_splits(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, IntegerVector err_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, List prev_sum_trees, List prev_sum_trees_mat, NumericVector y_scaled, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_trees_sum_update_splits(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP err_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP prev_sum_treesSEXP, SEXP prev_sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_trees_sum_update_splits(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, IntegerVector err_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, List prev_sum_trees, List prev_sum_trees_mat, NumericVector y_scaled, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_trees_sum_update_splits(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP err_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP prev_sum_treesSEXP, SEXP prev_sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -1290,18 +1342,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type zero_split(zero_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_trees_sum_update_splits(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_trees_sum_update_splits(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_trees_exact
-List get_best_trees_exact(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_trees_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_trees_exact(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_trees_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -1332,18 +1388,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type zero_split(zero_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_trees_exact(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_trees_exact(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_trees_update_splits_exact
-List get_best_trees_update_splits_exact(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_trees_update_splits_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_trees_update_splits_exact(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_trees_update_splits_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -1374,18 +1434,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type zero_split(zero_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_trees_update_splits_exact(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_trees_update_splits_exact(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_trees_sum_exact
-List get_best_trees_sum_exact(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, IntegerVector err_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, List prev_sum_trees, List prev_sum_trees_mat, NumericVector y_scaled, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_trees_sum_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP err_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP prev_sum_treesSEXP, SEXP prev_sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_trees_sum_exact(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, IntegerVector err_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, List prev_sum_trees, List prev_sum_trees_mat, NumericVector y_scaled, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_trees_sum_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP err_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP prev_sum_treesSEXP, SEXP prev_sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -1420,18 +1484,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type zero_split(zero_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_trees_sum_exact(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_trees_sum_exact(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_best_trees_sum_update_splits_exact
-List get_best_trees_sum_update_splits_exact(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, IntegerVector err_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, List prev_sum_trees, List prev_sum_trees_mat, NumericVector y_scaled, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
-RcppExport SEXP _bartBMA_get_best_trees_sum_update_splits_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP err_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP prev_sum_treesSEXP, SEXP prev_sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
+List get_best_trees_sum_update_splits_exact(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, arma::mat& D1, NumericMatrix resids, double a, double mu, double nu, double lambda, double c, double sigma_mu, List tree_table, List tree_mat, double lowest_BIC, IntegerVector parent, List cp_mat_list, IntegerVector err_list, NumericMatrix test_data, double alpha, double beta, bool is_test_data, double pen, int num_cp, bool split_rule_node, bool gridpoint, int maxOWsize, List prev_sum_trees, List prev_sum_trees_mat, NumericVector y_scaled, int num_splits, int gridsize, bool zero_split, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split);
+RcppExport SEXP _bartBMA_get_best_trees_sum_update_splits_exact(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP D1SEXP, SEXP residsSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP tree_tableSEXP, SEXP tree_matSEXP, SEXP lowest_BICSEXP, SEXP parentSEXP, SEXP cp_mat_listSEXP, SEXP err_listSEXP, SEXP test_dataSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP is_test_dataSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP prev_sum_treesSEXP, SEXP prev_sum_trees_matSEXP, SEXP y_scaledSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -1466,7 +1534,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type zero_split(zero_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_best_trees_sum_update_splits_exact(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
+    rcpp_result_gen = Rcpp::wrap(get_best_trees_sum_update_splits_exact(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1497,6 +1565,51 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type sp_high(sp_highSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sum_preds(sum_predsSEXP);
     rcpp_result_gen = Rcpp::wrap(get_original(low, high, sp_low, sp_high, sum_preds));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_original_arma
+arma::vec get_original_arma(double low, double high, double sp_low, double sp_high, arma::vec sum_preds);
+RcppExport SEXP _bartBMA_get_original_arma(SEXP lowSEXP, SEXP highSEXP, SEXP sp_lowSEXP, SEXP sp_highSEXP, SEXP sum_predsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type low(lowSEXP);
+    Rcpp::traits::input_parameter< double >::type high(highSEXP);
+    Rcpp::traits::input_parameter< double >::type sp_low(sp_lowSEXP);
+    Rcpp::traits::input_parameter< double >::type sp_high(sp_highSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type sum_preds(sum_predsSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_original_arma(low, high, sp_low, sp_high, sum_preds));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_original_TE_arma
+arma::vec get_original_TE_arma(double low, double high, double sp_low, double sp_high, arma::vec sum_preds);
+RcppExport SEXP _bartBMA_get_original_TE_arma(SEXP lowSEXP, SEXP highSEXP, SEXP sp_lowSEXP, SEXP sp_highSEXP, SEXP sum_predsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type low(lowSEXP);
+    Rcpp::traits::input_parameter< double >::type high(highSEXP);
+    Rcpp::traits::input_parameter< double >::type sp_low(sp_lowSEXP);
+    Rcpp::traits::input_parameter< double >::type sp_high(sp_highSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type sum_preds(sum_predsSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_original_TE_arma(low, high, sp_low, sp_high, sum_preds));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_original_TE_double
+double get_original_TE_double(double low, double high, double sp_low, double sp_high, double sum_preds);
+RcppExport SEXP _bartBMA_get_original_TE_double(SEXP lowSEXP, SEXP highSEXP, SEXP sp_lowSEXP, SEXP sp_highSEXP, SEXP sum_predsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type low(lowSEXP);
+    Rcpp::traits::input_parameter< double >::type high(highSEXP);
+    Rcpp::traits::input_parameter< double >::type sp_low(sp_lowSEXP);
+    Rcpp::traits::input_parameter< double >::type sp_high(sp_highSEXP);
+    Rcpp::traits::input_parameter< double >::type sum_preds(sum_predsSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_original_TE_double(low, high, sp_low, sp_high, sum_preds));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1656,13 +1769,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // BART_BMA_sumLikelihood
-List BART_BMA_sumLikelihood(double less_greedy, double spike_tree, double num_obs, double num_vars, double lambda_poisson, NumericMatrix data, NumericVector y, double start_mean, double start_sd, double a, double mu, double nu, double lambda, double c, double sigma_mu, double pen, int num_cp, NumericMatrix test_data, int num_rounds, double alpha, double beta, bool split_rule_node, bool gridpoint, int maxOWsize, int num_splits, int gridsize, bool zero_split, bool only_max_num_trees, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split, int exact_residuals);
-RcppExport SEXP _bartBMA_BART_BMA_sumLikelihood(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP dataSEXP, SEXP ySEXP, SEXP start_meanSEXP, SEXP start_sdSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP test_dataSEXP, SEXP num_roundsSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP only_max_num_treesSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP, SEXP exact_residualsSEXP) {
+List BART_BMA_sumLikelihood(double less_greedy, double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, NumericMatrix data, NumericVector y, double start_mean, double start_sd, double a, double mu, double nu, double lambda, double c, double sigma_mu, double pen, int num_cp, NumericMatrix test_data, int num_rounds, double alpha, double beta, bool split_rule_node, bool gridpoint, int maxOWsize, int num_splits, int gridsize, bool zero_split, bool only_max_num_trees, unsigned int min_num_obs_for_split, unsigned int min_num_obs_after_split, int exact_residuals);
+RcppExport SEXP _bartBMA_BART_BMA_sumLikelihood(SEXP less_greedySEXP, SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP dataSEXP, SEXP ySEXP, SEXP start_meanSEXP, SEXP start_sdSEXP, SEXP aSEXP, SEXP muSEXP, SEXP nuSEXP, SEXP lambdaSEXP, SEXP cSEXP, SEXP sigma_muSEXP, SEXP penSEXP, SEXP num_cpSEXP, SEXP test_dataSEXP, SEXP num_roundsSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP split_rule_nodeSEXP, SEXP gridpointSEXP, SEXP maxOWsizeSEXP, SEXP num_splitsSEXP, SEXP gridsizeSEXP, SEXP zero_splitSEXP, SEXP only_max_num_treesSEXP, SEXP min_num_obs_for_splitSEXP, SEXP min_num_obs_after_splitSEXP, SEXP exact_residualsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type less_greedy(less_greedySEXP);
     Rcpp::traits::input_parameter< double >::type spike_tree(spike_treeSEXP);
+    Rcpp::traits::input_parameter< int >::type s_t_hyperprior(s_t_hyperpriorSEXP);
+    Rcpp::traits::input_parameter< double >::type p_s_t(p_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type a_s_t(a_s_tSEXP);
+    Rcpp::traits::input_parameter< double >::type b_s_t(b_s_tSEXP);
     Rcpp::traits::input_parameter< double >::type num_obs(num_obsSEXP);
     Rcpp::traits::input_parameter< double >::type num_vars(num_varsSEXP);
     Rcpp::traits::input_parameter< double >::type lambda_poisson(lambda_poissonSEXP);
@@ -1692,7 +1809,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_for_split(min_num_obs_for_splitSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type min_num_obs_after_split(min_num_obs_after_splitSEXP);
     Rcpp::traits::input_parameter< int >::type exact_residuals(exact_residualsSEXP);
-    rcpp_result_gen = Rcpp::wrap(BART_BMA_sumLikelihood(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, y, start_mean, start_sd, a, mu, nu, lambda, c, sigma_mu, pen, num_cp, test_data, num_rounds, alpha, beta, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, only_max_num_trees, min_num_obs_for_split, min_num_obs_after_split, exact_residuals));
+    rcpp_result_gen = Rcpp::wrap(BART_BMA_sumLikelihood(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, y, start_mean, start_sd, a, mu, nu, lambda, c, sigma_mu, pen, num_cp, test_data, num_rounds, alpha, beta, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, only_max_num_trees, min_num_obs_for_split, min_num_obs_after_split, exact_residuals));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -2921,7 +3038,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bartBMA_set_daughter", (DL_FUNC) &_bartBMA_set_daughter, 6},
     {"_bartBMA_order_", (DL_FUNC) &_bartBMA_order_, 1},
     {"_bartBMA_orderforOW", (DL_FUNC) &_bartBMA_orderforOW, 1},
-    {"_bartBMA_get_tree_prior", (DL_FUNC) &_bartBMA_get_tree_prior, 8},
+    {"_bartBMA_get_tree_prior", (DL_FUNC) &_bartBMA_get_tree_prior, 12},
     {"_bartBMA_start_tree", (DL_FUNC) &_bartBMA_start_tree, 2},
     {"_bartBMA_start_tree2", (DL_FUNC) &_bartBMA_start_tree2, 0},
     {"_bartBMA_start_matrix", (DL_FUNC) &_bartBMA_start_matrix, 1},
@@ -2941,14 +3058,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bartBMA_sumtree_likelihood_function2_exact", (DL_FUNC) &_bartBMA_sumtree_likelihood_function2_exact, 7},
     {"_bartBMA_sumtree_likelihood_function3", (DL_FUNC) &_bartBMA_sumtree_likelihood_function3, 7},
     {"_bartBMA_sumtree_likelihood_function4", (DL_FUNC) &_bartBMA_sumtree_likelihood_function4, 7},
-    {"_bartBMA_get_best_split", (DL_FUNC) &_bartBMA_get_best_split, 22},
-    {"_bartBMA_get_best_split_2", (DL_FUNC) &_bartBMA_get_best_split_2, 22},
-    {"_bartBMA_get_best_split_sum", (DL_FUNC) &_bartBMA_get_best_split_sum, 26},
-    {"_bartBMA_get_best_split_sum_2", (DL_FUNC) &_bartBMA_get_best_split_sum_2, 26},
-    {"_bartBMA_get_best_split_exact", (DL_FUNC) &_bartBMA_get_best_split_exact, 22},
-    {"_bartBMA_get_best_split_2_exact", (DL_FUNC) &_bartBMA_get_best_split_2_exact, 22},
-    {"_bartBMA_get_best_split_sum_exact", (DL_FUNC) &_bartBMA_get_best_split_sum_exact, 26},
-    {"_bartBMA_get_best_split_sum_2_exact", (DL_FUNC) &_bartBMA_get_best_split_sum_2_exact, 26},
+    {"_bartBMA_get_best_split", (DL_FUNC) &_bartBMA_get_best_split, 26},
+    {"_bartBMA_get_best_split_2", (DL_FUNC) &_bartBMA_get_best_split_2, 26},
+    {"_bartBMA_get_best_split_sum", (DL_FUNC) &_bartBMA_get_best_split_sum, 30},
+    {"_bartBMA_get_best_split_sum_2", (DL_FUNC) &_bartBMA_get_best_split_sum_2, 30},
+    {"_bartBMA_get_best_split_exact", (DL_FUNC) &_bartBMA_get_best_split_exact, 26},
+    {"_bartBMA_get_best_split_2_exact", (DL_FUNC) &_bartBMA_get_best_split_2_exact, 26},
+    {"_bartBMA_get_best_split_sum_exact", (DL_FUNC) &_bartBMA_get_best_split_sum_exact, 30},
+    {"_bartBMA_get_best_split_sum_2_exact", (DL_FUNC) &_bartBMA_get_best_split_sum_2_exact, 30},
     {"_bartBMA_update_mean_var", (DL_FUNC) &_bartBMA_update_mean_var, 4},
     {"_bartBMA_update_predictions", (DL_FUNC) &_bartBMA_update_predictions, 4},
     {"_bartBMA_subsetter", (DL_FUNC) &_bartBMA_subsetter, 2},
@@ -2960,16 +3077,19 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bartBMA_gridCP", (DL_FUNC) &_bartBMA_gridCP, 3},
     {"_bartBMA_make_gridpoint_cpmat", (DL_FUNC) &_bartBMA_make_gridpoint_cpmat, 4},
     {"_bartBMA_make_pelt_cpmat", (DL_FUNC) &_bartBMA_make_pelt_cpmat, 4},
-    {"_bartBMA_get_best_trees", (DL_FUNC) &_bartBMA_get_best_trees, 32},
-    {"_bartBMA_get_best_trees_update_splits", (DL_FUNC) &_bartBMA_get_best_trees_update_splits, 32},
-    {"_bartBMA_get_best_trees_sum", (DL_FUNC) &_bartBMA_get_best_trees_sum, 36},
-    {"_bartBMA_get_best_trees_sum_update_splits", (DL_FUNC) &_bartBMA_get_best_trees_sum_update_splits, 36},
-    {"_bartBMA_get_best_trees_exact", (DL_FUNC) &_bartBMA_get_best_trees_exact, 32},
-    {"_bartBMA_get_best_trees_update_splits_exact", (DL_FUNC) &_bartBMA_get_best_trees_update_splits_exact, 32},
-    {"_bartBMA_get_best_trees_sum_exact", (DL_FUNC) &_bartBMA_get_best_trees_sum_exact, 36},
-    {"_bartBMA_get_best_trees_sum_update_splits_exact", (DL_FUNC) &_bartBMA_get_best_trees_sum_update_splits_exact, 36},
+    {"_bartBMA_get_best_trees", (DL_FUNC) &_bartBMA_get_best_trees, 36},
+    {"_bartBMA_get_best_trees_update_splits", (DL_FUNC) &_bartBMA_get_best_trees_update_splits, 36},
+    {"_bartBMA_get_best_trees_sum", (DL_FUNC) &_bartBMA_get_best_trees_sum, 40},
+    {"_bartBMA_get_best_trees_sum_update_splits", (DL_FUNC) &_bartBMA_get_best_trees_sum_update_splits, 40},
+    {"_bartBMA_get_best_trees_exact", (DL_FUNC) &_bartBMA_get_best_trees_exact, 36},
+    {"_bartBMA_get_best_trees_update_splits_exact", (DL_FUNC) &_bartBMA_get_best_trees_update_splits_exact, 36},
+    {"_bartBMA_get_best_trees_sum_exact", (DL_FUNC) &_bartBMA_get_best_trees_sum_exact, 40},
+    {"_bartBMA_get_best_trees_sum_update_splits_exact", (DL_FUNC) &_bartBMA_get_best_trees_sum_update_splits_exact, 40},
     {"_bartBMA_scale_response", (DL_FUNC) &_bartBMA_scale_response, 5},
     {"_bartBMA_get_original", (DL_FUNC) &_bartBMA_get_original, 5},
+    {"_bartBMA_get_original_arma", (DL_FUNC) &_bartBMA_get_original_arma, 5},
+    {"_bartBMA_get_original_TE_arma", (DL_FUNC) &_bartBMA_get_original_TE_arma, 5},
+    {"_bartBMA_get_original_TE_double", (DL_FUNC) &_bartBMA_get_original_TE_double, 5},
     {"_bartBMA_get_termobs_test_data", (DL_FUNC) &_bartBMA_get_termobs_test_data, 2},
     {"_bartBMA_get_termobs_test_data_fields", (DL_FUNC) &_bartBMA_get_termobs_test_data_fields, 2},
     {"_bartBMA_get_termobs_testdata_overall", (DL_FUNC) &_bartBMA_get_termobs_testdata_overall, 2},
@@ -2979,7 +3099,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bartBMA_preds_bbma_lin_alg_insamp", (DL_FUNC) &_bartBMA_preds_bbma_lin_alg_insamp, 12},
     {"_bartBMA_mean_vars_lin_alg_outsamp", (DL_FUNC) &_bartBMA_mean_vars_lin_alg_outsamp, 14},
     {"_bartBMA_mean_vars_lin_alg_insamp", (DL_FUNC) &_bartBMA_mean_vars_lin_alg_insamp, 13},
-    {"_bartBMA_BART_BMA_sumLikelihood", (DL_FUNC) &_bartBMA_BART_BMA_sumLikelihood, 31},
+    {"_bartBMA_BART_BMA_sumLikelihood", (DL_FUNC) &_bartBMA_BART_BMA_sumLikelihood, 35},
     {"_bartBMA_Quantile", (DL_FUNC) &_bartBMA_Quantile, 2},
     {"_bartBMA_mixt_eval_cdf", (DL_FUNC) &_bartBMA_mixt_eval_cdf, 6},
     {"_bartBMA_rootmixt", (DL_FUNC) &_bartBMA_rootmixt, 8},

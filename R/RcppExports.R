@@ -127,8 +127,8 @@ orderforOW <- function(x) {
     .Call(`_bartBMA_orderforOW`, x)
 }
 
-get_tree_prior <- function(spike_tree, num_obs, num_vars, lambda_poisson, tree_table, tree_matrix, alpha, beta) {
-    .Call(`_bartBMA_get_tree_prior`, spike_tree, num_obs, num_vars, lambda_poisson, tree_table, tree_matrix, alpha, beta)
+get_tree_prior <- function(spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, tree_table, tree_matrix, alpha, beta) {
+    .Call(`_bartBMA_get_tree_prior`, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, tree_table, tree_matrix, alpha, beta)
 }
 
 start_tree <- function(start_mean, start_sd) {
@@ -207,36 +207,36 @@ sumtree_likelihood_function4 <- function(y_temp, sum_treetable, sum_obs_to_nodes
     .Call(`_bartBMA_sumtree_likelihood_function4`, y_temp, sum_treetable, sum_obs_to_nodes, n, a, nu, lambda)
 }
 
-get_best_split <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_split`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split)
+get_best_split <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_split`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_split_2 <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_split_2`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split)
+get_best_split_2 <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_split_2`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_split_sum <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_split_sum`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split)
+get_best_split_sum <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_split_sum`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_split_sum_2 <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_split_sum_2`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split)
+get_best_split_sum_2 <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_split_sum_2`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_split_exact <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_split_exact`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split)
+get_best_split_exact <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_split_exact`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_split_2_exact <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_split_2_exact`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split)
+get_best_split_2_exact <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_split_2_exact`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, resids, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_split_sum_exact <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_split_sum_exact`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split)
+get_best_split_sum_exact <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_split_sum_exact`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_mat, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_split_sum_2_exact <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_split_sum_2_exact`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split)
+get_best_split_sum_2_exact <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_split_sum_2_exact`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, treetable, tree_mat, a, mu, nu, lambda, c, lowest_BIC, parent, cp_matlist, alpha, beta, maxOWsize, sum_trees, sum_trees_mat, y_scaled, parent2, i, min_num_obs_for_split, min_num_obs_after_split)
 }
 
 update_mean_var <- function(tree_table, tree_matrix, resids, a) {
@@ -283,36 +283,36 @@ make_pelt_cpmat <- function(data, resp, pen, num_cp) {
     .Call(`_bartBMA_make_pelt_cpmat`, data, resp, pen, num_cp)
 }
 
-get_best_trees <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_trees`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
+get_best_trees <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_trees`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_trees_update_splits <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_trees_update_splits`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
+get_best_trees_update_splits <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_trees_update_splits`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_trees_sum <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_trees_sum`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
+get_best_trees_sum <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_trees_sum`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_trees_sum_update_splits <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_trees_sum_update_splits`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
+get_best_trees_sum_update_splits <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_trees_sum_update_splits`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_trees_exact <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_trees_exact`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
+get_best_trees_exact <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_trees_exact`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_trees_update_splits_exact <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_trees_update_splits_exact`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
+get_best_trees_update_splits_exact <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_trees_update_splits_exact`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_trees_sum_exact <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_trees_sum_exact`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
+get_best_trees_sum_exact <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_trees_sum_exact`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
 }
 
-get_best_trees_sum_update_splits_exact <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
-    .Call(`_bartBMA_get_best_trees_sum_update_splits_exact`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
+get_best_trees_sum_update_splits_exact <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split) {
+    .Call(`_bartBMA_get_best_trees_sum_update_splits_exact`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, D1, resids, a, mu, nu, lambda, c, sigma_mu, tree_table, tree_mat, lowest_BIC, parent, cp_mat_list, err_list, test_data, alpha, beta, is_test_data, pen, num_cp, split_rule_node, gridpoint, maxOWsize, prev_sum_trees, prev_sum_trees_mat, y_scaled, num_splits, gridsize, zero_split, min_num_obs_for_split, min_num_obs_after_split)
 }
 
 scale_response <- function(a, b, c, d, y) {
@@ -321,6 +321,18 @@ scale_response <- function(a, b, c, d, y) {
 
 get_original <- function(low, high, sp_low, sp_high, sum_preds) {
     .Call(`_bartBMA_get_original`, low, high, sp_low, sp_high, sum_preds)
+}
+
+get_original_arma <- function(low, high, sp_low, sp_high, sum_preds) {
+    .Call(`_bartBMA_get_original_arma`, low, high, sp_low, sp_high, sum_preds)
+}
+
+get_original_TE_arma <- function(low, high, sp_low, sp_high, sum_preds) {
+    .Call(`_bartBMA_get_original_TE_arma`, low, high, sp_low, sp_high, sum_preds)
+}
+
+get_original_TE_double <- function(low, high, sp_low, sp_high, sum_preds) {
+    .Call(`_bartBMA_get_original_TE_double`, low, high, sp_low, sp_high, sum_preds)
 }
 
 get_termobs_test_data <- function(test_data, tree_data) {
@@ -369,8 +381,8 @@ mean_vars_lin_alg_insamp <- function(overall_sum_trees, overall_sum_mat, y, BIC_
 
 #' @title Obtain BARTBMA predictions, trees, BICs etc. to be called by R functions
 #' @export
-BART_BMA_sumLikelihood <- function(less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, y, start_mean, start_sd, a, mu, nu, lambda, c, sigma_mu, pen, num_cp, test_data, num_rounds, alpha, beta, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, only_max_num_trees, min_num_obs_for_split, min_num_obs_after_split, exact_residuals) {
-    .Call(`_bartBMA_BART_BMA_sumLikelihood`, less_greedy, spike_tree, num_obs, num_vars, lambda_poisson, data, y, start_mean, start_sd, a, mu, nu, lambda, c, sigma_mu, pen, num_cp, test_data, num_rounds, alpha, beta, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, only_max_num_trees, min_num_obs_for_split, min_num_obs_after_split, exact_residuals)
+BART_BMA_sumLikelihood <- function(less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, y, start_mean, start_sd, a, mu, nu, lambda, c, sigma_mu, pen, num_cp, test_data, num_rounds, alpha, beta, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, only_max_num_trees, min_num_obs_for_split, min_num_obs_after_split, exact_residuals) {
+    .Call(`_bartBMA_BART_BMA_sumLikelihood`, less_greedy, spike_tree, s_t_hyperprior, p_s_t, a_s_t, b_s_t, num_obs, num_vars, lambda_poisson, data, y, start_mean, start_sd, a, mu, nu, lambda, c, sigma_mu, pen, num_cp, test_data, num_rounds, alpha, beta, split_rule_node, gridpoint, maxOWsize, num_splits, gridsize, zero_split, only_max_num_trees, min_num_obs_for_split, min_num_obs_after_split, exact_residuals)
 }
 
 Quantile <- function(x, probs) {

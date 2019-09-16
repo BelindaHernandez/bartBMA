@@ -58,7 +58,9 @@ probit_bartBMA.default<-function(x.train,y.train,
                                  num_rounds=5,alpha=0.95,beta=2,split_rule_node=0,
                                  gridpoint=0,maxOWsize=100,num_splits=5,gridsize=10,zero_split=1,only_max_num_trees=1,
                                  min_num_obs_for_split=2, min_num_obs_after_split=2,
-                                 exact_residuals=1,spike_tree=0,lambda_poisson=10,less_greedy=0){
+                                 exact_residuals=1,
+                                 spike_tree=0, s_t_hyperprior=1, p_s_t=0.5, a_s_t=1,b_s_t=3,
+                                 lambda_poisson=10,less_greedy=0){
   
   if(is.factor(y.train)) {
     if(length(levels(y.train)) != 2) stop("y.train is a factor with number of levels != 2")
@@ -122,7 +124,9 @@ probit_bartBMA.default<-function(x.train,y.train,
   if(c<1)stop("Value of Occam's Window has to be greater than 0."); 
   if(num_cp<0 || num_cp>100)stop("Value of num_cp should be a value between 1 and 100."); 
   
-  bartBMA_call=BART_BMA_sumLikelihood(less_greedy,spike_tree,num_obs,num_vars,lambda_poisson,
+  bartBMA_call=BART_BMA_sumLikelihood(less_greedy,
+                                      spike_tree, s_t_hyperprior, p_s_t, a_s_t,b_s_t,
+                                      num_obs,num_vars,lambda_poisson,
                                       x.train,Zlatent.train,start_mean,start_sd,a,mu,nu,lambda,c,sigma_mu,
                                       pen,num_cp,x.test,num_rounds,alpha,beta,split_rule_node,gridpoint,maxOWsize,
                                       num_splits,gridsize,zero_split,only_max_num_trees,

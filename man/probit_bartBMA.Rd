@@ -14,6 +14,7 @@ probit_bartBMA(x, ...)
   num_splits = 5, gridsize = 10, zero_split = 1,
   only_max_num_trees = 1, min_num_obs_for_split = 2,
   min_num_obs_after_split = 2, exact_residuals = 1, spike_tree = 0,
+  s_t_hyperprior = 1, p_s_t = 0.5, a_s_t = 1, b_s_t = 3,
   lambda_poisson = 10, less_greedy = 0)
 }
 \arguments{
