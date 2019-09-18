@@ -413,6 +413,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// secondKindStirlingNumber
+double secondKindStirlingNumber(int n, int k);
+RcppExport SEXP _bartBMA_secondKindStirlingNumber(SEXP nSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(secondKindStirlingNumber(n, k));
+    return rcpp_result_gen;
+END_RCPP
+}
 // get_tree_prior
 double get_tree_prior(double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson, NumericMatrix tree_table, NumericMatrix tree_matrix, double alpha, double beta);
 RcppExport SEXP _bartBMA_get_tree_prior(SEXP spike_treeSEXP, SEXP s_t_hyperpriorSEXP, SEXP p_s_tSEXP, SEXP a_s_tSEXP, SEXP b_s_tSEXP, SEXP num_obsSEXP, SEXP num_varsSEXP, SEXP lambda_poissonSEXP, SEXP tree_tableSEXP, SEXP tree_matrixSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
@@ -3038,6 +3050,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bartBMA_set_daughter", (DL_FUNC) &_bartBMA_set_daughter, 6},
     {"_bartBMA_order_", (DL_FUNC) &_bartBMA_order_, 1},
     {"_bartBMA_orderforOW", (DL_FUNC) &_bartBMA_orderforOW, 1},
+    {"_bartBMA_secondKindStirlingNumber", (DL_FUNC) &_bartBMA_secondKindStirlingNumber, 2},
     {"_bartBMA_get_tree_prior", (DL_FUNC) &_bartBMA_get_tree_prior, 12},
     {"_bartBMA_start_tree", (DL_FUNC) &_bartBMA_start_tree, 2},
     {"_bartBMA_start_tree2", (DL_FUNC) &_bartBMA_start_tree2, 0},

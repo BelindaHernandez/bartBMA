@@ -632,6 +632,56 @@ IntegerVector orderforOW(NumericVector x) {	// gives vector of position of small
   return match(sorted, x);	//  match is the Rcpp sugar version of the R function match, which returns a vector of the positions of the first matches of the first argument in the second.
 }
 //######################################################################################################################//
+
+// [[Rcpp::depends(RcppArmadillo)]]
+//' @export
+// [[Rcpp::export]]
+double secondKindStirlingNumber(int n, int k) {
+  if(k>n)
+    throw std::range_error("Sterling number undefined for k>n");
+  if(k==0 && n==0)
+    return 1;
+  if (n == 0 || k == 0 || k > n) 
+    return 0; 
+  if (k == 1 || k == n) 
+    return 1; 
+  
+  arma::mat sf=arma::zeros(n + 1,n + 1);
+  for (int i = 0; i < k+1; i++) {
+    sf(i,i) = 1;
+  }
+  for(int i=1; i< n+1 ; i++){
+    sf(i,1)=1;
+  }
+  for (int i = 3; i < n + 1; i++) {
+    for (int j = 2; j < k + 1; j++) {
+      sf(i,j) = j * sf(i - 1,j) + sf(i - 1,j - 1);
+    }
+  }
+  return sf(n,k);
+}
+// //######################################################################################################################//
+// // Returns count of different partitions of n 
+// // elements in k subsets
+// 
+// //' @export
+// // [[Rcpp::export]]
+// double countP(int n, int k) 
+// { 
+//   // Base cases 
+//   if(k>n)
+//     throw std::range_error("Sterling number undefined for k>n");
+//   if(k==0 && n==0)
+//     return 1;
+//   if (n == 0 || k == 0 || k > n) 
+//     return 0; 
+//   if (k == 1 || k == n) 
+//     return 1; 
+//   
+//   // S(n+1, k) = k*S(n, k) + S(n, k-1) 
+//   return k*countP(n-1, k) + countP(n-1, k-1); 
+// } 
+//######################################################################################################################//
 #include <math.h>       /* tgamma */
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
@@ -741,7 +791,7 @@ double get_tree_prior(double spike_tree, int s_t_hyperprior, double p_s_t, doubl
           std::lgamma(q_temp+a_s_t)+std::lgamma(num_vars-q_temp+b_s_t)-std::lgamma(num_vars+a_s_t+b_s_t)+
           k_temp*log(lambda_poisson)-
           lambda_poisson-std::lgamma(k_temp+1)-denom  -
-          (std::lgamma(num_obs)+(k_temp-1-q_temp)*log(q_temp)+
+          (std::lgamma(num_obs)+log(secondKindStirlingNumber(k_temp,q_temp))+//(k_temp-1-q_temp)*log(q_temp)+
           std::lgamma(q_temp+1)-(std::lgamma(num_obs-k_temp+1))));
         //Rcout << " propsplit= " << propsplit << ".\n";
         return(propsplit);
@@ -751,7 +801,7 @@ double get_tree_prior(double spike_tree, int s_t_hyperprior, double p_s_t, doubl
           q_temp*log(p_s_t)+(num_vars-q_temp)*log(1-(p_s_t))+
           k_temp*log(lambda_poisson)-
           lambda_poisson-std::lgamma(k_temp+1)-denom  -
-          (std::lgamma(num_obs)+(k_temp-1-q_temp)*log(q_temp)+
+          (std::lgamma(num_obs)+log(secondKindStirlingNumber(k_temp,q_temp))+//(k_temp-1-q_temp)*log(q_temp)+
           std::lgamma(q_temp+1)-(std::lgamma(num_obs-k_temp+1))));
         //Rcout << " propsplit= " << propsplit << ".\n";
         return(propsplit);
