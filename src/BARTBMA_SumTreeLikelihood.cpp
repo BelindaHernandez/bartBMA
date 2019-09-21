@@ -867,7 +867,7 @@ double get_tree_prior(double spike_tree, int s_t_hyperprior, double p_s_t, doubl
           if(found.size()>0){        
             //term_nodes_index[index_count2]=j;
             //index_count2++;
-            propsplit*=1-alpha*pow((j+1),-beta) ;  
+            propsplit*= ( 1-alpha*pow((j+1),-beta) ) ;  
             
             break;
           }        
