@@ -791,7 +791,7 @@ double get_tree_prior(double spike_tree, int s_t_hyperprior, double p_s_t, doubl
           std::lgamma(q_temp+a_s_t)+std::lgamma(num_vars-q_temp+b_s_t)-std::lgamma(num_vars+a_s_t+b_s_t)+
           k_temp*log(lambda_poisson)-
           lambda_poisson-std::lgamma(k_temp+1)-denom  -
-          (std::lgamma(num_obs)+log(secondKindStirlingNumber(k_temp,q_temp))+//(k_temp-1-q_temp)*log(q_temp)+
+          (std::lgamma(num_obs)+log(secondKindStirlingNumber(k_temp-1,q_temp))+//(k_temp-1-q_temp)*log(q_temp)+
           std::lgamma(q_temp+1)-(std::lgamma(num_obs-k_temp+1))));
         //Rcout << " propsplit= " << propsplit << ".\n";
         return(propsplit);
@@ -801,7 +801,7 @@ double get_tree_prior(double spike_tree, int s_t_hyperprior, double p_s_t, doubl
           q_temp*log(p_s_t)+(num_vars-q_temp)*log(1-(p_s_t))+
           k_temp*log(lambda_poisson)-
           lambda_poisson-std::lgamma(k_temp+1)-denom  -
-          (std::lgamma(num_obs)+log(secondKindStirlingNumber(k_temp,q_temp))+//(k_temp-1-q_temp)*log(q_temp)+
+          (std::lgamma(num_obs)+log(secondKindStirlingNumber(k_temp-1,q_temp))+//(k_temp-1-q_temp)*log(q_temp)+
           std::lgamma(q_temp+1)-(std::lgamma(num_obs-k_temp+1))));
         //Rcout << " propsplit= " << propsplit << ".\n";
         return(propsplit);
