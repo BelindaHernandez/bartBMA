@@ -21,13 +21,6 @@ The goal of bartBMA is to ...
 
 ## Installation
 
-You can install the released version of bartBMA from [CRAN](https://CRAN.R-project.org) with:
-
-``` r
-install.packages("bartBMA")
-```
-
-And the development version from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")

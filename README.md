@@ -11,7 +11,8 @@ Hernández, B., Raftery, A. E., Pennington, S. R., & Parnell, A. C. (2018). Baye
 ## Installation
 
 ``` r
-install.packages("bartBMA")
+library(devtools)
+install_github("bartBMA")
 ```
 
 ## Example
