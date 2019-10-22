@@ -64,7 +64,17 @@ bartBMA(x, ...)
 
 \item{spike_tree}{If equal to 1, then the Spike-and-Tree prior will be used, otherwise the standard BART prior will be used. The number of splitting variables has a beta-binomial prior. The number of terminal nodes has a truncated Poisson prior, and then a uniform prior is placed on the set of valid constructions of trees given the splitting variables and number of terminal nodes.}
 
+\item{s_t_hyperprior}{If equals 1 and spike_tree equals 1, then a beta distribution hyperprior is placed on the variable inclusion probabilities for the spike and tree prior. The hyperprior parameters are a_s_t and b_s_t.}
+
+\item{p_s_t}{If spike_tree=1 and s_t_hyperprior=0, then p_s_t is the prior variable inclusion probability.}
+
+\item{a_s_t}{If spike_tree=1 and s_t_hyperprior=1, then a_s_t is a parameter of a beta distribution hyperprior}
+
 \item{lambda_poisson}{This is a parameter for the Spike-and-Tree prior. It is the parameter for the (truncated and conditional on the number of splitting variables) Poisson prior on the number of terminal nodes.}
+
+\item{less_greedy}{If equal to one, then a less greedy model search algorithm is used.}
+
+\item{a_s_t}{If spike_tree=1 and s_t_hyperprior=1, then b_s_t is a parameter of a beta distribution hyperprior}
 }
 \value{
 The following objects are returned by bartbma:
