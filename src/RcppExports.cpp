@@ -1138,6 +1138,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gridCP_arma
+arma::field<arma::vec> gridCP_arma(arma::vec x, arma::vec y, int gridSize);
+RcppExport SEXP _bartBMA_gridCP_arma(SEXP xSEXP, SEXP ySEXP, SEXP gridSizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< int >::type gridSize(gridSizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(gridCP_arma(x, y, gridSize));
+    return rcpp_result_gen;
+END_RCPP
+}
 // make_gridpoint_cpmat
 List make_gridpoint_cpmat(NumericMatrix data, NumericVector resp, int gridsize, int num_cp);
 RcppExport SEXP _bartBMA_make_gridpoint_cpmat(SEXP dataSEXP, SEXP respSEXP, SEXP gridsizeSEXP, SEXP num_cpSEXP) {
@@ -1149,6 +1162,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type gridsize(gridsizeSEXP);
     Rcpp::traits::input_parameter< int >::type num_cp(num_cpSEXP);
     rcpp_result_gen = Rcpp::wrap(make_gridpoint_cpmat(data, resp, gridsize, num_cp));
+    return rcpp_result_gen;
+END_RCPP
+}
+// make_gridpoint_cpmat_arma
+List make_gridpoint_cpmat_arma(arma::mat data, arma::vec resp, int gridsize, int num_cp);
+RcppExport SEXP _bartBMA_make_gridpoint_cpmat_arma(SEXP dataSEXP, SEXP respSEXP, SEXP gridsizeSEXP, SEXP num_cpSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type resp(respSEXP);
+    Rcpp::traits::input_parameter< int >::type gridsize(gridsizeSEXP);
+    Rcpp::traits::input_parameter< int >::type num_cp(num_cpSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_gridpoint_cpmat_arma(data, resp, gridsize, num_cp));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -3088,7 +3115,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bartBMA_PELT_meanvar_norm2", (DL_FUNC) &_bartBMA_PELT_meanvar_norm2, 2},
     {"_bartBMA_SS", (DL_FUNC) &_bartBMA_SS, 3},
     {"_bartBMA_gridCP", (DL_FUNC) &_bartBMA_gridCP, 3},
+    {"_bartBMA_gridCP_arma", (DL_FUNC) &_bartBMA_gridCP_arma, 3},
     {"_bartBMA_make_gridpoint_cpmat", (DL_FUNC) &_bartBMA_make_gridpoint_cpmat, 4},
+    {"_bartBMA_make_gridpoint_cpmat_arma", (DL_FUNC) &_bartBMA_make_gridpoint_cpmat_arma, 4},
     {"_bartBMA_make_pelt_cpmat", (DL_FUNC) &_bartBMA_make_pelt_cpmat, 4},
     {"_bartBMA_get_best_trees", (DL_FUNC) &_bartBMA_get_best_trees, 36},
     {"_bartBMA_get_best_trees_update_splits", (DL_FUNC) &_bartBMA_get_best_trees_update_splits, 36},

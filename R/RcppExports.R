@@ -280,8 +280,16 @@ gridCP <- function(x, y, gridSize = 10L) {
     .Call(`_bartBMA_gridCP`, x, y, gridSize)
 }
 
+gridCP_arma <- function(x, y, gridSize = 10L) {
+    .Call(`_bartBMA_gridCP_arma`, x, y, gridSize)
+}
+
 make_gridpoint_cpmat <- function(data, resp, gridsize, num_cp) {
     .Call(`_bartBMA_make_gridpoint_cpmat`, data, resp, gridsize, num_cp)
+}
+
+make_gridpoint_cpmat_arma <- function(data, resp, gridsize, num_cp) {
+    .Call(`_bartBMA_make_gridpoint_cpmat_arma`, data, resp, gridsize, num_cp)
 }
 
 make_pelt_cpmat <- function(data, resp, pen, num_cp) {
