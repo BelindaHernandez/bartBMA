@@ -42,15 +42,15 @@ ITEs_bartBMA<-function(x_covariates,z_train ,y_train,
     gridpoint=gridpoint,maxOWsize=maxOWsize,num_splits=num_splits,gridsize=gridsize,zero_split=zero_split,only_max_num_trees=only_max_num_trees,
     min_num_obs_for_split=min_num_obs_for_split, min_num_obs_after_split=min_num_obs_after_split)
   
-  if(nrow(x.test1)==0){
+  if(nrow(x.test)==0){
     all_treated_data <- cbind(rep(1,nrow(x_covariates)), x_covariates)
     all_control_data <- cbind(rep(0,nrow(x_covariates)), x_covariates)
     
     preds_treated<-get_BART_BMA_test_predictions(all_treated_data,trained_bart_BMA$bic,trained_bart_BMA$sumoftrees,trained_bart_BMA$y_minmax)
     preds_control<-get_BART_BMA_test_predictions(all_control_data,trained_bart_BMA$bic,trained_bart_BMA$sumoftrees,trained_bart_BMA$y_minmax)
   }else{
-    all_treated_data <- cbind(rep(1,nrow(x.test1)), x.test1)
-    all_control_data <- cbind(rep(0,nrow(x.test1)), x.test1)
+    all_treated_data <- cbind(rep(1,nrow(x.test)), x.test)
+    all_control_data <- cbind(rep(0,nrow(x.test)), x.test)
     
     preds_treated<-get_BART_BMA_test_predictions(all_treated_data,trained_bart_BMA$bic,trained_bart_BMA$sumoftrees,trained_bart_BMA$y_minmax)
     preds_control<-get_BART_BMA_test_predictions(all_control_data,trained_bart_BMA$bic,trained_bart_BMA$sumoftrees,trained_bart_BMA$y_minmax)

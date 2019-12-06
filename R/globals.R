@@ -1,1 +1,0 @@
-utils::globalVariables(c("num_vars", "num_obs",'burnin','num_iter','less_greedy'))

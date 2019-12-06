@@ -68,6 +68,10 @@ probit_bartBMA.default<-function(x.train,y.train,
                                  spike_tree=0, s_t_hyperprior=1, p_s_t=0.5, a_s_t=1,b_s_t=3,
                                  lambda_poisson=10,less_greedy=0,...){
   
+  
+  num_obs=nrow(x.train)
+  num_vars=ncol(x.train)
+  
   if(is.factor(y.train)) {
     if(length(levels(y.train)) != 2) stop("y.train is a factor with number of levels != 2")
     #binary = TRUE
