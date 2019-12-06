@@ -5,7 +5,7 @@
 \alias{bartBMA.default}
 \title{Bayesian Additive Regression Trees Using Bayesian Model Averaging (BART-BMA)}
 \usage{
-bartBMA(x, ...)
+bartBMA(x.train, ...)
 
 \method{bartBMA}{default}(x.train, y.train, a = 3, nu = 3,
   sigquant = 0.9, c = 1000, pen = 12, num_cp = 20,
@@ -15,10 +15,12 @@ bartBMA(x, ...)
   only_max_num_trees = 1, min_num_obs_for_split = 2,
   min_num_obs_after_split = 2, exact_residuals = 1, spike_tree = 0,
   s_t_hyperprior = 1, p_s_t = 0.5, a_s_t = 1, b_s_t = 3,
-  lambda_poisson = 10, less_greedy = 0)
+  lambda_poisson = 10, less_greedy = 0, ...)
 }
 \arguments{
 \item{x.train}{Training data covariate matrix}
+
+\item{...}{Further arguments.}
 
 \item{y.train}{Training data outcome vector.}
 
@@ -26,7 +28,7 @@ bartBMA(x, ...)
 
 \item{nu}{This is a hyperparameter in the distribution of the variance of the error term. THe inverse of the variance is distributed as Gamma (nu/2, nu*lambda/2). Default value nu=3.}
 
-\item{sigquant}{??}
+\item{sigquant}{Calibration quantile for the inverse chi-squared prior on the variance of the error term.}
 
 \item{c}{This determines the size of Occam's Window}
 
@@ -68,13 +70,13 @@ bartBMA(x, ...)
 
 \item{p_s_t}{If spike_tree=1 and s_t_hyperprior=0, then p_s_t is the prior variable inclusion probability.}
 
-\item{a_s_t}{If spike_tree=1 and s_t_hyperprior=1, then a_s_t is a parameter of a beta distribution hyperprior}
+\item{a_s_t}{If spike_tree=1 and s_t_hyperprior=1, then a_s_t is a parameter of a beta distribution hyperprior.}
+
+\item{b_s_t}{If spike_tree=1 and s_t_hyperprior=1, then b_s_t is a parameter of a beta distribution hyperprior.}
 
 \item{lambda_poisson}{This is a parameter for the Spike-and-Tree prior. It is the parameter for the (truncated and conditional on the number of splitting variables) Poisson prior on the number of terminal nodes.}
 
 \item{less_greedy}{If equal to one, then a less greedy model search algorithm is used.}
-
-\item{a_s_t}{If spike_tree=1 and s_t_hyperprior=1, then b_s_t is a parameter of a beta distribution hyperprior}
 }
 \value{
 The following objects are returned by bartbma:

@@ -4,7 +4,7 @@
 \alias{varImpScores}
 \title{Variable importances as defined by Hernandez et al. (2018)}
 \usage{
-varImpScores(object, ...)
+varImpScores(object)
 }
 \arguments{
 \item{object}{A bartBMA object obtained using the barBMA function.}

@@ -1,10 +1,12 @@
-#' @title Prediction intervals for bart-bma output obtained using linear algebra to obtain means and variances, and using bisection to find the quantiles of the mixture of t distributions.
+#' @title Estimate ITEs, CATE, CATT, CATNT and obtain credible intervals (in-sample or out-of-sample).
 #' 
-#' @description This function produces prediction intervals for bart-bma output obtained using rmixt function from the package mvnfast.
-#' @param min_possible The highest value that the upper quantile of any prediction interval could possibly take. This is required for a bisection root finding algorithm.
-#' @param max_possible The lowest value that the upper quantile of any prediction interval could possibly take. This is required for a bisection root finding algorithm.
+#' @description This function takes a set of sum of tree models obtained from ITEs_bartBMA, and then estimates ITEs, and the CATE, CATT, and CATNT and obtains prediction intervals
+#' @param object Output from ITEs_bartBMA of class ITE_ests.bartBMA.
+#' @param l_quant Lower quantile of credible intervals for the ITEs, CATT, CATNT.
+#' @param u_quant Upper quantile of credible intervals for the ITEs, CATT, CATNT.
 #' @param newdata Test data for which predictions are to be produced. Default = NULL. If NULL, then produces prediction intervals for training data if no test data was used in producing the bartBMA object, or produces prediction intervals for the original test data if test data was used in producing the bartBMA object.
 #' @param update_resids Option for whether to update the partial residuals in the gibbs sampler. If equal to 1, updates partial residuals, if equal to zero, does not update partial residuals. The defaullt setting is to update the partial residuals.
+#' @param num_cores Number of cores used in parallel.
 #' @param root_alg_precision The algorithm should obtain approximate bounds that are within the distance root_alg_precision of the true quantile for the chosen average of models.
 #' @param training_data The training data matrix
 #' @param zvec The treatment indicator vector. Training data treatment vector for insample predictions, test data treatment vector for out of sample predictions.

@@ -644,7 +644,6 @@ IntegerVector orderforOW(NumericVector x) {	// gives vector of position of small
 //######################################################################################################################//
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @export
 // [[Rcpp::export]]
 double secondKindStirlingNumber(int n, int k) {
   if(k>n)
@@ -9656,8 +9655,6 @@ arma::mat get_W_test(List sum_treetable ,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 NumericVector preds_bbma_lin_alg_outsamp(List overall_sum_trees,
                                          List overall_sum_mat,
@@ -9752,8 +9749,6 @@ NumericVector preds_bbma_lin_alg_outsamp(List overall_sum_trees,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 NumericVector preds_bbma_lin_alg_insamp(List overall_sum_trees,List overall_sum_mat,
                                         NumericVector y,NumericVector BIC_weights,
@@ -9844,8 +9839,6 @@ NumericVector preds_bbma_lin_alg_insamp(List overall_sum_trees,List overall_sum_
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List mean_vars_lin_alg_outsamp(List overall_sum_trees,
                                List overall_sum_mat,
@@ -9968,8 +9961,6 @@ List mean_vars_lin_alg_outsamp(List overall_sum_trees,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List mean_vars_lin_alg_insamp(List overall_sum_trees,
                               List overall_sum_mat,
@@ -10081,8 +10072,6 @@ List mean_vars_lin_alg_insamp(List overall_sum_trees,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions, trees, BICs etc. to be called by R functions
-//' @export
 // [[Rcpp::export]]
 List BART_BMA_sumLikelihood(double less_greedy,double spike_tree, int s_t_hyperprior, double p_s_t, double a_s_t, double b_s_t, double num_obs, double num_vars, double lambda_poisson,
                             NumericMatrix data,NumericVector y,double start_mean,double start_sd,
@@ -11002,8 +10991,6 @@ std::vector<double> mixt_find_boundsQ(double d_o_f, std::vector<double> mean_vec
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_exact_outsamp(List overall_sum_trees,
                              List overall_sum_mat,
@@ -11295,8 +11282,6 @@ List pred_ints_exact_outsamp(List overall_sum_trees,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_exact_outsamp_par(List overall_sum_trees,
                                  List overall_sum_mat,
@@ -11751,8 +11736,6 @@ List pred_ints_exact_outsamp_par(List overall_sum_trees,
 
 #include <RcppArmadilloExtensions/rmultinom.h>
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_lin_alg_outsamp(List overall_sum_trees,
                                List overall_sum_mat,
@@ -12031,8 +12014,6 @@ List pred_ints_lin_alg_outsamp(List overall_sum_trees,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_lin_alg_insamp(List overall_sum_trees,
                               List overall_sum_mat,
@@ -12205,8 +12186,6 @@ List pred_ints_lin_alg_insamp(List overall_sum_trees,
 //###########################################################################################################################//
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_chol_attempt_outsamp(List overall_sum_trees,
                                     List overall_sum_mat,
@@ -12477,8 +12456,6 @@ List pred_ints_chol_attempt_outsamp(List overall_sum_trees,
 #endif
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_lin_alg_parallel_outsamp(List overall_sum_trees,
                                         List overall_sum_mat,
@@ -12765,8 +12742,6 @@ List pred_ints_lin_alg_parallel_outsamp(List overall_sum_trees,
 #include <omp.h>
 #endif
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_lin_alg_fields_outsamp(List overall_sum_trees,
                                       List overall_sum_mat,
@@ -13225,8 +13200,6 @@ List pred_ints_lin_alg_fields_outsamp(List overall_sum_trees,
 #include <omp.h>
 #endif
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_chol_parallel_outsamp(List overall_sum_trees,
                                      List overall_sum_mat,
@@ -13695,8 +13668,6 @@ List pred_ints_chol_parallel_outsamp(List overall_sum_trees,
 #include <omp.h>
 #endif
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List mean_vars_lin_alg_parallel_outsamp(List overall_sum_trees,
                                         List overall_sum_mat,
@@ -14004,8 +13975,6 @@ List mean_vars_lin_alg_parallel_outsamp(List overall_sum_trees,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_ITE_outsamp_par(List overall_sum_trees,
                                List overall_sum_mat,
@@ -14606,8 +14575,6 @@ List pred_ints_ITE_outsamp_par(List overall_sum_trees,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_ITE_insamp_par(List overall_sum_trees,
                               List overall_sum_mat,
@@ -15214,8 +15181,6 @@ List pred_ints_ITE_insamp_par(List overall_sum_trees,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_ITE_CATT_outsamp_par(List overall_sum_trees,
                                     List overall_sum_mat,
@@ -15946,8 +15911,6 @@ List pred_ints_ITE_CATT_outsamp_par(List overall_sum_trees,
 
 
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain BARTBMA predictions
-//' @export
 // [[Rcpp::export]]
 List pred_ints_ITE_CATT_insamp_par(List overall_sum_trees,
                                    List overall_sum_mat,

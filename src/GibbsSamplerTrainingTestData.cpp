@@ -469,8 +469,6 @@ return(ret);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler(List overall_sum_trees,
@@ -1023,8 +1021,6 @@ List gibbs_sampler2(List overall_sum_trees,List overall_sum_mat,NumericVector y,
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_no_update(List overall_sum_trees,
@@ -1569,8 +1565,6 @@ List gibbs_sampler_no_update2(List overall_sum_trees,List overall_sum_mat,Numeri
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_exp(List overall_sum_trees,
@@ -2123,8 +2117,6 @@ List gibbs_sampler2_exp(List overall_sum_trees,List overall_sum_mat,NumericVecto
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_no_update_exp(List overall_sum_trees,
@@ -2669,8 +2661,6 @@ List gibbs_sampler_no_update2_exp(List overall_sum_trees,List overall_sum_mat,Nu
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_ITE(List overall_sum_trees,
@@ -3387,8 +3377,6 @@ List gibbs_sampler_ITE2(List overall_sum_trees,
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_ITE_no_update(List overall_sum_trees,
@@ -4105,8 +4093,6 @@ List gibbs_sampler_ITE_no_update2(List overall_sum_trees,
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_new_inits(List overall_sum_trees,
@@ -4664,8 +4650,6 @@ List gibbs_sampler2_new_inits(List overall_sum_trees,List overall_sum_mat,
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_no_update_new_inits(List overall_sum_trees,
@@ -5215,8 +5199,6 @@ List gibbs_sampler_no_update2_new_inits(List overall_sum_trees,List overall_sum_
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_exp_new_inits(List overall_sum_trees,
@@ -5774,8 +5756,6 @@ List gibbs_sampler2_exp_new_inits(List overall_sum_trees,List overall_sum_mat,Nu
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_no_update_exp_new_inits(List overall_sum_trees,
@@ -6327,8 +6307,6 @@ List gibbs_sampler_no_update2_exp_new_inits(List overall_sum_trees,List overall_
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_ITE_new_inits(List overall_sum_trees,
@@ -7047,8 +7025,6 @@ List gibbs_sampler_ITE2_new_inits(List overall_sum_trees,
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // [[Rcpp::depends(RcppArmadillo)]]
-//' @title Obtain draws from gibbs sampler
-//' @export
 // [[Rcpp::export]]
 
 List gibbs_sampler_ITE_no_update_new_inits(List overall_sum_trees,

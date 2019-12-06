@@ -26,8 +26,6 @@ NumericVector get_imp_vars(NumericVector split_vars,int num_col,NumericVector cu
 
   #include <Rcpp.h>
   using namespace Rcpp;
-//' @title Obtain weighted variable importances
-//' @export
 // [[Rcpp::export]]
 
 List get_weighted_var_imp(int num_vars,NumericVector BIC,List sum_trees){

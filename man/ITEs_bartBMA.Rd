@@ -4,13 +4,13 @@
 \alias{ITEs_bartBMA}
 \title{ITE Predictions (in-sample) using bartBMA and the method described by Hill (2011)}
 \usage{
-ITEs_bartBMA(x_covariates, z_train, y_train, a1 = 3, nu1 = 3,
-  sigquant1 = 0.9, c1 = 1000, pen1 = 12, num_cp1 = 20,
-  x.test1 = matrix(0, 0, 0), num_rounds1 = 5, alpha1 = 0.95,
-  beta1 = 2, split_rule_node1 = 0, gridpoint1 = 0,
-  maxOWsize1 = 100, num_splits1 = 5, gridsize1 = 10,
-  zero_split1 = 1, only_max_num_trees1 = 1,
-  min_num_obs_for_split1 = 2, min_num_obs_after_split1 = 2)
+ITEs_bartBMA(x_covariates, z_train, y_train, a = 3, nu = 3,
+  sigquant = 0.9, c = 1000, pen = 12, num_cp = 20,
+  x.test = matrix(0, 0, 0), num_rounds = 5, alpha = 0.95, beta = 2,
+  split_rule_node = 0, gridpoint = 0, maxOWsize = 100,
+  num_splits = 5, gridsize = 10, zero_split = 1,
+  only_max_num_trees = 1, min_num_obs_for_split = 2,
+  min_num_obs_after_split = 2)
 }
 \arguments{
 \item{x_covariates}{Covaraite matrix for training bartBMA.}
@@ -23,7 +23,7 @@ ITEs_bartBMA(x_covariates, z_train, y_train, a1 = 3, nu1 = 3,
 
 \item{nu}{This is a hyperparameter in the distribution of the variance of the error term. THe inverse of the variance is distributed as Gamma (nu/2, nu*lambda/2). Default value nu=3.}
 
-\item{sigquant}{??}
+\item{sigquant}{Calibration quantile for the inverse chi-squared prior on the variance of the error term.}
 
 \item{c}{This determines the size of Occam's Window}
 

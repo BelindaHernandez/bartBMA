@@ -4,7 +4,7 @@
 \alias{varIncProb}
 \title{Variable inclusion probabilities as defined by Linero (2018)}
 \usage{
-varIncProb(object, ...)
+varIncProb(object)
 }
 \arguments{
 \item{object}{A bartBMA object obtained using the barBMA function.}

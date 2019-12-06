@@ -6,7 +6,7 @@
 #' @param y.train Training data outcome vector.
 #' @param a This is a parameter that influences the variance of terminal node parameter values. Default value a=3.
 #' @param nu This is a hyperparameter in the distribution of the variance of the error term. THe inverse of the variance is distributed as Gamma (nu/2, nu*lambda/2). Default value nu=3.
-#' @param sigquant ??
+#' @param sigquant Calibration quantile for the inverse chi-squared prior on the variance of the error term.
 #' @param c This determines the size of Occam's Window
 #' @param pen This is a parameter used by the Pruned Exact Linear Time Algorithm when finding changepoints. Default value pen=12.
 #' @param num_cp This is a number between 0 and 100 that determines the proportion of changepoints proposed by the changepoint detection algorithm to keep when growing trees. Default num_cp=20.
@@ -28,9 +28,11 @@
 #' @param s_t_hyperprior If equals 1 and spike_tree equals 1, then a beta distribution hyperprior is placed on the variable inclusion probabilities for the spike and tree prior. The hyperprior parameters are a_s_t and b_s_t.
 #' @param p_s_t If spike_tree=1 and s_t_hyperprior=0, then p_s_t is the prior variable inclusion probability.
 #' @param a_s_t If spike_tree=1 and s_t_hyperprior=1, then a_s_t is a parameter of a beta distribution hyperprior
-#' @param a_s_t If spike_tree=1 and s_t_hyperprior=1, then b_s_t is a parameter of a beta distribution hyperprior
+#' @param b_s_t If spike_tree=1 and s_t_hyperprior=1, then b_s_t is a parameter of a beta distribution hyperprior
 #' @param lambda_poisson This is a parameter for the Spike-and-Tree prior. It is the parameter for the (truncated and conditional on the number of splitting variables) Poisson prior on the number of terminal nodes.
-#' @param less_greedy If equal to one, then a less greedy model search algorithm is used.#' @rdname probit_bartBMA
+#' @param less_greedy If equal to one, then a less greedy model search algorithm is used.
+#' @param ... Further arguments.
+#' @rdname probit_bartBMA
 #' @export 
 #' @return The following objects are returned by bartbma:
 #' \item{fitted.values}{The vector of predictions of the outcome for all training observations.} 
@@ -51,7 +53,7 @@
 #' \item{fitted.probs}{In-sample fitted probabilities}
 #' \item{fitted.classes}{In-sample fitted classes}
 #' @useDynLib bartBMA, .registration = TRUE
-probit_bartBMA<-function(x,...)UseMethod("probit_bartBMA")
+probit_bartBMA<-function(x.train,...)UseMethod("probit_bartBMA")
 
 #' @rdname probit_bartBMA
 #' @export probit_bartBMA.default
@@ -64,7 +66,7 @@ probit_bartBMA.default<-function(x.train,y.train,
                                  min_num_obs_for_split=2, min_num_obs_after_split=2,
                                  exact_residuals=1,
                                  spike_tree=0, s_t_hyperprior=1, p_s_t=0.5, a_s_t=1,b_s_t=3,
-                                 lambda_poisson=10,less_greedy=0){
+                                 lambda_poisson=10,less_greedy=0,...){
   
   if(is.factor(y.train)) {
     if(length(levels(y.train)) != 2) stop("y.train is a factor with number of levels != 2")

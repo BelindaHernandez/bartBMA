@@ -17,6 +17,8 @@ pred_means_bbma_new_initials_GS(object, num_iter, burnin, newdata = NULL,
 \item{newdata}{Test data for which predictions are to be produced. Default = NULL. If NULL, then produces prediction intervals for training data if no test data was used in producing the bartBMA object, or produces prediction intervals for the original test data if test data was used in producing the bartBMA object.}
 
 \item{update_resids}{Option for whether to update the partial residuals in the gibbs sampler. If equal to 1, updates partial residuals, if equal to zero, does not update partial residuals. The defaullt setting is to update the partial residua;s.}
+
+\item{trainingdata}{The matrix of training data.}
 }
 \value{
 The output is a list of length one. The one element in this list is a vector of prediction intervals???

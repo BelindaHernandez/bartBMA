@@ -8,15 +8,19 @@ pred_ints_exact(object, l_quant, u_quant, newdata = NULL,
   update_resids = 1, num_cores = 1, root_alg_precision = 1e-05)
 }
 \arguments{
+\item{object}{bartBMA object obtained from function bartBMA}
+
+\item{l_quant}{Lower quantile of credible intervals for the ITEs, CATT, CATNT.}
+
+\item{u_quant}{Upper quantile of credible intervals for the ITEs, CATT, CATNT.}
+
 \item{newdata}{Test data for which predictions are to be produced. Default = NULL. If NULL, then produces prediction intervals for training data if no test data was used in producing the bartBMA object, or produces prediction intervals for the original test data if test data was used in producing the bartBMA object.}
 
 \item{update_resids}{Option for whether to update the partial residuals in the gibbs sampler. If equal to 1, updates partial residuals, if equal to zero, does not update partial residuals. The defaullt setting is to update the partial residuals.}
 
+\item{num_cores}{Number of cores used in parallel.}
+
 \item{root_alg_precision}{The algorithm should obtain approximate bounds that are within the distance root_alg_precision of the true quantile for the chosen average of models.}
-
-\item{min_possible}{The highest value that the upper quantile of any prediction interval could possibly take. This is required for a bisection root finding algorithm.}
-
-\item{max_possible}{The lowest value that the upper quantile of any prediction interval could possibly take. This is required for a bisection root finding algorithm.}
 }
 \value{
 The output is a list of length one. The one element in this list is a vector of prediction intervals???

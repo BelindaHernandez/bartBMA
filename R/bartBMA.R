@@ -6,7 +6,7 @@
 #' @param y.train Training data outcome vector.
 #' @param a This is a parameter that influences the variance of terminal node parameter values. Default value a=3.
 #' @param nu This is a hyperparameter in the distribution of the variance of the error term. THe inverse of the variance is distributed as Gamma (nu/2, nu*lambda/2). Default value nu=3.
-#' @param sigquant ??
+#' @param sigquant Calibration quantile for the inverse chi-squared prior on the variance of the error term.
 #' @param c This determines the size of Occam's Window
 #' @param pen This is a parameter used by the Pruned Exact Linear Time Algorithm when finding changepoints. Default value pen=12.
 #' @param num_cp This is a number between 0 and 100 that determines the proportion of changepoints proposed by the changepoint detection algorithm to keep when growing trees. Default num_cp=20.
@@ -27,10 +27,11 @@
 #' @param spike_tree If equal to 1, then the Spike-and-Tree prior will be used, otherwise the standard BART prior will be used. The number of splitting variables has a beta-binomial prior. The number of terminal nodes has a truncated Poisson prior, and then a uniform prior is placed on the set of valid constructions of trees given the splitting variables and number of terminal nodes.
 #' @param s_t_hyperprior If equals 1 and spike_tree equals 1, then a beta distribution hyperprior is placed on the variable inclusion probabilities for the spike and tree prior. The hyperprior parameters are a_s_t and b_s_t.
 #' @param p_s_t If spike_tree=1 and s_t_hyperprior=0, then p_s_t is the prior variable inclusion probability.
-#' @param a_s_t If spike_tree=1 and s_t_hyperprior=1, then a_s_t is a parameter of a beta distribution hyperprior
-#' @param a_s_t If spike_tree=1 and s_t_hyperprior=1, then b_s_t is a parameter of a beta distribution hyperprior
+#' @param a_s_t If spike_tree=1 and s_t_hyperprior=1, then a_s_t is a parameter of a beta distribution hyperprior.
+#' @param b_s_t If spike_tree=1 and s_t_hyperprior=1, then b_s_t is a parameter of a beta distribution hyperprior.
 #' @param lambda_poisson This is a parameter for the Spike-and-Tree prior. It is the parameter for the (truncated and conditional on the number of splitting variables) Poisson prior on the number of terminal nodes.
 #' @param less_greedy If equal to one, then a less greedy model search algorithm is used.
+#' @param ... Further arguments.
 #' @rdname bartBMA
 #' @references
 #' \insertAllCited{}
@@ -52,7 +53,12 @@
 #' \item{nu}{input parameter}
 #' \item{lambda}{parameter determined by the inputs sigma, sigquant, and nu}
 #' @useDynLib bartBMA, .registration = TRUE
-bartBMA<-function(x,...)UseMethod("bartBMA")
+#' @importFrom Rdpack reprompt 
+#' @importFrom Rcpp evalCpp
+#' @importFrom stats sd qchisq quantile qnorm qchisq pnorm
+
+
+bartBMA<-function(x.train,...)UseMethod("bartBMA")
 
 #' @rdname bartBMA
 #' @export bartBMA.default
@@ -66,7 +72,7 @@ bartBMA.default<-function(x.train,y.train,
                           min_num_obs_for_split=2, min_num_obs_after_split=2,
                           exact_residuals=1,
                           spike_tree=0, s_t_hyperprior=1, p_s_t=0.5, a_s_t=1,b_s_t=3,
-                          lambda_poisson=10,less_greedy=0){
+                          lambda_poisson=10,less_greedy=0,...){
   
   
   num_obs=nrow(x.train)

@@ -4,7 +4,7 @@
 #' @param object A bartBMA object obtained using the barBMA function.
 #' @export 
 #' @return A vector of posterior inclusion probabilities. The variables are ordered in the same order that they occur in columns of the input covariate matrix used to obtain the input bartBMA object.
-varIncProb<-function(object,...){
+varIncProb<-function(object){
   #object will be bartBMA object.
   imp_vars2=get_weighted_var_imp(num_vars=object$numvars,BIC=object$bic,sum_trees=object$sumoftrees)
   res<-apply((imp_vars2[[3]]>0)*imp_vars2[[1]],2,sum)

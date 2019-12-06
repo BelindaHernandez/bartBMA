@@ -6,7 +6,7 @@
 #' @param y_train outcome vector for training bartBMA.
 #' @param a This is a parameter that influences the variance of terminal node parameter values. Default value a=3.
 #' @param nu This is a hyperparameter in the distribution of the variance of the error term. THe inverse of the variance is distributed as Gamma (nu/2, nu*lambda/2). Default value nu=3.
-#' @param sigquant ??
+#' @param sigquant Calibration quantile for the inverse chi-squared prior on the variance of the error term.
 #' @param c This determines the size of Occam's Window
 #' @param pen This is a parameter used by the Pruned Exact Linear Time Algorithm when finding changepoints. Default value pen=12.
 #' @param num_cp This is a number between 0 and 100 that determines the proportion of changepoints proposed by the changepoint detection algorithm to keep when growing trees. Default num_cp=20.
@@ -27,20 +27,20 @@
 #' @return A vector of Individual Treatment Effect Estimates.
 
 ITEs_bartBMA<-function(x_covariates,z_train ,y_train,
-                       a1=3,nu1=3,sigquant1=0.9,c1=1000,
-                       pen1=12,num_cp1=20,x.test1=matrix(0.0,0,0),
-                       num_rounds1=5,alpha1=0.95,beta1=2,split_rule_node1=0,
-                       gridpoint1=0,maxOWsize1=100,num_splits1=5,gridsize1=10,zero_split1=1,only_max_num_trees1=1,
-                       min_num_obs_for_split1=2, min_num_obs_after_split1=2){
+                       a=3,nu=3,sigquant=0.9,c=1000,
+                       pen=12,num_cp=20,x.test=matrix(0.0,0,0),
+                       num_rounds=5,alpha=0.95,beta=2,split_rule_node=0,
+                       gridpoint=0,maxOWsize=100,num_splits=5,gridsize=10,zero_split=1,only_max_num_trees=1,
+                       min_num_obs_for_split=2, min_num_obs_after_split=2){
   
   x_train <- cbind(z_train,x_covariates)
   
   trained_bart_BMA <- bartBMA(x.train= x_train,y.train =y_train ,
-    a=a1,nu=nu1,sigquant=sigquant1,c=c1,
-    pen=pen1,num_cp=num_cp1,x.test=x.test1,
-    num_rounds=num_rounds1,alpha=alpha1,beta=beta1,split_rule_node=split_rule_node1,
-    gridpoint=gridpoint1,maxOWsize=maxOWsize1,num_splits=num_splits1,gridsize=gridsize1,zero_split=zero_split1,only_max_num_trees=only_max_num_trees1,
-    min_num_obs_for_split=min_num_obs_for_split1, min_num_obs_after_split=min_num_obs_after_split1)
+    a=a,nu=nu,sigquant=sigquant,c=c,
+    pen=pen,num_cp=num_cp,x.test=x.test,
+    num_rounds=num_rounds,alpha=alpha,beta=beta,split_rule_node=split_rule_node,
+    gridpoint=gridpoint,maxOWsize=maxOWsize,num_splits=num_splits,gridsize=gridsize,zero_split=zero_split,only_max_num_trees=only_max_num_trees,
+    min_num_obs_for_split=min_num_obs_for_split, min_num_obs_after_split=min_num_obs_after_split)
   
   if(nrow(x.test1)==0){
     all_treated_data <- cbind(rep(1,nrow(x_covariates)), x_covariates)
