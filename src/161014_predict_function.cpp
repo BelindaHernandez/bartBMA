@@ -1,7 +1,7 @@
 //####################################################################################//
-  #include <RcppArmadillo.h>
-  #include <Rcpp.h>
-  using namespace Rcpp;
+#include <RcppArmadillo.h>
+#include <Rcpp.h>
+using namespace Rcpp;
 // [[Rcpp::export]]
 
 NumericVector find_internal_nodes_pred(NumericMatrix treetable){
@@ -19,8 +19,8 @@ NumericVector find_internal_nodes_pred(NumericMatrix treetable){
   return(internal_nodes_sort);
 }
 //####################################################################################//
-  
-  // [[Rcpp::depends(RcppArmadillo)]]
+
+// [[Rcpp::depends(RcppArmadillo)]]
 
 using namespace Rcpp;
 // [[Rcpp::export]]
@@ -36,8 +36,8 @@ NumericVector find_term_nodes_pred(NumericMatrix tree_table){
   return(terminal_nodes);
 }  
 //###################################################################################//
-  #include <Rcpp.h>
-  using namespace Rcpp;
+#include <Rcpp.h>
+using namespace Rcpp;
 // [[Rcpp::export]]
 
 NumericVector get_original_pred(double low,double high,double sp_low,double sp_high,NumericVector sum_preds){
@@ -45,8 +45,8 @@ NumericVector get_original_pred(double low,double high,double sp_low,double sp_h
   return(original_y);
 }
 //###################################################################################//
-  #include <Rcpp.h>
-  using namespace Rcpp;
+#include <Rcpp.h>
+using namespace Rcpp;
 
 // [[Rcpp::export]]
 
@@ -76,107 +76,107 @@ NumericVector bartBMA_get_testdata_term_obs_pred(NumericMatrix test_data,Numeric
     predictions=rep(nodemean,test_data.nrow());
   }
   else{
-  for(int i=0;i<terminal_nodes.size();i++){
-    arma::mat subdata=testd;
-    int curr_term=terminal_nodes[i];
-    int row_index;
-    int term_node=terminal_nodes[i];
-    
-    if(curr_term % 2==0){
-      //term node is left daughter
-      row_index=terminal_nodes[i];
-    }else{
-      //term node is right daughter
-      row_index=terminal_nodes[i]-1;
-    }
-    
-    //save the left and right node data into arma uvec
-    
-    arma::vec left_nodes=arma_tree.col(0);
-    arma::vec right_nodes=arma_tree.col(1);
-    arma::mat node_split_mat;    
-    node_split_mat.set_size(0,3);
-    
-    while(row_index!=1){
-      //for each terminal node work backwards and see if the parent node was a left or right node
-      //append split info to a matrix 
-      int rd=0;
-      arma::uvec parent_node=arma::find(left_nodes == term_node);
+    for(int i=0;i<terminal_nodes.size();i++){
+      arma::mat subdata=testd;
+      int curr_term=terminal_nodes[i];
+      int row_index;
+      int term_node=terminal_nodes[i];
       
-      if(parent_node.size()==0){
-        parent_node=arma::find(right_nodes == term_node);
-        rd=1;
+      if(curr_term % 2==0){
+        //term node is left daughter
+        row_index=terminal_nodes[i];
       }else{
+        //term node is right daughter
+        row_index=terminal_nodes[i]-1;
       }
-      //want to cout parent node and append to node_split_mat
       
-      node_split_mat.insert_rows(0,1);
-      node_split_mat(0,0)=tree_data(parent_node[0],2);
-      node_split_mat(0,1)=tree_data(parent_node[0],3);
-      node_split_mat(0,2)=rd;
+      //save the left and right node data into arma uvec
       
-      row_index=parent_node[0]+1;
-      term_node=parent_node[0]+1;
-    }
-    //once we have the split info, loop through rows and find the subset indexes for that terminal node!
+      arma::vec left_nodes=arma_tree.col(0);
+      arma::vec right_nodes=arma_tree.col(1);
+      arma::mat node_split_mat;    
+      node_split_mat.set_size(0,3);
+      
+      while(row_index!=1){
+        //for each terminal node work backwards and see if the parent node was a left or right node
+        //append split info to a matrix 
+        int rd=0;
+        arma::uvec parent_node=arma::find(left_nodes == term_node);
+        
+        if(parent_node.size()==0){
+          parent_node=arma::find(right_nodes == term_node);
+          rd=1;
+        }else{
+        }
+        //want to cout parent node and append to node_split_mat
+        
+        node_split_mat.insert_rows(0,1);
+        node_split_mat(0,0)=tree_data(parent_node[0],2);
+        node_split_mat(0,1)=tree_data(parent_node[0],3);
+        node_split_mat(0,2)=rd;
+        
+        row_index=parent_node[0]+1;
+        term_node=parent_node[0]+1;
+      }
+      //once we have the split info, loop through rows and find the subset indexes for that terminal node!
       //then fill in the predicted value for that tree
-    //double prediction = tree_data(term_node,5);
-    arma::uvec pred_indices;
-    int split= node_split_mat(0,0)-1;
-    arma::vec tempvec = testd.col(split);
-    double temp_split = node_split_mat(0,1);
-    
-    if(node_split_mat(0,2)==0){
-      pred_indices = arma::find(tempvec <= temp_split);
-    }else{
-      pred_indices = arma::find(tempvec > temp_split);
-    }
-    
-    arma::uvec temp_pred_indices;
-    //arma::uvec col_indices=seq_len(testd.n_cols);
-    arma::vec data_subset = testd.col(split);
-    data_subset=data_subset.elem(pred_indices);
-    //now loop through each row of node_split_mat
-    int n=node_split_mat.n_rows;
-    for(int j=1;j<n;j++){
-      int curr_sv=node_split_mat(j,0);
-      double split_p = node_split_mat(j,1);
+      //double prediction = tree_data(term_node,5);
+      arma::uvec pred_indices;
+      int split= node_split_mat(0,0)-1;
+      arma::vec tempvec = testd.col(split);
+      double temp_split = node_split_mat(0,1);
       
-      data_subset = testd.col(curr_sv-1);
-      data_subset=data_subset.elem(pred_indices);
-      
-      if(node_split_mat(j,2)==0){
-        //split is to the left
-        temp_pred_indices=arma::find(data_subset <= split_p);
+      if(node_split_mat(0,2)==0){
+        pred_indices = arma::find(tempvec <= temp_split);
       }else{
-        //split is to the right
-        temp_pred_indices=arma::find(data_subset > split_p);
+        pred_indices = arma::find(tempvec > temp_split);
       }
-      pred_indices=pred_indices.elem(temp_pred_indices);
       
-      if(pred_indices.size()==0){
-        continue;
+      arma::uvec temp_pred_indices;
+      //arma::uvec col_indices=seq_len(testd.n_cols);
+      arma::vec data_subset = testd.col(split);
+      data_subset=data_subset.elem(pred_indices);
+      //now loop through each row of node_split_mat
+      int n=node_split_mat.n_rows;
+      for(int j=1;j<n;j++){
+        int curr_sv=node_split_mat(j,0);
+        double split_p = node_split_mat(j,1);
+        
+        data_subset = testd.col(curr_sv-1);
+        data_subset=data_subset.elem(pred_indices);
+        
+        if(node_split_mat(j,2)==0){
+          //split is to the left
+          temp_pred_indices=arma::find(data_subset <= split_p);
+        }else{
+          //split is to the right
+          temp_pred_indices=arma::find(data_subset > split_p);
+        }
+        pred_indices=pred_indices.elem(temp_pred_indices);
+        
+        if(pred_indices.size()==0){
+          continue;
+        }
       }
-    }
-    double nodemean=tree_data(terminal_nodes[i]-1,5);
-    IntegerVector predind=as<IntegerVector>(wrap(pred_indices));
-    predictions[predind]= nodemean;
-    
-  } 
+      double nodemean=tree_data(terminal_nodes[i]-1,5);
+      IntegerVector predind=as<IntegerVector>(wrap(pred_indices));
+      predictions[predind]= nodemean;
+      
+    } 
   }
   return(predictions);
 }
 
 //##############################################################################################################################//
-  
-  // [[Rcpp::depends(RcppArmadillo)]]
+
+// [[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
 // [[Rcpp::export]]
 
 List get_BART_BMA_test_predictions(NumericMatrix test_data,NumericVector BIC,List sum_trees,NumericVector y_minmax){
   //this will take in a set of sum of trees and loop through each tree in each set.
   //for each tree in each set:
-    //call bartBMA_get_testdata_term_obs_pred() and get the predicted values
+  //call bartBMA_get_testdata_term_obs_pred() and get the predicted values
   //add up values for each set
   //at end weight summed predictions by BIC and put back on original scale
   NumericMatrix sum_tree_preds(test_data.nrow(),sum_trees.size());
@@ -199,7 +199,7 @@ List get_BART_BMA_test_predictions(NumericMatrix test_data,NumericVector BIC,Lis
           term_nodes[k]=term_nodes[k]-1;
           term_node_means.push_back(tree_data(term_nodes[k],5));
         }
-
+        
         NumericVector test_preds_tree;
         
         if(j==0){          
@@ -209,27 +209,27 @@ List get_BART_BMA_test_predictions(NumericMatrix test_data,NumericVector BIC,Lis
           test_preds_tree=bartBMA_get_testdata_term_obs_pred(test_data,tree_data,term_node_means);
           test_preds_sum_tree=test_preds_sum_tree+test_preds_tree;
         }
-
+        
       }
     }else{
-
+      
       //else there is only one tree in the list element not a sum of trees
       NumericMatrix tree_data=sum_trees[i];
       NumericVector term_nodes= find_term_nodes_pred(tree_data);
       NumericVector term_node_means;
-
+      
       for(int k=0;k<term_nodes.size();k++){
         term_nodes[k]=term_nodes[k]-1;
         term_node_means.push_back(tree_data(term_nodes[k],5));
       }
-
+      
       test_preds_sum_tree=bartBMA_get_testdata_term_obs_pred(test_data,tree_data,term_node_means);
-
+      
     }
     //now have the summed preds for the sum_of_trees add it to column of summed preds
     sum_tree_preds(_,i)= test_preds_sum_tree; 
   }
-
+  
   //now have predictions for each sum_of_trees. Next need to weight each tree prediction by posterior probability and add up.
   NumericMatrix overall_test_preds(sum_tree_preds.nrow(),sum_tree_preds.ncol());  
   for(int k=0;k<BIC.size();k++){  
@@ -240,10 +240,10 @@ List get_BART_BMA_test_predictions(NumericMatrix test_data,NumericVector BIC,Lis
     NumericVector BICi=-0.5*BIC;
     double max_BIC=max(BICi);
     double weight=exp(BICi[k]-(max_BIC+log(sum(exp(BICi-max_BIC)))));
-
+    
     overall_test_preds(_,k) = temp_test_preds*weight;
   }  
-
+  
   //sum over all the weighted predictions;
   arma::mat M2(overall_test_preds.begin(), overall_test_preds.nrow(), overall_test_preds.ncol(), false);
   arma::colvec test_predictions=sum(M2,1);  

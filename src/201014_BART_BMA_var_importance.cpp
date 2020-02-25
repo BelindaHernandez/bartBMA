@@ -1,7 +1,7 @@
 //#########################################################################################################################//
-  
-  #include <RcppArmadillo.h>
-  // [[Rcpp::depends(RcppArmadillo)]]
+
+#include <RcppArmadillo.h>
+// [[Rcpp::depends(RcppArmadillo)]]
 #include <Rcpp.h>
 using namespace Rcpp;
 // [[Rcpp::export]]
@@ -15,8 +15,8 @@ NumericVector get_imp_vars(NumericVector split_vars,int num_col,NumericVector cu
   if(vars_chosen.size()!=0){
     for(int i=0;i<split_vars.size();i++){      
       //if(tree_table[i]!=0){      
-        current_vars[split_vars[i]-1]+=1;
-        //  }
+      current_vars[split_vars[i]-1]+=1;
+      //  }
       
     }
   }
@@ -24,8 +24,8 @@ NumericVector get_imp_vars(NumericVector split_vars,int num_col,NumericVector cu
 }
 //#######################################################################################################################//
 
-  #include <Rcpp.h>
-  using namespace Rcpp;
+#include <Rcpp.h>
+using namespace Rcpp;
 // [[Rcpp::export]]
 
 List get_weighted_var_imp(int num_vars,NumericVector BIC,List sum_trees){

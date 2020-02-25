@@ -1,5 +1,6 @@
 #include <RcppArmadilloExtensions/sample.h>
 // [[Rcpp::depends(RcppArmadillo)]]
+#define NDEBUG 1
 using namespace Rcpp ;
 // [[Rcpp::export]]
 IntegerVector csample_num( IntegerVector x,
@@ -10926,17 +10927,11 @@ double rootmixt(double d_o_f, double a, double b,
   //Rcout << "fb = " << fb << ".\n";
   
   // this method only works if the signs of f(a) and f(b)
-  // are different. so just assert that
-  assert(fa * fb < 0); // 8.- macro assert from header cassert.
   
-  
+  if(fa * fb >= 0){throw std::range_error("fa * fb >= 0.This method only works if the signs of f(a) and f(b) are different.");}
   do {
     // calculate fun at the midpoint of a,b
     // if that's the root, we're done
-    
-    // this line is awful, never write code like this...
-    //if ((f = fun((s = (a + b) / 2))) == 0) break;
-    
     // prefer:
     double midpt = (a + b) / 2;
     double fmid = mixt_eval_cdf(midpt, d_o_f, mean_vec, var_vec, weights_vec,quant_val);
