@@ -7,15 +7,38 @@
 \usage{
 bartBMA(x.train, ...)
 
-\method{bartBMA}{default}(x.train, y.train, a = 3, nu = 3,
-  sigquant = 0.9, c = 1000, pen = 12, num_cp = 20,
-  x.test = matrix(0, 0, 0), num_rounds = 5, alpha = 0.95, beta = 2,
-  split_rule_node = 0, gridpoint = 0, maxOWsize = 100,
-  num_splits = 5, gridsize = 10, zero_split = 1,
-  only_max_num_trees = 1, min_num_obs_for_split = 2,
-  min_num_obs_after_split = 2, exact_residuals = 1, spike_tree = 0,
-  s_t_hyperprior = 1, p_s_t = 0.5, a_s_t = 1, b_s_t = 3,
-  lambda_poisson = 10, less_greedy = 0, ...)
+\method{bartBMA}{default}(
+  x.train,
+  y.train,
+  a = 3,
+  nu = 3,
+  sigquant = 0.9,
+  c = 1000,
+  pen = 12,
+  num_cp = 20,
+  x.test = matrix(0, 0, 0),
+  num_rounds = 5,
+  alpha = 0.95,
+  beta = 2,
+  split_rule_node = 0,
+  gridpoint = 0,
+  maxOWsize = 100,
+  num_splits = 5,
+  gridsize = 10,
+  zero_split = 1,
+  only_max_num_trees = 1,
+  min_num_obs_for_split = 2,
+  min_num_obs_after_split = 2,
+  exact_residuals = 1,
+  spike_tree = 0,
+  s_t_hyperprior = 1,
+  p_s_t = 0.5,
+  a_s_t = 1,
+  b_s_t = 3,
+  lambda_poisson = 10,
+  less_greedy = 0,
+  ...
+)
 }
 \arguments{
 \item{x.train}{Training data covariate matrix}
@@ -98,6 +121,22 @@ The following objects are returned by bartbma:
 }
 \description{
 This is an implementation of Bayesian Additive Regression Trees \insertCite{chipman2010bart}{bartBMA} using Bayesian Model Averaging \insertCite{hernandez2018bayesian}{bartBMA}.
+}
+\examples{
+N <- 100
+p<- 100
+set.seed(100)
+library(bartBMA)
+epsilon <- rnorm(N)
+xcov <- matrix(runif(N*p), nrow=N)
+y <- sin(pi*xcov[,1]*xcov[,2]) + 20*(xcov[,3]-0.5)^2+10*xcov[,4]+
+5*xcov[,5]+epsilon
+epsilontest <- rnorm(N)
+xcovtest <- matrix(runif(N*p), nrow=N)
+ytest <- sin(pi*xcovtest[,1]*xcovtest[,2]) + 20*(xcovtest[,3]-0.5)^2+10*xcovtest[,4]+
+5*xcovtest[,5]+epsilontest
+bart_bma_example <- bartBMA(x.train = xcov,y.train=y,x.test=xcovtest,zero_split = 1, 
+only_max_num_trees = 1,split_rule_node = 0)
 }
 \references{
 \insertAllCited{}

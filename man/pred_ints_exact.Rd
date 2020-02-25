@@ -4,8 +4,15 @@
 \alias{pred_ints_exact}
 \title{Prediction intervals for bart-bma output obtained using linear algebra to obtain means and variances, and using bisection to find the quantiles of the mixture of t distributions.}
 \usage{
-pred_ints_exact(object, l_quant, u_quant, newdata = NULL,
-  update_resids = 1, num_cores = 1, root_alg_precision = 1e-05)
+pred_ints_exact(
+  object,
+  l_quant,
+  u_quant,
+  newdata = NULL,
+  update_resids = 1,
+  num_cores = 1,
+  root_alg_precision = 1e-05
+)
 }
 \arguments{
 \item{object}{bartBMA object obtained from function bartBMA}

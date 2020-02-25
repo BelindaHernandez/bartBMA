@@ -4,16 +4,44 @@
 \alias{bartBMA_with_ITEs_exact_par}
 \title{Prediction intervals for bart-bma output obtained using linear algebra to obtain means and variances, and using bisection to find the quantiles of the mixture of t distributions.}
 \usage{
-bartBMA_with_ITEs_exact_par(l_quant, u_quant, newdata = NULL,
-  update_resids = 1, num_cores = 1, root_alg_precision = 1e-05,
-  x_covariates, z_train, y_train, a = 3, nu = 3, sigquant = 0.9,
-  c = 1000, pen = 12, num_cp = 20, x.test = matrix(0, 0, 0),
-  num_rounds = 5, alpha = 0.95, beta = 2, split_rule_node = 0,
-  gridpoint = 0, maxOWsize = 100, num_splits = 5, gridsize = 10,
-  zero_split = 1, only_max_num_trees = 1, min_num_obs_for_split = 2,
-  min_num_obs_after_split = 2, exact_residuals = 1, spike_tree = 0,
-  s_t_hyperprior = 1, p_s_t = 0.5, a_s_t = 1, b_s_t = 3,
-  lambda_poisson = 10, less_greedy = 0)
+bartBMA_with_ITEs_exact_par(
+  l_quant,
+  u_quant,
+  newdata = NULL,
+  update_resids = 1,
+  num_cores = 1,
+  root_alg_precision = 1e-05,
+  x_covariates,
+  z_train,
+  y_train,
+  a = 3,
+  nu = 3,
+  sigquant = 0.9,
+  c = 1000,
+  pen = 12,
+  num_cp = 20,
+  x.test = matrix(0, 0, 0),
+  num_rounds = 5,
+  alpha = 0.95,
+  beta = 2,
+  split_rule_node = 0,
+  gridpoint = 0,
+  maxOWsize = 100,
+  num_splits = 5,
+  gridsize = 10,
+  zero_split = 1,
+  only_max_num_trees = 1,
+  min_num_obs_for_split = 2,
+  min_num_obs_after_split = 2,
+  exact_residuals = 1,
+  spike_tree = 0,
+  s_t_hyperprior = 1,
+  p_s_t = 0.5,
+  a_s_t = 1,
+  b_s_t = 3,
+  lambda_poisson = 10,
+  less_greedy = 0
+)
 }
 \arguments{
 \item{l_quant}{Lower quantile of credible intervals for the ITEs, CATT, CATNT.}

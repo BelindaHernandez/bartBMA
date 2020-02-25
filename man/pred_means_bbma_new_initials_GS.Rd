@@ -4,8 +4,14 @@
 \alias{pred_means_bbma_new_initials_GS}
 \title{Predictions for bart-bma output obtained from a Gibbs sampler}
 \usage{
-pred_means_bbma_new_initials_GS(object, num_iter, burnin, newdata = NULL,
-  update_resids = 1, trainingdata)
+pred_means_bbma_new_initials_GS(
+  object,
+  num_iter,
+  burnin,
+  newdata = NULL,
+  update_resids = 1,
+  trainingdata
+)
 }
 \arguments{
 \item{object}{bartBMA object obtained from function bartBMA}

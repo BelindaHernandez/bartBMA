@@ -4,8 +4,16 @@
 \alias{pred_intervals_new_initials_GS}
 \title{Prediction intervals for bart-bma output}
 \usage{
-pred_intervals_new_initials_GS(object, num_iter, burnin, l_quant, u_quant,
-  newdata = NULL, update_resids = 1, trainingdata)
+pred_intervals_new_initials_GS(
+  object,
+  num_iter,
+  burnin,
+  l_quant,
+  u_quant,
+  newdata = NULL,
+  update_resids = 1,
+  trainingdata
+)
 }
 \arguments{
 \item{object}{bartBMA object obtained from function bartBMA}

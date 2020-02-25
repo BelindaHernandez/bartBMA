@@ -4,8 +4,15 @@
 \alias{pred_intervals_bbma_GS}
 \title{Prediction intervals for bart-bma output}
 \usage{
-pred_intervals_bbma_GS(object, num_iter, burnin, l_quant, u_quant,
-  newdata = NULL, update_resids = 1)
+pred_intervals_bbma_GS(
+  object,
+  num_iter,
+  burnin,
+  l_quant,
+  u_quant,
+  newdata = NULL,
+  update_resids = 1
+)
 }
 \arguments{
 \item{object}{bartBMA object obtained from function bartBMA}

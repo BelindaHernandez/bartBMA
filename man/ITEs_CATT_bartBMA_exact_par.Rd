@@ -4,9 +4,17 @@
 \alias{ITEs_CATT_bartBMA_exact_par}
 \title{Estimate ITEs, CATE, CATT, CATNT and obtain credible intervals (in-sample or out-of-sample).}
 \usage{
-ITEs_CATT_bartBMA_exact_par(object, l_quant, u_quant, newdata = NULL,
-  update_resids = 1, num_cores = 1, root_alg_precision = 1e-05,
-  training_data, zvec)
+ITEs_CATT_bartBMA_exact_par(
+  object,
+  l_quant,
+  u_quant,
+  newdata = NULL,
+  update_resids = 1,
+  num_cores = 1,
+  root_alg_precision = 1e-05,
+  training_data,
+  zvec
+)
 }
 \arguments{
 \item{object}{Output from ITEs_bartBMA of class ITE_ests.bartBMA.}

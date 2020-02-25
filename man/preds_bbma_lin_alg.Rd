@@ -4,8 +4,14 @@
 \alias{preds_bbma_lin_alg}
 \title{Predictions for bart-bma output obtained from the posterior probability weighted averaged of the posterior means for each model}
 \usage{
-preds_bbma_lin_alg(object, num_iter, burnin, newdata = NULL,
-  update_resids = 1, trainingdata)
+preds_bbma_lin_alg(
+  object,
+  num_iter,
+  burnin,
+  newdata = NULL,
+  update_resids = 1,
+  trainingdata
+)
 }
 \arguments{
 \item{object}{bartBMA object obtained from function bartBMA}
