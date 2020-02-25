@@ -36,11 +36,11 @@ ITEs_bartBMA<-function(x_covariates,z_train ,y_train,
   x_train <- cbind(z_train,x_covariates)
   
   trained_bart_BMA <- bartBMA(x.train= x_train,y.train =y_train ,
-    a=a,nu=nu,sigquant=sigquant,c=c,
-    pen=pen,num_cp=num_cp,x.test=x.test,
-    num_rounds=num_rounds,alpha=alpha,beta=beta,split_rule_node=split_rule_node,
-    gridpoint=gridpoint,maxOWsize=maxOWsize,num_splits=num_splits,gridsize=gridsize,zero_split=zero_split,only_max_num_trees=only_max_num_trees,
-    min_num_obs_for_split=min_num_obs_for_split, min_num_obs_after_split=min_num_obs_after_split)
+                              a=a,nu=nu,sigquant=sigquant,c=c,
+                              pen=pen,num_cp=num_cp,x.test=x.test,
+                              num_rounds=num_rounds,alpha=alpha,beta=beta,split_rule_node=split_rule_node,
+                              gridpoint=gridpoint,maxOWsize=maxOWsize,num_splits=num_splits,gridsize=gridsize,zero_split=zero_split,only_max_num_trees=only_max_num_trees,
+                              min_num_obs_for_split=min_num_obs_for_split, min_num_obs_after_split=min_num_obs_after_split)
   
   if(nrow(x.test)==0){
     all_treated_data <- cbind(rep(1,nrow(x_covariates)), x_covariates)
