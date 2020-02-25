@@ -23,10 +23,10 @@ pred_ints_exact_par <-function(object,#min_possible,max_possible,
   if(is.null(newdata) && length(object)==16){
     #if test data specified separately
     ret<-pred_ints_exact_outsamp_par(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,#min_possible, max_possible,
-                                 object$nrowTrain,
-                                   nrow(object$test_data),object$a,object$sigma,0,object$nu,
-                                   object$lambda,#diff_inital_resids,
-                                   object$test_data,l_quant,u_quant,num_cores,root_alg_precision
+                                     object$nrowTrain,
+                                     nrow(object$test_data),object$a,object$sigma,0,object$nu,
+                                     object$lambda,#diff_inital_resids,
+                                     object$test_data,l_quant,u_quant,num_cores,root_alg_precision
     )
     
     
@@ -43,10 +43,10 @@ pred_ints_exact_par <-function(object,#min_possible,max_possible,
   }else{
     #if test data included in call to object
     ret<-pred_ints_exact_outsamp_par(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,#min_possible, max_possible,
-                                 object$nrowTrain,
-                                   nrow(newdata), object$a,object$sigma,0,object$nu,
-                                   object$lambda,#diff_inital_resids,
-                                   newdata,l_quant,u_quant,num_cores,root_alg_precision
+                                     object$nrowTrain,
+                                     nrow(newdata), object$a,object$sigma,0,object$nu,
+                                     object$lambda,#diff_inital_resids,
+                                     newdata,l_quant,u_quant,num_cores,root_alg_precision
     )
     
   }}

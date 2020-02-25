@@ -15,51 +15,51 @@ pred_means_bbma_GS<-function(object,num_iter,burnin,newdata=NULL,update_resids=1
     if(is.null(newdata) && length(object)==16){
       #if test data specified separately
       gs_chains<-gibbs_sampler_no_update_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                               nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,object$test_data)
+                                             nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,object$test_data)
     }else if(is.null(newdata) && length(object)==14){
       #else return Pred Ints for training data
       gs_chains<-gibbs_sampler_no_update2_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals)
+                                              object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals)
       
     }else{
       #if test data included in call to object
       gs_chains<-gibbs_sampler_no_update_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                               nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,newdata)
+                                             nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,newdata)
     }
   }else{
     if(is.null(newdata) && length(object)==16){
       #if test data specified separately
       gs_chains<-gibbs_sampler_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                               nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,object$test_data)
+                                   nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,object$test_data)
     }else if(is.null(newdata) && length(object)==14){
       #else return Pred Ints for training data
       gs_chains<-gibbs_sampler2_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals)
+                                    object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals)
       
     }else{
       #if test data included in call to object
       gs_chains<-gibbs_sampler_exp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                               nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,newdata)
+                                   nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,object$sum_residuals,newdata)
     }
   }
   
   #y_posterior_sum_trees<-gs_chains[[4]]
   #y_orig_post_sum_trees<-gs_chains[[5]]
   #sigma_chains<-gs_chains[[3]]
-    if(is.null(newdata) && length(object)==16){
-      #y_posterior_sum_trees<-gs_chains[[4]]
-      y_orig_post_sum_trees<-gs_chains[[2]] ##[[5]]
-      sigma_chains<-gs_chains[[1]] #[[3]]
-    }else if(is.null(newdata) && length(object)==14){
-      #y_posterior_sum_trees<-gs_chains[[1]]
-      y_orig_post_sum_trees<-gs_chains[[2]] #[[2]]
-      sigma_chains<-gs_chains[[1]] #[[3]]
-  
-    }else{
-      #y_posterior_sum_trees<-gs_chains[[4]]
-      y_orig_post_sum_trees<-gs_chains[[2]] #[[5]]
-      sigma_chains<-gs_chains[[1]] #[[3]]
-    } 
+  if(is.null(newdata) && length(object)==16){
+    #y_posterior_sum_trees<-gs_chains[[4]]
+    y_orig_post_sum_trees<-gs_chains[[2]] ##[[5]]
+    sigma_chains<-gs_chains[[1]] #[[3]]
+  }else if(is.null(newdata) && length(object)==14){
+    #y_posterior_sum_trees<-gs_chains[[1]]
+    y_orig_post_sum_trees<-gs_chains[[2]] #[[2]]
+    sigma_chains<-gs_chains[[1]] #[[3]]
+    
+  }else{
+    #y_posterior_sum_trees<-gs_chains[[4]]
+    y_orig_post_sum_trees<-gs_chains[[2]] #[[5]]
+    sigma_chains<-gs_chains[[1]] #[[3]]
+  } 
   
   sum_of_tree_BIC<- -0.5*object$bic
   weights<-exp(sum_of_tree_BIC-(max(sum_of_tree_BIC)+log(sum(exp(sum_of_tree_BIC-max(sum_of_tree_BIC))))))

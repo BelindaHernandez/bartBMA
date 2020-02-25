@@ -39,47 +39,47 @@ pred_intervals_new_initials_GS<-function(object,num_iter,burnin,l_quant,u_quant,
     if(is.null(newdata) && length(object)==16){
       #if test data specified separately
       gs_chains<-gibbs_sampler_no_update_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
+                                                   nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,
+                                                   diff_inital_resids,
+                                                   object$test_data,
+                                                   new_pred_list1)
+    }else if(is.null(newdata) && length(object)==14){
+      #else return Pred Ints for training data
+      gs_chains<-gibbs_sampler_no_update2_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
+                                                    object$a,object$sigma,0,object$nu,object$lambda,
+                                                    diff_inital_resids,
+                                                    new_pred_list1)
+      
+    }else{
+      #if test data included in call to object
+      gs_chains<-gibbs_sampler_no_update_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
+                                                   nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,
+                                                   diff_inital_resids,
+                                                   newdata,
+                                                   new_pred_list1)
+    }
+  }else{
+    if(is.null(newdata) && length(object)==16){
+      #if test data specified separately
+      gs_chains<-gibbs_sampler_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
                                          nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,
                                          diff_inital_resids,
                                          object$test_data,
                                          new_pred_list1)
     }else if(is.null(newdata) && length(object)==14){
       #else return Pred Ints for training data
-      gs_chains<-gibbs_sampler_no_update2_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
+      gs_chains<-gibbs_sampler2_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
                                           object$a,object$sigma,0,object$nu,object$lambda,
                                           diff_inital_resids,
                                           new_pred_list1)
       
     }else{
       #if test data included in call to object
-      gs_chains<-gibbs_sampler_no_update_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
+      gs_chains<-gibbs_sampler_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
                                          nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,
                                          diff_inital_resids,
                                          newdata,
                                          new_pred_list1)
-    }
-  }else{
-    if(is.null(newdata) && length(object)==16){
-      #if test data specified separately
-      gs_chains<-gibbs_sampler_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                               nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,
-                               diff_inital_resids,
-                               object$test_data,
-                               new_pred_list1)
-    }else if(is.null(newdata) && length(object)==14){
-      #else return Pred Ints for training data
-      gs_chains<-gibbs_sampler2_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                object$a,object$sigma,0,object$nu,object$lambda,
-                                diff_inital_resids,
-                                new_pred_list1)
-      
-    }else{
-      #if test data included in call to object
-      gs_chains<-gibbs_sampler_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                               nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,
-                               diff_inital_resids,
-                               newdata,
-                               new_pred_list1)
     }
   }
   #  y_posterior_sum_trees<-gs_chains[[4]]

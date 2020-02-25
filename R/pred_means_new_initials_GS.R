@@ -14,7 +14,7 @@
 pred_means_bbma_new_initials_GS<-function(object,num_iter,burnin,newdata=NULL,update_resids=1,trainingdata){
   #object will be bartBMA object.
   
-   scaled_train_y <- scale_response(min(object$response),max(object$response),-0.5,0.5,object$response)
+  scaled_train_y <- scale_response(min(object$response),max(object$response),-0.5,0.5,object$response)
   # 
   # diff_inital_resids <- list()
   # resid_length <- length(object$sum_residuals[[1]][[1]])
@@ -25,57 +25,57 @@ pred_means_bbma_new_initials_GS<-function(object,num_iter,burnin,newdata=NULL,up
   #   diff_inital_resids[[i]] <- rep(list(scaled_train_y- ((length(object$sum_residuals[[i]])-1 )/ length(object$sum_residuals[[i]]))*mean(scaled_train_y)), 
   #                                  length(object$sum_residuals[[i]])) 
   # }
-   get_resids <- get_initial_resids(trainingdata,object$sumoftrees,scaled_train_y)
-   diff_inital_resids<- get_resids[[1]]
-   new_pred_list1 <- get_resids[[2]]
-   
-   
-   
+  get_resids <- get_initial_resids(trainingdata,object$sumoftrees,scaled_train_y)
+  diff_inital_resids<- get_resids[[1]]
+  new_pred_list1 <- get_resids[[2]]
+  
+  
+  
   if(update_resids==0){
     if(is.null(newdata) && length(object)==16){
       #if test data specified separately
       gs_chains<-gibbs_sampler_no_update_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
+                                                       nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,
+                                                       diff_inital_resids,
+                                                       object$test_data,
+                                                       new_pred_list1)
+    }else if(is.null(newdata) && length(object)==14){
+      #else return Pred Ints for training data
+      gs_chains<-gibbs_sampler_no_update2_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
+                                                        object$a,object$sigma,0,object$nu,object$lambda,
+                                                        diff_inital_resids,
+                                                        new_pred_list1)
+      
+    }else{
+      #if test data included in call to object
+      gs_chains<-gibbs_sampler_no_update_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
+                                                       nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,
+                                                       diff_inital_resids,
+                                                       newdata,
+                                                       new_pred_list1)
+    }
+  }else{
+    if(is.null(newdata) && length(object)==16){
+      #if test data specified separately
+      gs_chains<-gibbs_sampler_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
                                              nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,
                                              diff_inital_resids,
                                              object$test_data,
                                              new_pred_list1)
     }else if(is.null(newdata) && length(object)==14){
       #else return Pred Ints for training data
-      gs_chains<-gibbs_sampler_no_update2_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
+      gs_chains<-gibbs_sampler2_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
                                               object$a,object$sigma,0,object$nu,object$lambda,
                                               diff_inital_resids,
                                               new_pred_list1)
       
     }else{
       #if test data included in call to object
-      gs_chains<-gibbs_sampler_no_update_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
+      gs_chains<-gibbs_sampler_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
                                              nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,
                                              diff_inital_resids,
                                              newdata,
                                              new_pred_list1)
-    }
-  }else{
-    if(is.null(newdata) && length(object)==16){
-      #if test data specified separately
-      gs_chains<-gibbs_sampler_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                   nrow(object$test_data),object$a,object$sigma,0,object$nu,object$lambda,
-                                   diff_inital_resids,
-                                   object$test_data,
-                                   new_pred_list1)
-    }else if(is.null(newdata) && length(object)==14){
-      #else return Pred Ints for training data
-      gs_chains<-gibbs_sampler2_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                    object$a,object$sigma,0,object$nu,object$lambda,
-                                    diff_inital_resids,
-                                    new_pred_list1)
-      
-    }else{
-      #if test data included in call to object
-      gs_chains<-gibbs_sampler_exp_new_inits(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,num_iter, burnin,object$nrowTrain,
-                                   nrow(newdata), object$a,object$sigma,0,object$nu,object$lambda,
-                                   diff_inital_resids,
-                                   newdata,
-                                   new_pred_list1)
     }
   }
   

@@ -12,9 +12,9 @@
 #' @return The output is a list of length one. The one element in this list is a vector of prediction intervals???
 
 pred_ints_exact <-function(object,#min_possible,max_possible,
-                               l_quant,u_quant,newdata=NULL,update_resids=1,
-                               num_cores=1,
-                               root_alg_precision=0.00001){
+                           l_quant,u_quant,newdata=NULL,update_resids=1,
+                           num_cores=1,
+                           root_alg_precision=0.00001){
   #object will be bartBMA object.
   
   
@@ -24,9 +24,9 @@ pred_ints_exact <-function(object,#min_possible,max_possible,
     #if test data specified separately
     ret<-pred_ints_exact_outsamp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,#min_possible, max_possible,
                                  object$nrowTrain,
-                                     nrow(object$test_data),object$a,object$sigma,0,object$nu,
-                                     object$lambda,#diff_inital_resids,
-                                     object$test_data,l_quant,u_quant,num_cores,root_alg_precision
+                                 nrow(object$test_data),object$a,object$sigma,0,object$nu,
+                                 object$lambda,#diff_inital_resids,
+                                 object$test_data,l_quant,u_quant,num_cores,root_alg_precision
     )
     
     
@@ -44,9 +44,9 @@ pred_ints_exact <-function(object,#min_possible,max_possible,
     #if test data included in call to object
     ret<-pred_ints_exact_outsamp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,#min_possible, max_possible,
                                  object$nrowTrain,
-                                     nrow(newdata), object$a,object$sigma,0,object$nu,
-                                     object$lambda,#diff_inital_resids,
-                                     newdata,l_quant,u_quant,num_cores,root_alg_precision
+                                 nrow(newdata), object$a,object$sigma,0,object$nu,
+                                 object$lambda,#diff_inital_resids,
+                                 newdata,l_quant,u_quant,num_cores,root_alg_precision
     )
     
   }}
