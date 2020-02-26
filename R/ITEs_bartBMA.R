@@ -26,7 +26,7 @@
 #' @export 
 #' @return A list of length 2. The first element is A vector of Individual Treatment Effect Estimates. The second element is a bartBMA object (i.e. the trained BART-BMA model).
 #' @examples 
-#' 
+#' n <- 250
 #' x1 <- rnorm(n)
 #' x2 <- rnorm(n)
 #' x3 <- rnorm(n) 
@@ -46,8 +46,10 @@
 #' tautrain <- 1+2*x_covs_train[,2]*x_covs_train[,4]
 #' 
 #' #Prognostic function
-#' mutrain <- 1 + 2*x_covs_train[,5] -1*x_covs_train[,6]-4*x_covs_train[,7] +x_covs_train[,1]*x_covs_train[,3]
-#' #mutrain <- -6 + 2*x_covs_train[,5] -1*x_covs_train[,6]-4*x_covs_train[,7] +6*abs(x_covs_train[,3]-1)
+#' mutrain <- 1 + 2*x_covs_train[,5] -1*x_covs_train[,6]-4*x_covs_train[,7] +
+#' x_covs_train[,1]*x_covs_train[,3]
+#' #mutrain <- -6 + 2*x_covs_train[,5] -1*x_covs_train[,6]-4*x_covs_train[,7] +
+#' 6*abs(x_covs_train[,3]-1)
 #' sd_mtrain <- sd(mutrain)
 #' utrain <- runif(n)
 #' #pitrain <- 0.8*pnorm((3*mutrain/sd_mtrain)-0.5*x_covs_train[,1])+0.05+utrain/10

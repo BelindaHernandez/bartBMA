@@ -14,7 +14,7 @@
 #' \item{meanpreds}{An n by 1 matrix containing the estimated means.} 
 #' @examples 
 #' 
-#'load the package
+#' #load the package
 #' library(bartBMA)
 #' #set the seed
 #' set.seed(100)

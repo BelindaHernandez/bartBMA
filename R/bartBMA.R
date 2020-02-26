@@ -57,11 +57,11 @@
 #' @importFrom Rcpp evalCpp
 #' @importFrom stats sd qchisq quantile qnorm qchisq pnorm
 #' @examples
-#'N <- 100
-#'p<- 100
-#'set.seed(100)
+#' N <- 100
+#' p<- 100
+#' set.seed(100)
 #' library(bartBMA)
-#'epsilon <- rnorm(N)
+#' epsilon <- rnorm(N)
 #' xcov <- matrix(runif(N*p), nrow=N)
 #' y <- sin(pi*xcov[,1]*xcov[,2]) + 20*(xcov[,3]-0.5)^2+10*xcov[,4]+
 #' 5*xcov[,5]+epsilon

@@ -39,7 +39,7 @@ This function produces prediction intervals for BART-BMA estimates by post-hoc G
 }
 \examples{
 
-load the package
+#load the package
 library(bartBMA)
 #set the seed
 set.seed(100)

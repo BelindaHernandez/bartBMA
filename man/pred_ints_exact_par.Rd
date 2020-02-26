@@ -32,7 +32,7 @@ The output is a list of length 2:
 \item{meanpreds}{An n by 1 matrix containing the estimated means.}
 }
 \description{
-This function produces prediction intervals for bart-bma output obtained using rmixt function from the package mvnfast.
+This function produces prediction intervals for bart-bma output.
 }
 \examples{
 

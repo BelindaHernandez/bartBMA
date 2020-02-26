@@ -124,11 +124,14 @@ The output is a list of length 4:
 \item{CATE_Interval}{A 3 by 1 matrix. The first element is the l_quant*100 quantile of the CATE distribution, the second element is the median of the CATE distribution, and the thied element is the u_quant*100 quantile of the CATE distribution.}
 }
 \description{
-This function produces prediction intervals for bart-bma output obtained using rmixt function from the package mvnfast.
+This function produces prediction intervals for bart-bma output.
 }
 \examples{
 #Example of BART-BMA for ITE estimation
-#Applied to data simulations from Hahn et al. (2020, Bayesian Analysis) "Bayesian Regression Tree Models for Causal Inference: Regularization, Confounding, and Heterogeneous Effects
+#Applied to data simulations from Hahn et al. (2020, Bayesian Analysis) 
+#"Bayesian Regression Tree Models for Causal Inference: Regularization, Confounding, 
+# and Heterogeneous Effects
+n <- 250
 x1 <- rnorm(n)
 x2 <- rnorm(n)
 x3 <- rnorm(n) 
@@ -148,8 +151,10 @@ x_covs_train <- cbind(x1,x2,x3,x4,x5A,x5B,x5C,xnoise)
 tautrain <- 1+2*x_covs_train[,2]*x_covs_train[,4]
 
 #Prognostic function
-mutrain <- 1 + 2*x_covs_train[,5] -1*x_covs_train[,6]-4*x_covs_train[,7] +x_covs_train[,1]*x_covs_train[,3]
-#mutrain <- -6 + 2*x_covs_train[,5] -1*x_covs_train[,6]-4*x_covs_train[,7] +6*abs(x_covs_train[,3]-1)
+mutrain <- 1 + 2*x_covs_train[,5] -1*x_covs_train[,6]-4*x_covs_train[,7] +
+x_covs_train[,1]*x_covs_train[,3]
+#mutrain <- -6 + 2*x_covs_train[,5] -1*x_covs_train[,6]-4*x_covs_train[,7] +
+6*abs(x_covs_train[,3]-1)
 sd_mtrain <- sd(mutrain)
 utrain <- runif(n)
 #pitrain <- 0.8*pnorm((3*mutrain/sd_mtrain)-0.5*x_covs_train[,1])+0.05+utrain/10

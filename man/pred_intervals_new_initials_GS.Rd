@@ -61,5 +61,6 @@ ytest <- sin(pi*xcovtest[,1]*xcovtest[,2]) + 20*(xcovtest[,3]-0.5)^2+10*xcovtest
 bart_bma_example <- bartBMA(x.train = xcov,y.train=y,x.test=xcovtest,zero_split = 1, 
                             only_max_num_trees = 1,split_rule_node = 0)
 #Obtain the prediction intervals
-pred_intervals_new_initials_GS(bart_bma_example,1000,100,0.025,0.975,newdata=NULL,update_resids=1,xcov)
+pred_intervals_new_initials_GS(bart_bma_example,1000,100,0.025,0.975,
+newdata=NULL,update_resids=1,xcov)
 }

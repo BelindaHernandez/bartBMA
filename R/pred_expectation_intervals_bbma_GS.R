@@ -14,7 +14,7 @@
 #' \item{meanpreds}{An n by 1 matrix containing the estimated means of f(x).} 
 #' @examples 
 #' 
-#'load the package
+#' #load the package
 #' library(bartBMA)
 #' #set the seed
 #' set.seed(100)
@@ -33,7 +33,8 @@
 #' bart_bma_example <- bartBMA(x.train = xcov,y.train=y,x.test=xcovtest,zero_split = 1, 
 #'                             only_max_num_trees = 1,split_rule_node = 0)
 #' #Obtain the prediction intervals
-#' pred_expectation_intervals_bbma_GS(bart_bma_example,1000,100,0.025,0.975,newdata=NULL,update_resids=1)
+#' pred_expectation_intervals_bbma_GS(bart_bma_example,1000,100,0.025,0.975,
+#' newdata=NULL,update_resids=1)
  
 pred_expectation_intervals_bbma_GS<-function(object,num_iter,burnin,l_quant,u_quant,newdata=NULL,update_resids=1){
   if(l_quant>0.5 ||u_quant<0 ||u_quant>1){stop("Lower quantile must be lower than 0.5 and greater than 0")}

@@ -1,6 +1,6 @@
 #' @title Prediction intervals for bart-bma output obtained using linear algebra to obtain means and variances, and using bisection to find the quantiles of the mixture of t distributions.
 #' 
-#' @description This function produces prediction intervals for bart-bma output obtained using rmixt function from the package mvnfast.
+#' @description This function produces prediction intervals for bart-bma output.
 #' @param object bartBMA object obtained from function bartBMA
 #' @param l_quant Lower quantile of credible intervals for the ITEs, CATT, CATNT.
 #' @param u_quant Upper quantile of credible intervals for the ITEs, CATT, CATNT.

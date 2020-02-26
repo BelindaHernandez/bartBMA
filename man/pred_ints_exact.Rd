@@ -22,6 +22,8 @@ pred_ints_exact(
 
 \item{newdata}{Test data for which predictions are to be produced. Default = NULL. If NULL, then produces prediction intervals for training data if no test data was used in producing the bartBMA object, or produces prediction intervals for the original test data if test data was used in producing the bartBMA object.}
 
+\item{num_cores}{Number of cores used in parallel.}
+
 \item{root_alg_precision}{The algorithm should obtain approximate bounds that are within the distance root_alg_precision of the true quantile for the chosen average of models.}
 }
 \value{
@@ -30,7 +32,7 @@ The output is a list of length 2:
 \item{meanpreds}{An n by 1 matrix containing the estimated means.}
 }
 \description{
-This function produces prediction intervals for bart-bma output obtained using rmixt function from the package mvnfast.
+This function produces prediction intervals for bart-bma output.
 }
 \examples{
 
