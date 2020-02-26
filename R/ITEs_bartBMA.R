@@ -24,7 +24,45 @@
 #' @param min_num_obs_for_split This integer determines the minimum number of observations in a (parent) tree node for the algorithm to consider potential splits of the node.
 #' @param min_num_obs_after_split This integer determines the minimum number of observations in a child node resulting from a split in order for a split to occur. If the left or right chikd node has less than this number of observations, then the split can not occur.
 #' @export 
-#' @return A vector of Individual Treatment Effect Estimates.
+#' @return A list of length 2. The first element is A vector of Individual Treatment Effect Estimates. The second element is a bartBMA object (i.e. the trained BART-BMA model).
+#' @examples 
+#' 
+#' x1 <- rnorm(n)
+#' x2 <- rnorm(n)
+#' x3 <- rnorm(n) 
+#' x4 <- rbinom(n,1,0.5)
+#' x5 <- as.factor(sample( LETTERS[1:3], n, replace=TRUE))
+#' 
+#' p= 0
+#' xnoise = matrix(rnorm(n*p), nrow=n)
+#' x5A <- ifelse(x5== 'A',1,0)
+#' x5B <- ifelse(x5== 'B',1,0)
+#' x5C <- ifelse(x5== 'C',1,0)
+#' 
+#' x_covs_train <- cbind(x1,x2,x3,x4,x5A,x5B,x5C,xnoise)
+#' 
+#' #Treatment effect
+#' #tautrain <- 3
+#' tautrain <- 1+2*x_covs_train[,2]*x_covs_train[,4]
+#' 
+#' #Prognostic function
+#' mutrain <- 1 + 2*x_covs_train[,5] -1*x_covs_train[,6]-4*x_covs_train[,7] +x_covs_train[,1]*x_covs_train[,3]
+#' #mutrain <- -6 + 2*x_covs_train[,5] -1*x_covs_train[,6]-4*x_covs_train[,7] +6*abs(x_covs_train[,3]-1)
+#' sd_mtrain <- sd(mutrain)
+#' utrain <- runif(n)
+#' #pitrain <- 0.8*pnorm((3*mutrain/sd_mtrain)-0.5*x_covs_train[,1])+0.05+utrain/10
+#' pitrain <- 0.5
+#' ztrain <- rbinom(n,1,pitrain)
+#' ytrain <- mutrain + tautrain*ztrain
+#' #pihattrain <- pbart(x_covs_train,ztrain )$prob.train.mean
+#' 
+#' #set lower and upper quantiles for intervals
+#' lbound <- 0.025
+#' ubound <- 0.975
+#' 
+#' example_output <- ITEs_bartBMA(x_covariates = x_covs_train, 
+#'                                z_train = ztrain,
+#'                                y_train = ytrain)
 
 ITEs_bartBMA<-function(x_covariates,z_train ,y_train,
                        a=3,nu=3,sigquant=0.9,c=1000,
@@ -57,7 +95,8 @@ ITEs_bartBMA<-function(x_covariates,z_train ,y_train,
     
   }
   
-  ITE_ests<-preds_treated[[1]]-preds_control[[1]]
-  class(ITE_ests)<-"ITE_ests.bartBMA"
-  ITE_ests
+  ret <- list()
+  ret$ITE_ests<-preds_treated[[1]]-preds_control[[1]]
+  ret$bbma_object <- trained_bart_BMA
+  ret
 }

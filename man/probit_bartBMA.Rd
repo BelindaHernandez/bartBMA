@@ -124,3 +124,15 @@ The following objects are returned by bartbma:
 \description{
 This is an implementation of Bayesian Additive Regression Trees (Chipman et al. 2018) using Bayesian Model Averaging (Hernandez et al. 2018).
 }
+\examples{
+#Example from BART package (McCulloch et al. 2019)
+set.seed(99)
+n=100
+x = sort(-2+4*runif(n))
+X=matrix(x,ncol=1)
+f = function(x) {return((1/2)*x^3)}
+FL = function(x) {return(exp(x)/(1+exp(x)))}
+pv = FL(f(x))
+y = rbinom(n,1,pv)
+probit_bartBMA(x.train = X,y.train = y)
+}

@@ -33,8 +33,33 @@ pred_intervals_new_initials_GS(
 \item{trainingdata}{The matrix of training data.}
 }
 \value{
-The output is a list of length one. The one element in this list is a vector of prediction intervals???
+The output is a list of length 2:
+\item{PI}{A 3 by n matrix, where n is the number of observations. The first row gives the l_quant*100 quantiles. The second row gives the medians. The third row gives the u_quant*100 quantiles.} 
+\item{meanpreds}{An n by 1 matrix containing the estimated means.}
 }
 \description{
 This function produces prediction intervals for BART-BMA estimates by post-hoc Gibbs-sampling from the full conditionals of the terminal node parameters and the variance of the error term. See Hernandez et al. (2018) Appendix D for details.
+}
+\examples{
+
+#load the package
+library(bartBMA)
+#set the seed
+set.seed(100)
+#simulate some data
+N <- 100
+p<- 100
+epsilon <- rnorm(N)
+xcov <- matrix(runif(N*p), nrow=N)
+y <- sin(pi*xcov[,1]*xcov[,2]) + 20*(xcov[,3]-0.5)^2+10*xcov[,4]+5*xcov[,5]+epsilon
+epsilontest <- rnorm(N)
+xcovtest <- matrix(runif(N*p), nrow=N)
+ytest <- sin(pi*xcovtest[,1]*xcovtest[,2]) + 20*(xcovtest[,3]-0.5)^2+10*xcovtest[,4]+
+  5*xcovtest[,5]+epsilontest
+
+#Train the object 
+bart_bma_example <- bartBMA(x.train = xcov,y.train=y,x.test=xcovtest,zero_split = 1, 
+                            only_max_num_trees = 1,split_rule_node = 0)
+#Obtain the prediction intervals
+pred_intervals_new_initials_GS(bart_bma_example,1000,100,0.025,0.975,newdata=NULL,update_resids=1,xcov)
 }

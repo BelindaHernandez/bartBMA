@@ -27,8 +27,28 @@ preds_bbma_lin_alg(
 \item{trainingdata}{The matrix of training data.}
 }
 \value{
-The output is a list of length one. The one element in this list is a vector of prediction intervals???
+A vector of predictions.
 }
 \description{
 This function produces predictions from BART-BMA by obtaining the posterior probability weighted averaged of the posterior means for each model.
+}
+\examples{
+#set the seed
+set.seed(100)
+#simulate some data
+N <- 100
+p<- 100
+epsilon <- rnorm(N)
+xcov <- matrix(runif(N*p), nrow=N)
+y <- sin(pi*xcov[,1]*xcov[,2]) + 20*(xcov[,3]-0.5)^2+10*xcov[,4]+5*xcov[,5]+epsilon
+epsilontest <- rnorm(N)
+xcovtest <- matrix(runif(N*p), nrow=N)
+ytest <- sin(pi*xcovtest[,1]*xcovtest[,2]) + 20*(xcovtest[,3]-0.5)^2+10*xcovtest[,4]+
+  5*xcovtest[,5]+epsilontest
+
+#Train the object 
+bart_bma_example <- bartBMA(x.train = xcov,y.train=y,x.test=xcovtest,zero_split = 1, 
+                            only_max_num_trees = 1,split_rule_node = 0)
+#Obtain the prediction intervals
+preds_bbma_lin_alg(bart_bma_example,1000,100,newdata=xcovtest)
 }

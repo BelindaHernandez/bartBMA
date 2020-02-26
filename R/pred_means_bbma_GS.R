@@ -7,7 +7,26 @@
 #' @param newdata Test data for which predictions are to be produced. Default = NULL. If NULL, then produces prediction intervals for training data if no test data was used in producing the bartBMA object, or produces prediction intervals for the original test data if test data was used in producing the bartBMA object.
 #' @param update_resids Option for whether to update the partial residuals in the gibbs sampler. If equal to 1, updates partial residuals, if equal to zero, does not update partial residuals. The defaullt setting is to update the partial residua;s.
 #' @export 
-#' @return The output is a list of length one. The one element in this list is a vector of prediction intervals???
+#' @return The output is a vector of predictions.
+#' @examples 
+#' set.seed(100)
+#' #simulate some data
+#' N <- 100
+#' p<- 100
+#' epsilon <- rnorm(N)
+#' xcov <- matrix(runif(N*p), nrow=N)
+#' y <- sin(pi*xcov[,1]*xcov[,2]) + 20*(xcov[,3]-0.5)^2+10*xcov[,4]+5*xcov[,5]+epsilon
+#' epsilontest <- rnorm(N)
+#' xcovtest <- matrix(runif(N*p), nrow=N)
+#' ytest <- sin(pi*xcovtest[,1]*xcovtest[,2]) + 20*(xcovtest[,3]-0.5)^2+10*xcovtest[,4]+
+#'   5*xcovtest[,5]+epsilontest
+#' 
+#' #Train the object 
+#' bart_bma_example <- bartBMA(x.train = xcov,y.train=y,x.test=xcovtest,zero_split = 1, 
+#'                             only_max_num_trees = 1,split_rule_node = 0)
+#' #Obtain the prediction intervals
+#' pred_means_bbma_GS(bart_bma_example,1000,100,newdata=NULL,update_resids=1)
+
 
 pred_means_bbma_GS<-function(object,num_iter,burnin,newdata=NULL,update_resids=1){
   #object will be bartBMA object.

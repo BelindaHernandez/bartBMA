@@ -9,7 +9,6 @@ pred_ints_exact_par(
   l_quant,
   u_quant,
   newdata = NULL,
-  update_resids = 1,
   num_cores = 1,
   root_alg_precision = 1e-05
 )
@@ -23,15 +22,38 @@ pred_ints_exact_par(
 
 \item{newdata}{Test data for which predictions are to be produced. Default = NULL. If NULL, then produces prediction intervals for training data if no test data was used in producing the bartBMA object, or produces prediction intervals for the original test data if test data was used in producing the bartBMA object.}
 
-\item{update_resids}{Option for whether to update the partial residuals in the gibbs sampler. If equal to 1, updates partial residuals, if equal to zero, does not update partial residuals. The defaullt setting is to update the partial residuals.}
-
 \item{num_cores}{Number of cores used in parallel.}
 
 \item{root_alg_precision}{The algorithm should obtain approximate bounds that are within the distance root_alg_precision of the true quantile for the chosen average of models.}
 }
 \value{
-The output is a list of length one. The one element in this list is a vector of prediction intervals???
+The output is a list of length 2:
+\item{PI}{A 3 by n matrix, where n is the number of observations. The first row gives the l_quant*100 quantiles. The second row gives the medians. The third row gives the u_quant*100 quantiles.} 
+\item{meanpreds}{An n by 1 matrix containing the estimated means.}
 }
 \description{
 This function produces prediction intervals for bart-bma output obtained using rmixt function from the package mvnfast.
+}
+\examples{
+
+#load the package
+library(bartBMA)
+#set the seed
+set.seed(100)
+#simulate some data
+N <- 100
+p<- 100
+epsilon <- rnorm(N)
+xcov <- matrix(runif(N*p), nrow=N)
+y <- sin(pi*xcov[,1]*xcov[,2]) + 20*(xcov[,3]-0.5)^2+10*xcov[,4]+5*xcov[,5]+epsilon
+epsilontest <- rnorm(N)
+xcovtest <- matrix(runif(N*p), nrow=N)
+ytest <- sin(pi*xcovtest[,1]*xcovtest[,2]) + 20*(xcovtest[,3]-0.5)^2+10*xcovtest[,4]+
+  5*xcovtest[,5]+epsilontest
+
+#Train the object 
+bart_bma_example <- bartBMA(x.train = xcov,y.train=y,x.test=xcovtest,zero_split = 1, 
+                            only_max_num_trees = 1,split_rule_node = 0)
+#Obtain the prediction intervals
+pred_ints_exact_par(bart_bma_example,0.025,0.975,newdata=NULL,num_cores=1)
 }

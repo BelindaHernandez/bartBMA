@@ -4,7 +4,27 @@
 #' @param object A probit_bartBMA object obtained using the probit_bartBMA function.
 #' @param newdata Covariate matrix for new dataset.
 #' @export 
-#' @return A vector of predictions for the new dataset.
+#' @return The output is a list of length 2:
+#' \item{probs}{A vector of estimated probabilities for newdata.} 
+#' \item{pred_binary}{A vector of binary predictions for newdata.} 
+#' @examples 
+#' #Example from BART package (McCulloch et al. 2019)
+#' set.seed(99)
+#' n=100
+#' x = sort(-2+4*runif(n))
+#' X=matrix(x,ncol=1)
+#' f = function(x) {return((1/2)*x^3)}
+#' FL = function(x) {return(exp(x)/(1+exp(x)))}
+#' pv = FL(f(x))
+#' y = rbinom(n,1,pv)
+#' 
+#' trained_probit_bbma <- probit_bartBMA(x.train = X,y.train = y)
+#' 
+#' np=100
+#' xp=-2+4*(1:np)/np
+#' Xp=matrix(xp,ncol=1)
+#' 
+#' predict_probit_bartBMA(trained_probit_bbma,Xp)
 
 predict_probit_bartBMA<-function(object,newdata){
   

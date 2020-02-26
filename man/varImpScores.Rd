@@ -15,3 +15,23 @@ A vector of variable importances. The variables are ordered in the same order th
 \description{
 This measure defines the importance of a variable as the model-probability weighted sum of the number of splits on the variable of interest, divided by the sum over all variables of such weighted counts of splits.
 }
+\examples{
+#set the seed
+set.seed(100)
+#simulate some data
+N <- 100
+p<- 100
+epsilon <- rnorm(N)
+xcov <- matrix(runif(N*p), nrow=N)
+y <- sin(pi*xcov[,1]*xcov[,2]) + 20*(xcov[,3]-0.5)^2+10*xcov[,4]+5*xcov[,5]+epsilon
+epsilontest <- rnorm(N)
+xcovtest <- matrix(runif(N*p), nrow=N)
+ytest <- sin(pi*xcovtest[,1]*xcovtest[,2]) + 20*(xcovtest[,3]-0.5)^2+10*xcovtest[,4]+
+  5*xcovtest[,5]+epsilontest
+
+#Train the object 
+bart_bma_example <- bartBMA(x.train = xcov,y.train=y,x.test=xcovtest,zero_split = 1, 
+                            only_max_num_trees = 1,split_rule_node = 0)
+#Obtain the variable importances
+varImpScores(bart_bma_example)
+}

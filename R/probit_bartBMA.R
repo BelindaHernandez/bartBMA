@@ -53,6 +53,18 @@
 #' \item{fitted.probs}{In-sample fitted probabilities}
 #' \item{fitted.classes}{In-sample fitted classes}
 #' @useDynLib bartBMA, .registration = TRUE
+#' @examples 
+#' #Example from BART package (McCulloch et al. 2019)
+#' set.seed(99)
+#' n=100
+#' x = sort(-2+4*runif(n))
+#' X=matrix(x,ncol=1)
+#' f = function(x) {return((1/2)*x^3)}
+#' FL = function(x) {return(exp(x)/(1+exp(x)))}
+#' pv = FL(f(x))
+#' y = rbinom(n,1,pv)
+#' probit_bartBMA(x.train = X,y.train = y)
+
 probit_bartBMA<-function(x.train,...)UseMethod("probit_bartBMA")
 
 #' @rdname probit_bartBMA
