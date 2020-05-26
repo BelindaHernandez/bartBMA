@@ -16,7 +16,6 @@
 #' @param c This determines the size of Occam's Window
 #' @param pen This is a parameter used by the Pruned Exact Linear Time Algorithm when finding changepoints. Default value pen=12.
 #' @param num_cp This is a number between 0 and 100 that determines the proportion of changepoints proposed by the changepoint detection algorithm to keep when growing trees. Default num_cp=20.
-#' @param x.test Test data covariate matrix. Default x.test=matrix(0.0,0,0).
 #' @param num_rounds Number of trees. (Maximum number of trees in a sum-of-tree model). Default num_rounds=5.
 #' @param alpha Parameter in prior probability of tree node splitting. Default alpha=0.95
 #' @param beta Parameter in prior probability of tree node splitting. Default beta=1
@@ -94,7 +93,7 @@ bartBMA_with_ITEs_exact_par <-function(l_quant,u_quant,newdata=NULL,update_resid
                                        num_cores=1,root_alg_precision=0.00001,
                                        x_covariates,z_train ,y_train,
                                        a=3,nu=3,sigquant=0.9,c=1000,
-                                       pen=12,num_cp=20,x.test=matrix(0.0,0,0),
+                                       pen=12,num_cp=20,#x.test=matrix(0.0,0,0),
                                        num_rounds=5,alpha=0.95,beta=2,split_rule_node=0,
                                        gridpoint=0,maxOWsize=100,num_splits=5,
                                        gridsize=10,zero_split=1,only_max_num_trees=1,
@@ -106,9 +105,10 @@ bartBMA_with_ITEs_exact_par <-function(l_quant,u_quant,newdata=NULL,update_resid
   
   x_train <- cbind(z_train,x_covariates)
   
+
   object <- bartBMA(x.train= x_train,y.train =y_train ,
                     a=a,nu=nu,sigquant=sigquant,c=c,
-                    pen=pen,num_cp=num_cp,x.test=x.test,
+                    pen=pen,num_cp=num_cp,#x.test=x.test,
                     num_rounds=num_rounds,alpha=alpha,beta=beta,split_rule_node=split_rule_node,
                     gridpoint=gridpoint,maxOWsize=maxOWsize,num_splits=num_splits,
                     gridsize=gridsize,zero_split=zero_split,only_max_num_trees=only_max_num_trees,
@@ -146,6 +146,7 @@ bartBMA_with_ITEs_exact_par <-function(l_quant,u_quant,newdata=NULL,update_resid
     )
     
   }else{
+    
     #if test data included in call to object
     ret<-pred_ints_ITE_outsamp_par(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,#min_possible, max_possible,
                                    object$nrowTrain,

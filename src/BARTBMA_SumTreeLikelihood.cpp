@@ -13985,10 +13985,10 @@ List pred_ints_ITE_outsamp_par(List overall_sum_trees,
   
   //List termobs_testdata_overall= get_termobs_testdata_overall(overall_sum_trees,test_data);
   
-  NumericVector onevec1(training_data.nrow(),1.0);
+  NumericVector onevec1(test_data.nrow(),1.0);
   NumericMatrix Test1data= cbind(onevec1,test_data);
   
-  NumericVector zerovec1(training_data.nrow(),0.0);
+  NumericVector zerovec1(test_data.nrow(),0.0);
   NumericMatrix Test0data= cbind(zerovec1,test_data);
   
   arma::field<arma::field<arma::field<arma::uvec>>> termobs_testdata1_overallF=get_termobs_testdata_fields_overall(overall_sum_trees,Test1data);
