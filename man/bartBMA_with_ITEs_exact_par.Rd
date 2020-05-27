@@ -20,7 +20,6 @@ bartBMA_with_ITEs_exact_par(
   c = 1000,
   pen = 12,
   num_cp = 20,
-  x.test = matrix(0, 0, 0),
   num_rounds = 5,
   alpha = 0.95,
   beta = 2,
@@ -73,8 +72,6 @@ bartBMA_with_ITEs_exact_par(
 \item{pen}{This is a parameter used by the Pruned Exact Linear Time Algorithm when finding changepoints. Default value pen=12.}
 
 \item{num_cp}{This is a number between 0 and 100 that determines the proportion of changepoints proposed by the changepoint detection algorithm to keep when growing trees. Default num_cp=20.}
-
-\item{x.test}{Test data covariate matrix. Default x.test=matrix(0.0,0,0).}
 
 \item{num_rounds}{Number of trees. (Maximum number of trees in a sum-of-tree model). Default num_rounds=5.}
 

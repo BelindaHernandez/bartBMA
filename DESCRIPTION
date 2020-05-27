@@ -18,5 +18,5 @@ License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.0),  mvnfast, Rdpack
 RdMacros: Rdpack
 LinkingTo: Rcpp, RcppArmadillo, BH
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 Encoding: UTF-8
