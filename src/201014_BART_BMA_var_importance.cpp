@@ -30,7 +30,7 @@ using namespace Rcpp;
 
 List get_weighted_var_imp(int num_vars,NumericVector BIC,List sum_trees){
   
-  IntegerMatrix vars_for_all_trees(sum_trees.size(),num_vars);
+  NumericMatrix vars_for_all_trees(sum_trees.size(),num_vars);
   NumericMatrix weighted_vars_for_all_trees(sum_trees.size(),num_vars);
   //NumericVector weighted_BIC=BIC/sum(BIC);
   
@@ -67,14 +67,17 @@ List get_weighted_var_imp(int num_vars,NumericVector BIC,List sum_trees){
         //have current tree get the split variables used
         NumericVector tree_vars=tree_data(_,2);
         selected_variables=get_imp_vars(tree_vars,num_vars,selected_variables);
+        NumericVector temp_counts_so_far = vars_for_all_trees(i,_);
+        vars_for_all_trees(i,_)= temp_counts_so_far + selected_variables;
       }
     }else{
       NumericMatrix tree_data=sum_trees[i];
       //get variables selected for current tree and add to row i or vars_for_all_trees
       NumericVector tree_vars=tree_data(_,2);
       selected_variables=get_imp_vars(tree_vars,num_vars,selected_variables);
+      vars_for_all_trees(i,_)=selected_variables;
+      
     }
-    vars_for_all_trees(i,_)=selected_variables;
     weighted_vars_for_all_trees(i,_)=selected_variables*weighted_BIC[i];
   }
   
