@@ -46,8 +46,18 @@ predict_bartBMA<-function(object,newdata){
     
   }else{
     #if test data included in call to object
-    ret<-preds_bbma_lin_alg_outsamp(object$sumoftrees,object$obs_to_termNodesMatrix,object$response,object$bic,0, 0,object$nrowTrain,
-                                    nrow(newdata), object$a,object$sigma,0,object$nu,
+    ret<-preds_bbma_lin_alg_outsamp(object$sumoftrees,
+                                    object$obs_to_termNodesMatrix,
+                                    object$response,
+                                    object$bic,
+                                    0, 
+                                    0,
+                                    object$nrowTrain,
+                                    nrow(newdata), 
+                                    object$a,
+                                    object$sigma,
+                                    0,
+                                    object$nu,
                                     object$lambda,#diff_inital_resids,
                                     newdata
     )
