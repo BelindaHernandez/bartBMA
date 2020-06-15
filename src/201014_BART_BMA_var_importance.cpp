@@ -78,7 +78,7 @@ List get_weighted_var_imp(int num_vars,NumericVector BIC,List sum_trees){
       vars_for_all_trees(i,_)=selected_variables;
       
     }
-    weighted_vars_for_all_trees(i,_)=selected_variables*weighted_BIC[i];
+    weighted_vars_for_all_trees(i,_)=vars_for_all_trees(i,_)*weighted_BIC[i];
   }
   
   //get BIC and weight the vars by their BIC/sum(BIC)
