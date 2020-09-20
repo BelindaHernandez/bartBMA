@@ -90,6 +90,9 @@ bartBMA.default<-function(x.train,y.train,
                           lambda_poisson=10,less_greedy=0,...){
   
   
+  if(num_rounds<=1) stop("Currently require num_rounds>1. i.e. Two or more trees per model. ")
+  
+  
   num_obs=nrow(x.train)
   num_vars=ncol(x.train)
   

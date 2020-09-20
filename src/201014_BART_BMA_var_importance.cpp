@@ -14,8 +14,10 @@ NumericVector get_imp_vars(NumericVector split_vars,int num_col,NumericVector cu
   }
   if(vars_chosen.size()!=0){
     for(int i=0;i<split_vars.size();i++){      
-      //if(tree_table[i]!=0){      
-      current_vars[split_vars[i]-1]+=1;
+      //if(tree_table[i]!=0){  
+      if(split_vars[i]!=0){  
+        current_vars[split_vars[i]-1]+=1;
+      }
       //  }
       
     }
@@ -67,8 +69,9 @@ List get_weighted_var_imp(int num_vars,NumericVector BIC,List sum_trees){
         //have current tree get the split variables used
         NumericVector tree_vars=tree_data(_,2);
         selected_variables=get_imp_vars(tree_vars,num_vars,selected_variables);
-        NumericVector temp_counts_so_far = vars_for_all_trees(i,_);
-        vars_for_all_trees(i,_)= temp_counts_so_far + selected_variables;
+        //NumericVector temp_counts_so_far = vars_for_all_trees(i,_);
+        //vars_for_all_trees(i,_)= temp_counts_so_far + selected_variables;
+        vars_for_all_trees(i,_)= selected_variables;
       }
     }else{
       NumericMatrix tree_data=sum_trees[i];
